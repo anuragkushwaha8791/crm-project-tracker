@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project View (Shared)</title>
+
+<style>
+
+body{
+font-family:Segoe UI,sans-serif;
+background:#f4f7fb;
+margin:0;
+padding:20px;
+}
+
+h1{
+color:#1f4e79;
+}
+
+.badge{
+display:inline-block;
+background:#e8eef7;
+color:#1f4e79;
+padding:4px 10px;
+border-radius:20px;
+font-size:12px;
+margin-bottom:15px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,.1);
+max-width:600px;
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+border-bottom:1px solid #eee;
+padding:8px 0;
+font-size:14px;
+}
+
+.row .label{
+color:#777;
+}
+
+.row .value{
+font-weight:bold;
+color:#1f4e79;
+text-align:right;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+margin-top:10px;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+font-size:12px;
+text-align:left;
+}
+
+th{
+background:#1f4e79;
+color:white;
+}
+
+tr.overdue{
+background:#fdecea;
+}
+
+.search-section{
+margin-bottom:15px;
+}
+
+.search-section input{
+width:100%;
+max-width:400px;
+padding:10px;
+box-sizing:border-box;
+}
+
+.note{
+font-size:11px;
+color:#888;
+margin-top:10px;
+}
+
+#msg{
+color:#c0392b;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="badge">👁 Read-only shared view</div>
+
+<div id="content">Loading...</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+query,
+orderBy,
+limit,
+getDocs,
+doc,
+getDoc
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyCSa-bvwEaFSz2MKt6AFFUe5QvbSy-7br4",
+authDomain: "anurag-kushwaha-projects.firebaseapp.com",
+projectId: "anurag-kushwaha-projects",
+storageBucket: "anurag-kushwaha-projects.firebasestorage.app",
+messagingSenderId: "745347735405",
+appId: "1:745347735405:web:7a486753dba3bd499c0464"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const VIEW_LIMIT = 300;
+
+function escapeHtml(value){
+if(value === undefined || value === null) return "";
+return String(value)
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;");
+}
+
+function ageing(d){
+if(!d.taskStartDate || !d.taskEndDate) return "-";
+const start = new Date(d.taskStartDate);
+const end = new Date(d.taskEndDate);
+const diff = Math.floor((end-start)/86400000);
+return (diff>=0?diff:0) + " Days";
+}
+
+function isOverdue(d){
+if(!d.taskEndDate || d.taskStatus === "Complete") return false;
+const today = new Date(); today.setHours(0,0,0,0);
+return new Date(d.taskEndDate) < today;
+}
+
+async function renderSingle(id){
+
+try{
+
+const snap = await getDoc(doc(db,"crmprojects",id));
+
+if(!snap.exists()){
+content.innerHTML = "<h1>Project Not Found</h1><p id='msg'>This link may be invalid or the project was deleted.</p>";
+return;
+}
+
+const d = snap.data();
+
+const fields = [
+["Project Name", d.projectName],
+["Type Of Business", d.business],
+["Type Of Asset", d.assetType],
+["Project Owner", d.ownerName || d.projectOwner],
+["Asset Model", d.assetModel],
+["Running Task", d.runningTask],
+["Project SPOC", d.projectSpoc],
+["Start Date", d.taskStartDate],
+["End Date", d.taskEndDate],
+["Status", d.taskStatus],
+["Priority", d.taskPriority],
+["Progress 1", d.progress1],
+["Progress 2", d.progress2],
+["Remarks", d.remarks],
+["Ageing", ageing(d)]
+];
+
+let rows = fields.map(([label,value])=>`
+<div class="row">
+<span class="label">${escapeHtml(label)}</span>
+<span class="value">${escapeHtml(value) || "-"}</span>
+</div>
+`).join("");
+
+content.innerHTML = `
+<h1>${escapeHtml(d.projectName) || "Project"}</h1>
+<div class="card">${rows}</div>
+`;
+
+}catch(error){
+
+console.error(error);
+content.innerHTML = "<h1>Unable to load project</h1><p id='msg'>Check your connection, or the Firestore read rules may need to allow public access for shared links to work.</p>";
+
+}
+
+}
+
+async function renderAll(){
+
+try{
+
+const q = query(collection(db,"crmprojects"), orderBy("createdAt","desc"), limit(VIEW_LIMIT));
+const snapshot = await getDocs(q);
+
+let allProjects = [];
+snapshot.forEach(docSnap=>allProjects.push(docSnap.data()));
+
+let html = `
+<h1>All Projects</h1>
+<div class="search-section">
+<input id="searchBox" placeholder="Search Project" onkeyup="window.filterProjects()">
+</div>
+<table>
+<thead>
+<tr>
+<th>Sr No</th>
+<th>Project Name</th>
+<th>Business</th>
+<th>Owner</th>
+<th>Running Task</th>
+<th>Start Date</th>
+<th>End Date</th>
+<th>Status</th>
+<th>Priority</th>
+<th>Ageing</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+<div class="note">Showing the ${allProjects.length} most recent record(s) for performance. Ask an Admin for a project-specific link to view any single record.</div>
+`;
+
+content.innerHTML = html;
+
+window.allProjects = allProjects;
+window.filterProjects();
+
+}catch(error){
+
+console.error(error);
+content.innerHTML = "<h1>Unable to load projects</h1><p id='msg'>Check your connection, or the Firestore read rules may need to allow public access for shared links to work.</p>";
+
+}
+
+}
+
+window.filterProjects = function(){
+
+const search = (document.getElementById("searchBox").value || "").toLowerCase();
+let html = "";
+let sr = 1;
+
+(window.allProjects || []).forEach((d)=>{
+
+const txt = JSON.stringify(d).toLowerCase();
+if(search && !txt.includes(search)) return;
+
+html += `
+<tr class="${isOverdue(d) ? 'overdue' : ''}">
+<td>${sr++}</td>
+<td>${escapeHtml(d.projectName)}</td>
+<td>${escapeHtml(d.business)}</td>
+<td>${escapeHtml(d.ownerName || d.projectOwner)}</td>
+<td>${escapeHtml(d.runningTask)}</td>
+<td>${escapeHtml(d.taskStartDate)}</td>
+<td>${escapeHtml(d.taskEndDate)}</td>
+<td>${escapeHtml(d.taskStatus)}</td>
+<td>${escapeHtml(d.taskPriority)}</td>
+<td>${ageing(d)}</td>
+</tr>
+`;
+
+});
+
+document.getElementById("tableBody").innerHTML = html || "<tr><td colspan='10'>No projects found.</td></tr>";
+
+};
+
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+if(id){
+renderSingle(id);
+}else{
+renderAll();
+}
+
+</script>
+
+</body>
+</html>

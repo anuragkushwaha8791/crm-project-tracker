@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mooving CRM Login</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI,sans-serif;
+}
+
+:root{
+--bg:#f4f7fb;
+--card-bg:#ffffff;
+--text:#1c1c1c;
+--muted:#777;
+--border:#ccc;
+--navy:#1f4e79;
+--red:#e2131f;
+--red-dark:#b80f1a;
+}
+
+[data-theme="dark"]{
+--bg:#0f1720;
+--card-bg:#1b2530;
+--text:#e6edf3;
+--muted:#9fb0bf;
+--border:#2c3947;
+--navy:#3f7cc0;
+}
+
+body{
+background:var(--bg);
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+overflow:hidden;
+color:var(--text);
+transition:background .3s ease,color .3s ease;
+}
+
+/* ---------- Theme toggle ---------- */
+
+#themeToggle{
+position:fixed;
+top:16px;
+right:16px;
+z-index:1001;
+background:var(--card-bg);
+border:1px solid var(--border);
+color:var(--text);
+border-radius:20px;
+padding:8px 14px;
+cursor:pointer;
+font-size:13px;
+}
+
+/* ---------- Welcome Splash ---------- */
+
+#splash{
+position:fixed;
+inset:0;
+background:linear-gradient(135deg,#1f4e79,#2f6fae);
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+z-index:999;
+color:white;
+text-align:center;
+transition:opacity .6s ease;
+}
+
+#splash.hide{
+opacity:0;
+pointer-events:none;
+}
+
+.company-name{
+font-size:20px;
+font-weight:bold;
+letter-spacing:.5px;
+margin-bottom:6px;
+}
+
+.crm-shimmer{
+background:linear-gradient(90deg,#ffffff,#ffe08a,#ffffff);
+background-size:200% auto;
+-webkit-background-clip:text;
+background-clip:text;
+color:transparent;
+font-weight:bold;
+animation:shimmer 2.8s linear infinite;
+}
+
+@keyframes shimmer{
+0%{ background-position:0% center; }
+100%{ background-position:200% center; }
+}
+
+.company-sub{
+font-size:12px;
+opacity:.85;
+margin-bottom:20px;
+}
+
+.robot-wrap{
+width:180px;
+height:200px;
+margin-bottom:10px;
+}
+
+.r-arm-left{
+transform-origin:70px 100px;
+animation:armLeft 2.4s ease-in-out infinite;
+}
+
+.r-arm-right{
+transform-origin:130px 100px;
+animation:armRight 2.4s ease-in-out infinite;
+}
+
+@keyframes armLeft{
+0%,100%{transform:rotate(0deg);}
+45%,65%{transform:rotate(35deg);}
+}
+
+@keyframes armRight{
+0%,100%{transform:rotate(0deg);}
+45%,65%{transform:rotate(-35deg);}
+}
+
+.r-eye{ animation:blink 3s infinite; }
+
+@keyframes blink{
+0%,92%,100%{opacity:1;}
+95%{opacity:0.1;}
+}
+
+.welcome-text{
+font-size:22px;
+font-weight:bold;
+opacity:0;
+animation:fadeUp 1s ease forwards;
+animation-delay:.6s;
+}
+
+@keyframes fadeUp{
+from{opacity:0; transform:translateY(15px);}
+to{opacity:1; transform:translateY(0);}
+}
+
+#enterBtn{
+margin-top:22px;
+background:white;
+color:#1f4e79;
+border:none;
+padding:10px 22px;
+border-radius:20px;
+font-size:13px;
+font-weight:bold;
+cursor:pointer;
+opacity:0;
+animation:fadeUp 1s ease forwards;
+animation-delay:1.4s;
+}
+
+#enterBtn:hover{ background:#e8eef7; }
+
+/* ---------- Split Login Layout ---------- */
+
+.wrap{
+display:flex;
+width:100%;
+height:100%;
+}
+
+.leftPanel{
+flex:1.2;
+background:linear-gradient(160deg,#101820,#1f4e79 70%);
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:flex-start;
+padding:60px;
+color:white;
+position:relative;
+overflow:hidden;
+}
+
+.leftPanel .brand{
+font-size:34px;
+font-weight:900;
+letter-spacing:1px;
+margin-bottom:8px;
+}
+
+.leftPanel .brand span{ color:var(--red); }
+
+.leftPanel .tagline{
+font-size:14px;
+opacity:.85;
+max-width:320px;
+line-height:1.5;
+margin-bottom:30px;
+}
+
+.leftPanel .mini-robot{
+position:absolute;
+right:40px;
+bottom:30px;
+width:120px;
+opacity:.9;
+}
+
+.rightPanel{
+flex:1;
+display:flex;
+justify-content:center;
+align-items:center;
+background:var(--bg);
+}
+
+.login-box{
+background:var(--card-bg);
+width:380px;
+padding:34px;
+border-radius:14px;
+box-shadow:0 0 25px rgba(0,0,0,.12);
+border-top:4px solid var(--red);
+}
+
+h1{
+text-align:center;
+margin-bottom:6px;
+color:var(--navy);
+font-size:22px;
+}
+
+.subtitle{
+text-align:center;
+color:var(--muted);
+font-size:13px;
+margin-bottom:14px;
+}
+
+input{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:1px solid var(--border);
+border-radius:6px;
+background:var(--card-bg);
+color:var(--text);
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:16px;
+background:var(--red);
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:16px;
+font-weight:bold;
+}
+
+button:hover{ background:var(--red-dark); }
+
+button:disabled{
+background:#8a94a3;
+cursor:not-allowed;
+}
+
+.forgot{
+text-align:center;
+margin-top:14px;
+font-size:12px;
+color:var(--muted);
+cursor:pointer;
+text-decoration:underline;
+}
+
+.self-note{
+text-align:center;
+margin-top:16px;
+font-size:11px;
+color:var(--muted);
+}
+
+.error{
+color:#c0392b;
+margin-top:10px;
+text-align:center;
+font-size:13px;
+}
+
+.success{
+color:#1e8449;
+margin-top:10px;
+text-align:center;
+font-size:13px;
+}
+
+@media (max-width:760px){
+.leftPanel{ display:none; }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<button id="themeToggle" onclick="toggleTheme()">🌙 Dark</button>
+
+<div id="splash">
+
+<div class="company-name">MOOVING SMART MOBILITY &amp; ENERGY SOLUTIONS PVT. LTD.</div>
+<div class="company-sub">Project &amp; Task <span class="crm-shimmer">CRM</span></div>
+
+<div class="robot-wrap">
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<circle cx="100" cy="55" r="34" fill="#ffffff"/>
+<circle class="r-eye" cx="88" cy="52" r="5" fill="#1f4e79"/>
+<circle class="r-eye" cx="112" cy="52" r="5" fill="#1f4e79"/>
+<path d="M85 68 Q100 78 115 68" stroke="#1f4e79" stroke-width="3" fill="none" stroke-linecap="round"/>
+<rect x="70" y="6" width="60" height="10" rx="5" fill="#ffffff"/>
+<rect x="60" y="90" width="80" height="85" rx="22" fill="#ffffff"/>
+<g class="r-arm-left"><rect x="35" y="95" width="16" height="58" rx="8" fill="#ffffff"/></g>
+<g class="r-arm-right"><rect x="149" y="95" width="16" height="58" rx="8" fill="#ffffff"/></g>
+</svg>
+</div>
+
+<div class="welcome-text">🙏 Welcome to Mooving</div>
+
+<button id="enterBtn" onclick="document.getElementById('splash').classList.add('hide')" style="width:auto">Continue to Login</button>
+
+</div>
+
+<div class="wrap">
+
+<div class="leftPanel">
+<div class="brand">MO<span>O</span>VING</div>
+<div class="tagline">India's Fastest Growing Battery Swapping Network — internal Project &amp; Task CRM for the Mooving team.</div>
+
+<svg class="mini-robot" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<circle cx="100" cy="55" r="34" fill="#ffffff"/>
+<circle cx="88" cy="52" r="5" fill="#1f4e79"/>
+<circle cx="112" cy="52" r="5" fill="#1f4e79"/>
+<path d="M85 68 Q100 78 115 68" stroke="#1f4e79" stroke-width="3" fill="none" stroke-linecap="round"/>
+<rect x="60" y="90" width="80" height="85" rx="22" fill="#ffffff"/>
+<g class="r-arm-left"><rect x="35" y="95" width="16" height="58" rx="8" fill="#ffffff"/></g>
+<g class="r-arm-right"><rect x="149" y="95" width="16" height="58" rx="8" fill="#ffffff"/></g>
+</svg>
+
+</div>
+
+<div class="rightPanel">
+
+<div class="login-box">
+
+<h1>CRM Login</h1>
+<div class="subtitle">Access your Mooving project dashboard</div>
+
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Password">
+
+<button id="submitBtn" onclick="submitForm()">Login</button>
+
+<div class="forgot" id="forgotLink" onclick="forgotPassword()">Forgot password?</div>
+
+<div class="self-note">New accounts are created only by your Administrator from the Admin Panel.</div>
+
+<div id="msg"></div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+// Theme init (runs before firebase, purely UI preference stored locally)
+(function(){
+const saved = localStorage.getItem("crm-theme") || "light";
+document.documentElement.setAttribute("data-theme", saved);
+document.addEventListener("DOMContentLoaded", ()=>{
+document.getElementById("themeToggle").textContent = saved === "dark" ? "☀️ Light" : "🌙 Dark";
+});
+})();
+
+function toggleTheme(){
+const current = document.documentElement.getAttribute("data-theme");
+const next = current === "dark" ? "light" : "dark";
+document.documentElement.setAttribute("data-theme", next);
+localStorage.setItem("crm-theme", next);
+document.getElementById("themeToggle").textContent = next === "dark" ? "☀️ Light" : "🌙 Dark";
+}
+</script>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+
+import {
+getAuth,
+onAuthStateChanged,
+signInWithEmailAndPassword,
+sendPasswordResetEmail
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+
+import {
+getFirestore,
+doc,
+getDoc,
+setDoc,
+collection,
+addDoc,
+serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyCSa-bvwEaFSz2MKt6AFFUe5QvbSy-7br4",
+authDomain: "anurag-kushwaha-projects.firebaseapp.com",
+projectId: "anurag-kushwaha-projects",
+storageBucket: "anurag-kushwaha-projects.firebasestorage.app",
+messagingSenderId: "745347735405",
+appId: "1:745347735405:web:7a486753dba3bd499c0464"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// auto-hide splash after a few seconds even if user doesn't click
+setTimeout(()=>{ document.getElementById('splash').classList.add('hide'); }, 4000);
+
+async function logActivity(action, details, email){
+try{
+await addDoc(collection(db,"activityLogs"), {
+action: action,
+details: details || "",
+userEmail: email || "",
+timestamp: serverTimestamp()
+});
+}catch(e){ /* non-fatal */ }
+}
+
+window.forgotPassword = async function(){
+
+const emailVal = prompt("Enter the email address linked to your account:");
+if(!emailVal) return;
+
+try{
+await sendPasswordResetEmail(auth, emailVal.trim());
+msg.className = "success";
+msg.innerHTML = "Password reset email sent. Check your inbox (and spam folder).";
+}catch(error){
+msg.className = "error";
+msg.innerHTML = error.message;
+}
+
+};
+
+async function ensureUserDoc(user){
+
+const ref = doc(db,"users",user.uid);
+const snap = await getDoc(ref);
+
+if(snap.exists()){
+return snap.data();
+}
+
+// Fallback bootstrap: if somehow no profile exists yet for a valid Auth
+// login (e.g. very first admin created directly in Firebase Console),
+// create a minimal profile.
+const data = {
+name: user.displayName || user.email,
+email: user.email,
+role: "User",
+createdAt: new Date().toISOString(),
+lastLogin: new Date().toISOString()
+};
+
+await setDoc(ref, data);
+return data;
+
+}
+
+window.submitForm = async function(){
+
+const emailVal = email.value.trim();
+const passwordVal = password.value;
+
+if(!emailVal || !passwordVal){
+msg.className = "error";
+msg.innerHTML = "Email and password are required.";
+return;
+}
+
+submitBtn.disabled = true;
+msg.className = "";
+msg.innerHTML = "";
+
+try{
+
+const userCred = await signInWithEmailAndPassword(auth, emailVal, passwordVal);
+const userData = await ensureUserDoc(userCred.user);
+
+try{
+await setDoc(doc(db,"users",userCred.user.uid), { lastLogin: serverTimestamp() }, { merge: true });
+}catch(e){}
+
+await logActivity("Login", `${userData.name || emailVal} logged in`, emailVal);
+
+msg.className = "success";
+msg.innerHTML = "Login Successful ✅";
+
+setTimeout(()=>{
+window.location.href = "dashboard.html";
+},600);
+
+}catch(error){
+
+msg.className = "error";
+msg.innerHTML = error.message;
+
+}finally{
+
+submitBtn.disabled = false;
+
+}
+
+};
+
+// If already logged in, skip straight to dashboard.
+onAuthStateChanged(auth, (user)=>{
+if(user){
+window.location.href = "dashboard.html";
+}
+});
+
+</script>
+
+</body>
+
+</html>

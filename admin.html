@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Admin Panel</title>
+
+<style>
+
+:root{
+--bg:#f4f7fb;
+--card-bg:#ffffff;
+--text:#222;
+--muted:#666;
+--border:#ddd;
+--navy:#1f4e79;
+--danger:#c0392b;
+--success:#1e8449;
+}
+
+[data-theme="dark"]{
+--bg:#0f1720;
+--card-bg:#1b2530;
+--text:#e6edf3;
+--muted:#9fb0bf;
+--border:#2c3947;
+--navy:#3f7cc0;
+}
+
+body{
+font-family:Segoe UI,sans-serif;
+background:var(--bg);
+color:var(--text);
+margin:0;
+padding:20px;
+transition:background .3s,color .3s;
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+flex-wrap:wrap;
+gap:10px;
+}
+
+h1{ color:var(--navy); }
+
+.nav button, .logout{
+background:var(--navy);
+color:white;
+border:none;
+padding:10px 15px;
+border-radius:5px;
+cursor:pointer;
+font-size:13px;
+margin-left:8px;
+}
+
+.logout{ background:var(--danger); }
+.nav button.secondary{ background:var(--success); }
+.nav button.ghost{ background:var(--card-bg); color:var(--text); border:1px solid var(--border); }
+
+.cards{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:15px;
+margin-bottom:20px;
+}
+
+.card{
+background:var(--card-bg);
+padding:18px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,.08);
+}
+
+.card h3{ font-size:13px; color:var(--muted); font-weight:normal; }
+.card h2{ color:var(--navy); margin-top:6px; }
+
+.panel{
+background:var(--card-bg);
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+box-shadow:0 0 10px rgba(0,0,0,.06);
+}
+
+.panel h2{ color:var(--navy); font-size:16px; margin-bottom:10px; }
+
+table{ width:100%; border-collapse:collapse; }
+
+th,td{
+border:1px solid var(--border);
+padding:8px;
+font-size:13px;
+text-align:left;
+}
+
+th{ background:var(--navy); color:white; }
+
+select, input{
+padding:8px;
+background:var(--card-bg);
+color:var(--text);
+border:1px solid var(--border);
+border-radius:5px;
+}
+
+.note{ font-size:12px; color:var(--muted); margin-top:10px; }
+
+#accessDenied{
+display:none;
+text-align:center;
+margin-top:80px;
+color:var(--danger);
+}
+
+.searchRow{ margin-bottom:12px; }
+.searchRow input{ width:100%; max-width:400px; padding:10px; box-sizing:border-box; }
+
+.createForm{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:10px;
+align-items:end;
+}
+
+.createForm input, .createForm select{
+width:100%;
+box-sizing:border-box;
+padding:10px;
+}
+
+.createForm button{
+background:var(--navy);
+color:white;
+border:none;
+padding:10px 15px;
+border-radius:5px;
+cursor:pointer;
+}
+
+.viewBtn{
+background:var(--navy);
+color:white;
+border:none;
+padding:6px 10px;
+border-radius:5px;
+cursor:pointer;
+font-size:11px;
+margin-right:5px;
+}
+
+.deleteBtn{
+background:var(--danger);
+color:white;
+border:none;
+padding:6px 10px;
+border-radius:5px;
+cursor:pointer;
+font-size:11px;
+}
+
+.modalOverlay{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.45);
+z-index:200;
+justify-content:center;
+align-items:center;
+}
+
+.modalOverlay.show{ display:flex; }
+
+.modalBox{
+background:var(--card-bg);
+padding:24px;
+border-radius:10px;
+width:90%;
+max-width:450px;
+}
+
+.modalBox h2{ color:var(--navy); margin-bottom:12px; font-size:16px; }
+.modalBox input{ width:100%; padding:10px; margin-top:8px; box-sizing:border-box; }
+.modalBox .closeBtn{
+background:#8a94a3;
+color:white;
+border:none;
+padding:8px 14px;
+border-radius:5px;
+cursor:pointer;
+margin-top:10px;
+}
+
+.credsBox{
+background:var(--bg);
+border:1px dashed var(--border);
+padding:12px;
+border-radius:8px;
+font-size:13px;
+margin-top:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="accessDenied">
+<h1>Access Denied</h1>
+<p>Only Admin users can view this page.</p>
+</div>
+
+<div id="adminContent" style="display:none">
+
+<div class="header">
+<h1>Admin Panel</h1>
+<div class="nav">
+<button class="ghost" onclick="toggleTheme()" id="themeToggle">🌙 Dark</button>
+<button onclick="window.location.href='dashboard.html'">Dashboard</button>
+<button onclick="window.location.href='Projects.html'">Project Manager</button>
+<button onclick="openPasswordModal()">Change Password</button>
+<button class="logout" onclick="logout()">Logout</button>
+</div>
+</div>
+
+<div class="cards">
+<div class="card"><h3>Total Users</h3><h2 id="totalUsers">0</h2></div>
+<div class="card"><h3>Total Projects</h3><h2 id="totalProjects">0</h2></div>
+<div class="card"><h3>Pending Tasks</h3><h2 id="pendingTasks">0</h2></div>
+<div class="card"><h3>High Priority Tasks</h3><h2 id="highPriorityTasks">0</h2></div>
+<div class="card"><h3>Overdue Tasks</h3><h2 id="overdueTasks">0</h2></div>
+</div>
+
+<div class="panel">
+<h2>➕ Create New User</h2>
+<p style="font-size:13px;color:var(--muted);margin-bottom:10px">
+Only Admins can create accounts now — there's no public sign-up page anymore. Fill this in, then share the email + temporary password with the person yourself (WhatsApp, email, in person etc.) and ask them to change it after first login.
+</p>
+<div class="createForm">
+<input id="newName" placeholder="Full Name">
+<input id="newEmail" type="email" placeholder="Email">
+<input id="newPassword" type="text" placeholder="Temporary Password (min 6 chars)">
+<select id="newRole">
+<option>User</option>
+<option>Admin</option>
+<option>Viewer</option>
+</select>
+<button onclick="createUser()">Create Account</button>
+</div>
+<div id="createMsg" style="font-size:13px;color:var(--danger);margin-top:8px"></div>
+<div id="createdCreds" class="credsBox" style="display:none"></div>
+</div>
+
+<div class="panel">
+<h2>Users, Roles &amp; Task Report</h2>
+<div class="searchRow">
+<input id="userSearch" placeholder="Search by name or email..." onkeyup="renderUsers()">
+</div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Email</th>
+<th>Role</th>
+<th>Joined</th>
+<th>Last Login</th>
+<th>Total Tasks</th>
+<th>Completed</th>
+<th>Efficiency</th>
+<th>Change Role</th>
+<th>Dashboard</th>
+<th>Delete</th>
+</tr>
+</thead>
+<tbody id="userTable"></tbody>
+</table>
+<div class="note">
+"Delete" permanently removes the person's login if you've deployed the optional Cloud Function
+(see functions/index.js + SETUP-README.md); either way it always removes their CRM profile/role
+immediately. Their existing projects are kept (still visible, just unassigned from an active account)
+unless you tick "also delete their projects".
+</div>
+</div>
+
+<div class="panel">
+<h2>🗒 Activity Log</h2>
+<div id="activityLogBody">Loading...</div>
+</div>
+
+</div>
+
+<!-- Password change modal -->
+<div class="modalOverlay" id="passwordModal">
+<div class="modalBox">
+<h2>Change Password</h2>
+<input type="password" id="currentPassword" placeholder="Current Password">
+<input type="password" id="newPasswordSelf" placeholder="New Password (min 6 chars)">
+<div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px"></div>
+<button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 15px;border-radius:5px;cursor:pointer">Update Password</button>
+<button class="closeBtn" onclick="closePasswordModal()">Cancel</button>
+</div>
+</div>
+
+<!-- Delete confirmation modal -->
+<div class="modalOverlay" id="deleteModal">
+<div class="modalBox">
+<h2>Permanently Delete User</h2>
+<p id="deleteModalText" style="font-size:13px;color:var(--muted)"></p>
+<label style="font-size:13px;display:flex;gap:8px;align-items:center;margin-top:10px">
+<input type="checkbox" id="deleteProjectsToo" style="width:auto;margin:0"> Also permanently delete all of their projects
+</label>
+<div id="deleteMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:8px"></div>
+<button onclick="confirmDeleteUser()" style="background:var(--danger);color:white;border:none;padding:10px 15px;border-radius:5px;cursor:pointer">Yes, Delete Permanently</button>
+<button class="closeBtn" onclick="closeDeleteModal()">Cancel</button>
+</div>
+</div>
+
+<script>
+(function(){
+const saved = localStorage.getItem("crm-theme") || "light";
+document.documentElement.setAttribute("data-theme", saved);
+})();
+function toggleTheme(){
+const current = document.documentElement.getAttribute("data-theme");
+const next = current === "dark" ? "light" : "dark";
+document.documentElement.setAttribute("data-theme", next);
+localStorage.setItem("crm-theme", next);
+document.getElementById("themeToggle").textContent = next === "dark" ? "☀️ Light" : "🌙 Dark";
+}
+document.addEventListener("DOMContentLoaded", ()=>{
+document.getElementById("themeToggle").textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️ Light" : "🌙 Dark";
+});
+</script>
+
+<script type="module">
+
+import { initializeApp, deleteApp }
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+
+import {
+getAuth,
+onAuthStateChanged,
+signOut,
+reauthenticateWithCredential,
+EmailAuthProvider,
+updatePassword,
+createUserWithEmailAndPassword,
+updateProfile
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+getDocs,
+addDoc,
+doc,
+getDoc,
+setDoc,
+updateDoc,
+deleteDoc,
+onSnapshot,
+query,
+where,
+orderBy,
+limit,
+getCountFromServer,
+serverTimestamp,
+writeBatch
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+import {
+getFunctions,
+httpsCallable
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyCSa-bvwEaFSz2MKt6AFFUe5QvbSy-7br4",
+authDomain: "anurag-kushwaha-projects.firebaseapp.com",
+projectId: "anurag-kushwaha-projects",
+storageBucket: "anurag-kushwaha-projects.firebasestorage.app",
+messagingSenderId: "745347735405",
+appId: "1:745347735405:web:7a486753dba3bd499c0464"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const functionsClient = getFunctions(app);
+
+let currentUser = null;
+let currentName = "";
+let usersMap = {};
+let deleteTargetUid = null;
+
+function escapeHtml(value){
+if(value === undefined || value === null) return "";
+return String(value)
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;");
+}
+
+function formatTimestamp(ts){
+if(!ts) return "-";
+try{
+if(ts.toDate) return ts.toDate().toLocaleString();
+return new Date(ts).toLocaleString();
+}catch(e){ return "-"; }
+}
+
+async function logActivity(action, details){
+try{
+await addDoc(collection(db,"activityLogs"), {
+action: action,
+details: details || "",
+userEmail: currentUser ? currentUser.email : "",
+userName: currentName,
+timestamp: serverTimestamp()
+});
+}catch(e){ console.error(e); }
+}
+
+async function notifyUser(targetUid, title, message){
+if(!targetUid) return;
+try{
+await addDoc(collection(db,"notifications"), {
+targetUid: targetUid, title: title, message: message, read: false, createdAt: serverTimestamp()
+});
+}catch(e){ console.error(e); }
+}
+
+async function ensureUserDoc(user){
+const ref = doc(db,"users",user.uid);
+const snap = await getDoc(ref);
+if(snap.exists()) return snap.data();
+const data = { name: user.displayName || user.email, email: user.email, role: "User", createdAt: new Date().toISOString() };
+await setDoc(ref, data);
+return data;
+}
+
+window.logout = async function(){
+await logActivity("Logout", "");
+signOut(auth).then(()=>{ window.location.href = "index.html"; });
+};
+
+/* ---------------- Create new user (Admin-only, secondary-app trick) ---------------- */
+/* Uses a SECOND Firebase App instance so creating the account doesn't sign
+   the current Admin out of their own session. This is a well-known, fully
+   client-side-safe pattern (no server needed) — it does NOT expose any
+   secret, because Firebase web config is not a secret key; real protection
+   comes from firestore.rules, which only Admin accounts are allowed to
+   write "role" through anyway. */
+
+window.createUser = async function(){
+
+const name = document.getElementById("newName").value.trim();
+const emailVal = document.getElementById("newEmail").value.trim();
+const passwordVal = document.getElementById("newPassword").value;
+const role = document.getElementById("newRole").value;
+const msgEl = document.getElementById("createMsg");
+const credsBox = document.getElementById("createdCreds");
+
+msgEl.innerText = "";
+credsBox.style.display = "none";
+
+if(!name || !emailVal || !passwordVal){
+msgEl.innerText = "Name, email and password are all required.";
+return;
+}
+
+if(passwordVal.length < 6){
+msgEl.innerText = "Password must be at least 6 characters.";
+return;
+}
+
+let secondaryApp;
+
+try{
+
+secondaryApp = initializeApp(firebaseConfig, "SecondaryCreateUser_" + Date.now());
+const secondaryAuth = getAuth(secondaryApp);
+
+const cred = await createUserWithEmailAndPassword(secondaryAuth, emailVal, passwordVal);
+await updateProfile(cred.user, { displayName: name });
+
+await setDoc(doc(db,"users",cred.user.uid), {
+name: name,
+email: emailVal,
+role: role,
+createdAt: serverTimestamp(),
+lastLogin: null
+});
+
+await signOut(secondaryAuth);
+await deleteApp(secondaryApp);
+
+await logActivity("User Created", `${name} (${emailVal}) created as ${role}`);
+
+document.getElementById("newName").value = "";
+document.getElementById("newEmail").value = "";
+document.getElementById("newPassword").value = "";
+document.getElementById("newRole").selectedIndex = 0;
+
+credsBox.style.display = "block";
+credsBox.innerHTML = `✅ Account created. Share these with <b>${escapeHtml(name)}</b>:<br>Email: <b>${escapeHtml(emailVal)}</b><br>Temporary Password: <b>${escapeHtml(passwordVal)}</b><br><span style="color:var(--muted)">Ask them to use "Forgot password?" on the login page to set their own password.</span>`;
+
+}catch(error){
+
+msgEl.innerText = error.message;
+if(secondaryApp){
+try{ await deleteApp(secondaryApp); }catch(e){}
+}
+
+}
+
+};
+
+/* ---------------- Role change ---------------- */
+
+window.changeRole = async function(uid, newRole){
+try{
+await updateDoc(doc(db,"users",uid), { role: newRole });
+const u = usersMap[uid];
+await logActivity("Role Changed", `${u ? u.name : uid} role set to ${newRole}`);
+await notifyUser(uid, "Role Updated", `Your role was changed to ${newRole} by an Admin.`);
+}catch(error){
+console.error(error);
+alert("Error updating role. " + error.message);
+}
+};
+
+/* ---------------- Delete user ---------------- */
+
+window.openDeleteModal = function(uid, email){
+deleteTargetUid = uid;
+document.getElementById("deleteModalText").innerText = `This will remove ${email}'s CRM profile permanently. If the Cloud Function is deployed, their login itself will also be deleted.`;
+document.getElementById("deleteProjectsToo").checked = false;
+document.getElementById("deleteMsg").innerText = "";
+document.getElementById("deleteModal").classList.add("show");
+};
+
+window.closeDeleteModal = function(){
+document.getElementById("deleteModal").classList.remove("show");
+deleteTargetUid = null;
+};
+
+window.confirmDeleteUser = async function(){
+
+if(!deleteTargetUid) return;
+
+if(deleteTargetUid === currentUser.uid){
+document.getElementById("deleteMsg").innerText = "You can't delete your own account.";
+return;
+}
+
+const uid = deleteTargetUid;
+const u = usersMap[uid] || {};
+const alsoDeleteProjects = document.getElementById("deleteProjectsToo").checked;
+
+try{
+
+if(alsoDeleteProjects){
+const projSnap = await getDocs(query(collection(db,"crmprojects"), where("ownerUid","==",uid)));
+const batch = writeBatch(db);
+projSnap.forEach(d=>batch.delete(d.ref));
+await batch.commit();
+}
+
+let authDeleted = false;
+
+try{
+const callDelete = httpsCallable(functionsClient, "deleteUserAccount");
+await callDelete({ uid: uid });
+authDeleted = true;
+}catch(fnError){
+console.warn("Cloud Function deleteUserAccount not available:", fnError.message);
+}
+
+if(!authDeleted){
+await deleteDoc(doc(db,"users",uid));
+}
+
+await logActivity("User Deleted", `${u.name || u.email || uid} removed by Admin${authDeleted ? " (login also deleted)" : " (profile only — deploy Cloud Function for full deletion)"}`);
+
+closeDeleteModal();
+alert(authDeleted ? "User permanently deleted (login + profile)." : "User's CRM profile removed. Their login still technically exists — deploy the Cloud Function (see SETUP-README.md) to remove it too.");
+
+}catch(error){
+document.getElementById("deleteMsg").innerText = error.message;
+}
+
+};
+
+/* ---------------- Users + task report ---------------- */
+
+async function countQ(...constraints){
+const q = query(collection(db,"crmprojects"), ...constraints);
+const snap = await getCountFromServer(q);
+return snap.data().count;
+}
+
+window.renderUsers = async function(){
+
+const search = (document.getElementById("userSearch").value || "").toLowerCase();
+let html = "";
+
+for(const uid of Object.keys(usersMap)){
+
+const u = usersMap[uid];
+const txt = ((u.name||"") + " " + (u.email||"")).toLowerCase();
+if(search && !txt.includes(search)) continue;
+
+let total = 0, completed = 0;
+try{
+total = await countQ(where("ownerUid","==",uid));
+completed = await countQ(where("ownerUid","==",uid), where("taskStatus","==","Complete"));
+}catch(e){}
+
+const efficiency = total ? Math.round((completed/total)*100) : 0;
+
+html += `
+<tr>
+<td>${escapeHtml(u.name)}</td>
+<td>${escapeHtml(u.email)}</td>
+<td>${escapeHtml(u.role)}</td>
+<td>${escapeHtml((u.createdAt && u.createdAt.toDate) ? u.createdAt.toDate().toLocaleDateString() : (u.createdAt||"").slice(0,10))}</td>
+<td>${formatTimestamp(u.lastLogin)}</td>
+<td>${total}</td>
+<td>${completed}</td>
+<td>${efficiency}%</td>
+<td>
+<select onchange="changeRole('${uid}', this.value)">
+<option ${u.role==="Admin"?"selected":""}>Admin</option>
+<option ${u.role==="User"?"selected":""}>User</option>
+<option ${u.role==="Viewer"?"selected":""}>Viewer</option>
+</select>
+</td>
+<td><button class="viewBtn" onclick="window.location.href='dashboard.html?viewUid=${uid}'">View</button></td>
+<td><button class="deleteBtn" onclick="openDeleteModal('${uid}','${escapeHtml(u.email)}')">Delete</button></td>
+</tr>
+`;
+
+}
+
+userTable.innerHTML = html || "<tr><td colspan='11'>No users found.</td></tr>";
+totalUsers.innerText = Object.keys(usersMap).length;
+
+};
+
+function loadUsers(){
+onSnapshot(collection(db,"users"), (snapshot)=>{
+usersMap = {};
+snapshot.forEach(docSnap=>{ usersMap[docSnap.id] = docSnap.data(); });
+renderUsers();
+});
+}
+
+function loadProjectStats(){
+
+async function refresh(){
+try{
+const todayStr = new Date().toISOString().slice(0,10);
+const total = await countQ();
+const pending = await countQ(where("taskStatus","==","Pending"));
+const high = await countQ(where("taskPriority","==","High"));
+const overdueP = await countQ(where("taskStatus","==","Pending"), where("taskEndDate","<",todayStr));
+const overdueI = await countQ(where("taskStatus","==","In Progress"), where("taskEndDate","<",todayStr));
+
+totalProjects.innerText = total;
+pendingTasks.innerText = pending;
+highPriorityTasks.innerText = high;
+overdueTasks.innerText = overdueP + overdueI;
+}catch(e){ console.error(e); }
+}
+
+refresh();
+setInterval(refresh, 30000);
+
+// keep counts reasonably fresh on any project write too
+onSnapshot(query(collection(db,"crmprojects"), orderBy("createdAt","desc"), limit(1)), ()=>{ refresh(); });
+
+}
+
+/* ---------------- Activity log viewer ---------------- */
+
+const ACTIVITY_LOG_CAP = 70;
+
+function loadActivityLog(){
+const q = query(collection(db,"activityLogs"), orderBy("timestamp","desc"), limit(ACTIVITY_LOG_CAP));
+onSnapshot(q, (snapshot)=>{
+let html = "<table><thead><tr><th>When</th><th>Action</th><th>By</th><th>Details</th></tr></thead><tbody>";
+snapshot.forEach(docSnap=>{
+const d = docSnap.data();
+html += `<tr><td>${formatTimestamp(d.timestamp)}</td><td>${escapeHtml(d.action)}</td><td>${escapeHtml(d.userName || d.userEmail)}</td><td>${escapeHtml(d.details)}</td></tr>`;
+});
+html += "</tbody></table>";
+document.getElementById("activityLogBody").innerHTML = html || "No activity yet.";
+pruneOldActivityLogs();
+}, (error)=>{
+document.getElementById("activityLogBody").innerHTML = `Could not load activity log (${escapeHtml(error.code || error.message)}). If this persists, confirm Firestore Security Rules are published and your account's role is "Admin".`;
+console.error(error);
+});
+}
+
+let pruning = false;
+
+async function pruneOldActivityLogs(){
+if(pruning) return;
+pruning = true;
+try{
+const countSnap = await getCountFromServer(collection(db,"activityLogs"));
+const total = countSnap.data().count;
+if(total > ACTIVITY_LOG_CAP){
+const excess = total - ACTIVITY_LOG_CAP;
+const oldestSnap = await getDocs(query(collection(db,"activityLogs"), orderBy("timestamp","asc"), limit(excess)));
+const batch = writeBatch(db);
+oldestSnap.forEach(d=>batch.delete(d.ref));
+await batch.commit();
+}
+}catch(error){
+console.error("pruneOldActivityLogs error:", error);
+}finally{
+pruning = false;
+}
+}
+
+/* ---------------- Password change ---------------- */
+
+window.openPasswordModal = function(){
+document.getElementById("currentPassword").value = "";
+document.getElementById("newPasswordSelf").value = "";
+document.getElementById("passwordMsg").innerText = "";
+document.getElementById("passwordModal").classList.add("show");
+};
+
+window.closePasswordModal = function(){
+document.getElementById("passwordModal").classList.remove("show");
+};
+
+window.changePassword = async function(){
+
+const cur = document.getElementById("currentPassword").value;
+const next = document.getElementById("newPasswordSelf").value;
+const msgEl = document.getElementById("passwordMsg");
+
+if(!cur || !next){ msgEl.innerText = "Both fields are required."; return; }
+if(next.length < 6){ msgEl.innerText = "New password must be at least 6 characters."; return; }
+
+try{
+const credential = EmailAuthProvider.credential(currentUser.email, cur);
+await reauthenticateWithCredential(currentUser, credential);
+await updatePassword(currentUser, next);
+msgEl.style.color = "var(--success)";
+msgEl.innerText = "Password updated successfully.";
+setTimeout(closePasswordModal, 1200);
+}catch(error){
+msgEl.style.color = "var(--danger)";
+msgEl.innerText = error.message;
+}
+
+};
+
+onAuthStateChanged(auth, async (user)=>{
+
+if(!user){
+window.location.href = "index.html";
+return;
+}
+
+currentUser = user;
+
+const userData = await ensureUserDoc(user);
+currentName = userData.name || user.email;
+
+if(userData.role !== "Admin"){
+document.getElementById("accessDenied").style.display = "block";
+setTimeout(()=>{ window.location.href = "dashboard.html"; }, 1500);
+return;
+}
+
+document.getElementById("adminContent").style.display = "block";
+
+loadUsers();
+loadProjectStats();
+loadActivityLog();
+
+});
+
+</script>
+
+</body>
+</html>

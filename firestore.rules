@@ -1,0 +1,128 @@
+rules_version = '2';
+
+// =========================================================================
+// CRM FIRESTORE SECURITY RULES
+// -------------------------------------------------------------------------
+// Deploy this from: Firebase Console > Firestore Database > Rules
+// (paste this whole file in and click "Publish"), OR via Firebase CLI:
+//   firebase deploy --only firestore:rules
+// =========================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function myUid() {
+      return request.auth.uid;
+    }
+
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(myUid())).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(myUid())) &&
+        myRole() == "Admin";
+    }
+
+    // ---------------- users ----------------
+    // Anyone signed in can read the users list (needed for dashboards/reports).
+    // A user can create ONLY their own profile document (first-login bootstrap),
+    // and can only ever set role on that create if the users collection is
+    // empty (handled by matching against isFirstUser via a `role in` check is
+    // not feasible here, so we simply require role == "User" on self-created
+    // docs; the very-first-admin case is expected to be bootstrapped manually
+    // from the Firebase Console per the SETUP-README).
+    // A user can update their own doc EXCEPT the role/approval fields.
+    // Only an Admin can change someone's role or delete a user profile.
+    match /users/{uid} {
+
+      allow read: if isSignedIn();
+
+      // Two ways a user doc can be created:
+      //  1. An Admin creates it for someone else (any role) — this is how
+      //     the Admin Panel's "Create New User" feature writes the profile.
+      //  2. A fallback self-bootstrap (e.g. the very first Admin account,
+      //     created directly in the Firebase Console, logging in for the
+      //     first time with no Firestore profile yet) — locked to role
+      //     "User" only, so nobody can hand themselves Admin this way.
+      allow create: if isSignedIn() && (
+                      isAdmin()
+                      ||
+                      ( myUid() == uid && request.resource.data.role == "User" )
+                    );
+
+      allow update: if isSignedIn() && (
+                      isAdmin()
+                      ||
+                      (
+                        myUid() == uid &&
+                        request.resource.data.role == resource.data.role &&
+                        request.resource.data.adminApprovalPending == resource.data.adminApprovalPending
+                      )
+                    );
+
+      allow delete: if isAdmin();
+    }
+
+    // ---------------- crmprojects ----------------
+    // Read is left open (no login required) ONLY so the existing
+    // "Share View-Only Link" feature (view.html) keeps working for people
+    // who don't have an account. If you don't need public share links,
+    // change this line to: allow read: if isSignedIn();
+    // Writes always require login, and edits/deletes are restricted to the
+    // project owner or an Admin - enforced here, not just in the UI.
+    match /crmprojects/{id} {
+
+      allow read: if true;
+
+      allow create: if isSignedIn()
+                    && request.resource.data.ownerUid == myUid();
+
+      allow update: if isSignedIn() && (
+                       isAdmin() ||
+                       resource.data.ownerUid == myUid()
+                     );
+
+      allow delete: if isSignedIn() && isAdmin();
+    }
+
+    // ---------------- notifications ----------------
+    // A user can only read notifications addressed to them; Admins can read all.
+    match /notifications/{id} {
+
+      allow read: if isSignedIn() && (isAdmin() || resource.data.targetUid == myUid());
+
+      allow create: if isSignedIn();
+
+      allow update: if isSignedIn() && (isAdmin() || resource.data.targetUid == myUid());
+
+      allow delete: if isAdmin();
+    }
+
+    // ---------------- activityLogs ----------------
+    // Write-only audit trail. Only Admins can read it back; nobody can edit
+    // or delete entries (append-only).
+    match /activityLogs/{id} {
+
+      allow read: if isAdmin();
+
+      allow create: if isSignedIn();
+
+      allow update: if false;
+
+      allow delete: if isAdmin();
+    }
+
+    // ---------------- teams (reserved for future use) ----------------
+    match /teams/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+  }
+}

@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Project Manager</title>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+
+<style>
+
+:root{
+--bg:#f4f7fb;
+--card-bg:#ffffff;
+--text:#222;
+--muted:#666;
+--border:#ddd;
+--navy:#1f4e79;
+--navy-dark:#163a5c;
+--danger:#c0392b;
+}
+
+[data-theme="dark"]{
+--bg:#0f1720;
+--card-bg:#1b2530;
+--text:#e6edf3;
+--muted:#9fb0bf;
+--border:#2c3947;
+--navy:#3f7cc0;
+--navy-dark:#2f6096;
+}
+
+body{
+    font-family:Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding:20px;
+    transition:background .3s,color .3s;
+}
+
+h1{ color:var(--navy); }
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+gap:10px;
+margin-bottom:10px;
+}
+
+.nav{
+display:flex;
+gap:10px;
+align-items:center;
+flex-wrap:wrap;
+}
+
+#roleBadge{
+background:var(--card-bg);
+border:1px solid var(--border);
+color:var(--navy);
+padding:6px 12px;
+border-radius:20px;
+font-size:12px;
+font-weight:bold;
+}
+
+.form, .grid-form{
+    background:var(--card-bg);
+    padding:20px;
+    border-radius:10px;
+    margin-bottom:20px;
+    box-shadow:0 2px 5px rgba(0,0,0,0.08);
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:0 15px;
+}
+
+.grid-form label{
+    font-size:13px;
+    color:var(--navy);
+    margin-top:8px;
+    margin-bottom:-4px;
+}
+
+.grid-form button{
+    grid-column:1 / -1;
+    justify-self:start;
+}
+
+input,select{
+    width:100%;
+    padding:10px;
+    margin-top:8px;
+    margin-bottom:10px;
+    box-sizing:border-box;
+    background:var(--card-bg);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:5px;
+}
+
+button{
+    background:var(--navy);
+    color:white;
+    border:none;
+    padding:10px 15px;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+button:hover{ background:var(--navy-dark); }
+
+button.secondary{ background:#8a94a3; }
+button.secondary:hover{ background:#6b7480; }
+button.ghost{ background:var(--card-bg); color:var(--text); border:1px solid var(--border); }
+
+button.share{
+    background:#1e8449;
+    padding:6px 10px;
+    font-size:11px;
+}
+button.share:hover{ background:#166638; }
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--card-bg);
+}
+
+th,td{
+    border:1px solid var(--border);
+    padding:8px;
+    font-size:12px;
+    text-align:left;
+}
+
+th{ background:var(--navy); color:white; }
+tr.overdue{ background:#fdecea; }
+[data-theme="dark"] tr.overdue{ background:#3a2226; }
+
+.search-section{
+    margin-bottom:15px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+.search-section input{ margin:0; flex:1; min-width:200px; }
+
+#formStatus{
+    grid-column:1 / -1;
+    font-size:13px;
+    color:var(--danger);
+    min-height:16px;
+}
+
+.loadMoreBtn{
+background:#8a94a3;
+color:white;
+border:none;
+padding:8px 14px;
+border-radius:5px;
+cursor:pointer;
+margin-top:10px;
+font-size:12px;
+}
+
+.scale-note{
+font-size:11px;
+color:var(--muted);
+margin:-8px 0 12px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+<h1>Project Manager</h1>
+<div class="nav">
+<span id="roleBadge"></span>
+<button class="ghost" onclick="toggleTheme()" id="themeToggle">🌙 Dark</button>
+<button onclick="window.location.href='dashboard.html'">Dashboard</button>
+<button id="adminBtn" style="display:none" onclick="window.location.href='admin.html'">Admin Panel</button>
+</div>
+</div>
+
+<div class="grid-form" id="projectForm">
+
+<div>
+<label>Project Name</label>
+<input id="projectName" placeholder="Project Name">
+</div>
+
+<div>
+<label>Type Of Business</label>
+<input id="business" placeholder="Type Of Business">
+</div>
+
+<div>
+<label>Type Of Asset</label>
+<input id="assetType" placeholder="Type Of Asset">
+</div>
+
+<div>
+<label>Project Owner</label>
+<input id="projectOwner" placeholder="Project Owner">
+</div>
+
+<div>
+<label>Asset Model</label>
+<input id="assetModel" placeholder="Asset Model">
+</div>
+
+<div>
+<label>Running Task</label>
+<input id="runningTask" placeholder="Running Task">
+</div>
+
+<div>
+<label>Project SPOC</label>
+<input id="projectSpoc" placeholder="Project SPOC">
+</div>
+
+<div>
+<label>Task Start Date</label>
+<input type="date" id="taskStartDate">
+</div>
+
+<div>
+<label>Task End Date</label>
+<input type="date" id="taskEndDate">
+</div>
+
+<div>
+<label>Priority</label>
+<select id="taskPriority">
+<option>Low</option>
+<option>Medium</option>
+<option>High</option>
+</select>
+</div>
+
+<div>
+<label>Progress 1</label>
+<input id="progress1" placeholder="Progress 1">
+</div>
+
+<div>
+<label>Progress 2</label>
+<input id="progress2" placeholder="Progress 2">
+</div>
+
+<div>
+<label>Remarks</label>
+<input id="remarks" placeholder="Remarks">
+</div>
+
+<div>
+<label>Status</label>
+<select id="taskStatus">
+<option>Pending</option>
+<option>In Progress</option>
+<option>Complete</option>
+</select>
+</div>
+
+<div id="formStatus"></div>
+
+<button id="saveBtn">Save Project</button>
+<button id="cancelEditBtn" class="secondary" type="button">Cancel Edit</button>
+
+</div>
+
+<div class="search-section">
+
+<input id="searchBox" placeholder="Search Project (loaded records only)" onkeyup="loadProjects()">
+
+<button onclick="exportExcel()">Export Excel</button>
+<button class="secondary" onclick="shareAllLink()">Share View-Only Link (All Projects)</button>
+
+</div>
+
+<div class="scale-note" id="scaleNote"></div>
+
+<table>
+
+<thead>
+<tr>
+<th>Sr No</th>
+<th>Project Name</th>
+<th>Business</th>
+<th>Asset</th>
+<th>Owner</th>
+<th>Asset Model</th>
+<th>Running Task</th>
+<th>SPOC</th>
+<th>Start Date</th>
+<th>End Date</th>
+<th>Status</th>
+<th>Priority</th>
+<th>Progress 1</th>
+<th>Progress 2</th>
+<th>Remarks</th>
+<th>Ageing</th>
+<th>Share</th>
+<th>Edit</th>
+<th>Delete</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"><tr><td colspan="19">Loading your projects...</td></tr></tbody>
+
+</table>
+
+<div style="text-align:center">
+<button class="loadMoreBtn" id="loadMoreBtn" onclick="loadMore()">Load More</button>
+</div>
+
+<script>
+(function(){
+const saved = localStorage.getItem("crm-theme") || "light";
+document.documentElement.setAttribute("data-theme", saved);
+})();
+function toggleTheme(){
+const current = document.documentElement.getAttribute("data-theme");
+const next = current === "dark" ? "light" : "dark";
+document.documentElement.setAttribute("data-theme", next);
+localStorage.setItem("crm-theme", next);
+document.getElementById("themeToggle").textContent = next === "dark" ? "☀️ Light" : "🌙 Dark";
+}
+document.addEventListener("DOMContentLoaded", ()=>{
+document.getElementById("themeToggle").textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️ Light" : "🌙 Dark";
+});
+</script>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+
+import {
+getAuth,
+onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+getDocs,
+deleteDoc,
+updateDoc,
+doc,
+getDoc,
+setDoc,
+onSnapshot,
+query,
+orderBy,
+limit,
+startAfter,
+where,
+serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyCSa-bvwEaFSz2MKt6AFFUe5QvbSy-7br4",
+authDomain: "anurag-kushwaha-projects.firebaseapp.com",
+projectId: "anurag-kushwaha-projects",
+storageBucket: "anurag-kushwaha-projects.firebasestorage.app",
+messagingSenderId: "745347735405",
+appId: "1:745347735405:web:7a486753dba3bd499c0464"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const PAGE_SIZE = 200;
+
+let editId = null;
+let editOwnerUid = null;
+let editOwnerName = null;
+let currentUser = null;
+let currentRole = "Viewer";
+let currentName = "";
+let latestProjects = [];
+let lastVisible = null;
+
+function escapeHtml(value){
+if(value === undefined || value === null) return "";
+return String(value)
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;");
+}
+
+async function logActivity(action, details){
+try{
+await addDoc(collection(db,"activityLogs"), {
+action: action,
+details: details || "",
+userEmail: currentUser ? currentUser.email : "",
+userName: currentName,
+timestamp: serverTimestamp()
+});
+}catch(e){ console.error(e); }
+}
+
+async function notifyUser(targetUid, title, message){
+if(!targetUid) return;
+try{
+await addDoc(collection(db,"notifications"), {
+targetUid: targetUid, title: title, message: message, read: false, createdAt: serverTimestamp()
+});
+}catch(e){ console.error(e); }
+}
+
+// Fallback bootstrap only — normal accounts are created by an Admin from
+// the Admin Panel. This just makes sure a profile exists (e.g. for the
+// very first Admin, created directly in the Firebase Console) and never
+// grants Admin from the client.
+async function ensureUserDoc(user){
+
+const ref = doc(db,"users",user.uid);
+const snap = await getDoc(ref);
+
+if(snap.exists()){
+return snap.data();
+}
+
+const data = {
+name: user.displayName || user.email,
+email: user.email,
+role: "User",
+createdAt: new Date().toISOString()
+};
+
+await setDoc(ref, data);
+return data;
+
+}
+
+function canEdit(project){
+if(currentRole === "Admin") return true;
+if(currentRole === "User") return project.ownerUid === (currentUser && currentUser.uid);
+return false;
+}
+
+function canDelete(){
+return currentRole === "Admin";
+}
+
+function setStatus(msg){
+formStatus.textContent = msg || "";
+}
+
+function resetForm(){
+document.querySelectorAll(".grid-form input").forEach(x=>x.value="");
+taskPriority.selectedIndex = 0;
+taskStatus.selectedIndex = 0;
+editId = null;
+editOwnerUid = null;
+editOwnerName = null;
+saveBtn.textContent = "Save Project";
+}
+
+window.saveProject = async function(){
+
+if(!projectName.value.trim()){
+setStatus("Project Name is required.");
+projectName.focus();
+return;
+}
+
+const status = taskStatus.value;
+
+const projectData = {
+
+projectName: projectName.value.trim(),
+business: business.value.trim(),
+assetType: assetType.value.trim(),
+projectOwner: projectOwner.value.trim(),
+assetModel: assetModel.value.trim(),
+runningTask: runningTask.value.trim(),
+projectSpoc: projectSpoc.value.trim(),
+taskStartDate: taskStartDate.value,
+taskEndDate: taskEndDate.value,
+taskPriority: taskPriority.value,
+taskStatus: status,
+progress1: progress1.value.trim(),
+progress2: progress2.value.trim(),
+remarks: remarks.value.trim(),
+lastModifiedByUid: currentUser ? currentUser.uid : "",
+lastModifiedByName: currentName
+
+};
+
+if(status === "Complete"){
+projectData.completedAt = serverTimestamp();
+}
+
+saveBtn.disabled = true;
+setStatus("");
+
+try{
+
+if(editId){
+
+if(!canEdit({ownerUid: editOwnerUid})){
+setStatus("You don't have permission to edit this project.");
+saveBtn.disabled = false;
+return;
+}
+
+await updateDoc(doc(db,"crmprojects",editId), projectData);
+
+await logActivity("Project Updated", projectData.projectName);
+
+// If someone other than the project's owner (i.e. an Admin) made this
+// edit, let the owner know.
+if(editOwnerUid && editOwnerUid !== currentUser.uid){
+await notifyUser(editOwnerUid, "Project Updated", `${currentName} updated your project "${projectData.projectName}".`);
+}
+
+alert("Project Updated");
+
+}else{
+
+projectData.ownerEmail = currentUser ? currentUser.email : "";
+projectData.ownerUid = currentUser ? currentUser.uid : "";
+projectData.ownerName = currentName;
+projectData.createdAt = serverTimestamp();
+
+await addDoc(collection(db,"crmprojects"), projectData);
+
+await logActivity("Project Created", projectData.projectName);
+
+alert("Project Saved");
+
+}
+
+resetForm();
+
+}catch(error){
+
+console.error(error);
+setStatus("Error saving data. " + error.message);
+
+}finally{
+
+saveBtn.disabled = false;
+
+}
+
+};
+
+saveBtn.onclick = saveProject;
+cancelEditBtn.onclick = resetForm;
+
+function isOverdue(d){
+if(!d.taskEndDate || d.taskStatus === "Complete") return false;
+const today = new Date(); today.setHours(0,0,0,0);
+return new Date(d.taskEndDate) < today;
+}
+
+function renderTable(){
+
+let html = "";
+let sr = 1;
+
+const search = searchBox.value.toLowerCase();
+
+latestProjects.forEach((item)=>{
+
+const d = item.data;
+const id = item.id;
+
+const txt = JSON.stringify(d).toLowerCase();
+if(search && !txt.includes(search)) return;
+
+let ageing = "-";
+if(d.taskStartDate && d.taskEndDate){
+const start = new Date(d.taskStartDate);
+const end = new Date(d.taskEndDate);
+const diffDays = Math.floor((end-start)/86400000);
+ageing = (diffDays >= 0 ? diffDays : 0) + " Days";
+}
+
+const overdueFlag = isOverdue(d);
+const allowed = canEdit(d);
+
+html += `
+<tr class="${overdueFlag ? 'overdue' : ''}">
+
+<td>${sr++}</td>
+<td>${escapeHtml(d.projectName)}</td>
+<td>${escapeHtml(d.business)}</td>
+<td>${escapeHtml(d.assetType)}</td>
+<td>${escapeHtml(d.ownerName || d.projectOwner)}</td>
+<td>${escapeHtml(d.assetModel)}</td>
+<td>${escapeHtml(d.runningTask)}</td>
+<td>${escapeHtml(d.projectSpoc)}</td>
+<td>${escapeHtml(d.taskStartDate)}</td>
+<td>${escapeHtml(d.taskEndDate)}</td>
+<td>${escapeHtml(d.taskStatus)}</td>
+<td>${escapeHtml(d.taskPriority)}</td>
+<td>${escapeHtml(d.progress1)}</td>
+<td>${escapeHtml(d.progress2)}</td>
+<td>${escapeHtml(d.remarks)}</td>
+<td>${ageing}</td>
+
+<td><button class="share" onclick="shareProject('${id}')">Share</button></td>
+<td>${allowed ? `<button onclick="editProject('${id}')">Edit</button>` : "-"}</td>
+<td>${canDelete() ? `<button onclick="deleteProject('${id}')">Delete</button>` : "-"}</td>
+
+</tr>
+`;
+
+});
+
+tableBody.innerHTML = html || "<tr><td colspan='19'>No projects found.</td></tr>";
+scaleNote.innerText = `Showing ${latestProjects.length} most recent record(s). Use "Load More" below for older data, or the search box to filter within loaded records.`;
+
+}
+
+let usingFallbackListener = false;
+
+function buildProjectsQuery(){
+if(currentRole === "Admin"){
+return query(collection(db,"crmprojects"), orderBy("createdAt","desc"), limit(PAGE_SIZE));
+}
+return query(collection(db,"crmprojects"), where("ownerUid","==",currentUser.uid), orderBy("createdAt","desc"), limit(PAGE_SIZE));
+}
+
+function buildFallbackQuery(){
+if(currentRole === "Admin"){
+return query(collection(db,"crmprojects"), limit(PAGE_SIZE));
+}
+return query(collection(db,"crmprojects"), where("ownerUid","==",currentUser.uid), limit(PAGE_SIZE));
+}
+
+function listenProjects(){
+
+const q = buildProjectsQuery();
+
+const loadingTimeout = setTimeout(()=>{
+if(!tableBody.dataset.loaded){
+tableBody.innerHTML = "<tr><td colspan='19'>Still loading after 10 seconds — this usually means the connection to Firebase is stuck. Try a hard refresh (Ctrl+Shift+R). If it keeps happening, screenshot this message.</td></tr>";
+}
+}, 10000);
+
+onSnapshot(q, (snapshot)=>{
+clearTimeout(loadingTimeout);
+tableBody.dataset.loaded = "1";
+latestProjects = [];
+snapshot.forEach(d=>latestProjects.push({id:d.id, data:d.data()}));
+if(snapshot.docs.length){
+lastVisible = snapshot.docs[snapshot.docs.length-1];
+}
+renderTable();
+}, (error)=>{
+
+clearTimeout(loadingTimeout);
+console.error("Primary listener error:", error);
+if(usingFallbackListener) return;
+usingFallbackListener = true;
+
+// Fall back to a query that needs no composite index at all, so data
+// still shows while any required index finishes building in the
+// background. Still scoped by owner for non-Admins — never falls back
+// to an unscoped, all-users query.
+const fallbackQ = buildFallbackQuery();
+
+onSnapshot(fallbackQ, (snapshot)=>{
+tableBody.dataset.loaded = "1";
+latestProjects = [];
+snapshot.forEach(d=>latestProjects.push({id:d.id, data:d.data()}));
+latestProjects.sort((a,b)=>{
+const at = a.data.createdAt && a.data.createdAt.toMillis ? a.data.createdAt.toMillis() : 0;
+const bt = b.data.createdAt && b.data.createdAt.toMillis ? b.data.createdAt.toMillis() : 0;
+return bt - at;
+});
+renderTable();
+if(!document.getElementById("fallbackNote")){
+const note = document.createElement("div");
+note.id = "fallbackNote";
+note.className = "note";
+note.textContent = error.code === "failed-precondition"
+? "Akki server"
+: `Live sort unavailable right now (${error.code || error.message}) — showing available data.`;
+tableBody.parentElement.appendChild(note);
+}
+}, (fallbackError)=>{
+tableBody.dataset.loaded = "1";
+console.error("Fallback listener also failed:", fallbackError);
+tableBody.innerHTML = `<tr><td colspan='19'>Could not load data (${escapeHtml(fallbackError.code || fallbackError.message)}). Check that Firestore Security Rules are published and that you're online.</td></tr>`;
+});
+
+});
+
+}
+
+window.loadMore = async function(){
+
+if(!lastVisible){
+alert("No more data to load.");
+return;
+}
+
+try{
+const q = currentRole === "Admin"
+? query(collection(db,"crmprojects"), orderBy("createdAt","desc"), startAfter(lastVisible), limit(PAGE_SIZE))
+: query(collection(db,"crmprojects"), where("ownerUid","==",currentUser.uid), orderBy("createdAt","desc"), startAfter(lastVisible), limit(PAGE_SIZE));
+const snap = await getDocs(q);
+
+if(snap.empty){
+alert("No more projects.");
+return;
+}
+
+snap.forEach(d=>latestProjects.push({id:d.id, data:d.data()}));
+lastVisible = snap.docs[snap.docs.length-1];
+renderTable();
+
+}catch(error){
+console.error(error);
+alert("Error loading more data.");
+}
+
+};
+
+window.loadProjects = function(){
+renderTable();
+};
+
+window.shareProject = function(id){
+const link = `${window.location.origin}${window.location.pathname.replace("Projects.html","view.html")}?id=${id}`;
+navigator.clipboard.writeText(link).then(()=>{
+alert("Share link copied to clipboard:\n" + link);
+}).catch(()=>{
+prompt("Copy this link:", link);
+});
+};
+
+window.shareAllLink = function(){
+const link = `${window.location.origin}${window.location.pathname.replace("Projects.html","view.html")}`;
+navigator.clipboard.writeText(link).then(()=>{
+alert("View-only link (all projects) copied to clipboard:\n" + link);
+}).catch(()=>{
+prompt("Copy this link:", link);
+});
+};
+
+window.editProject = async function(id){
+
+const item = latestProjects.find(p=>p.id === id);
+if(!item) return;
+
+const d = item.data;
+
+if(!canEdit(d)){
+alert("You don't have permission to edit this project.");
+return;
+}
+
+projectName.value = d.projectName || "";
+business.value = d.business || "";
+assetType.value = d.assetType || "";
+projectOwner.value = d.projectOwner || "";
+assetModel.value = d.assetModel || "";
+runningTask.value = d.runningTask || "";
+projectSpoc.value = d.projectSpoc || "";
+taskStartDate.value = d.taskStartDate || "";
+taskEndDate.value = d.taskEndDate || "";
+taskPriority.value = d.taskPriority || "Low";
+taskStatus.value = d.taskStatus || "Pending";
+progress1.value = d.progress1 || "";
+progress2.value = d.progress2 || "";
+remarks.value = d.remarks || "";
+
+editId = id;
+editOwnerUid = d.ownerUid || null;
+editOwnerName = d.ownerName || null;
+saveBtn.textContent = "Update Project";
+setStatus("");
+
+window.scrollTo({ top:0, behavior:'smooth' });
+
+};
+
+window.deleteProject = async function(id){
+
+const item = latestProjects.find(p=>p.id === id);
+if(!item) return;
+const d = item.data;
+
+if(!canDelete()){
+alert("Only an Admin can delete projects.");
+return;
+}
+
+if(confirm("Delete Project ?")){
+
+try{
+
+await deleteDoc(doc(db,"crmprojects",id));
+
+await logActivity("Project Deleted", d.projectName);
+
+if(d.ownerUid && d.ownerUid !== currentUser.uid){
+await notifyUser(d.ownerUid, "Project Deleted", `${currentName} deleted your project "${d.projectName}".`);
+}
+
+alert("Project Deleted");
+
+if(editId === id){
+resetForm();
+}
+
+}catch(error){
+console.error(error);
+alert("Error deleting project.");
+}
+
+}
+
+};
+
+window.exportExcel = function(){
+
+if(!latestProjects.length){
+alert("No projects to export.");
+return;
+}
+
+let data = [];
+let sr = 1;
+
+latestProjects.forEach((item)=>{
+
+const d = item.data;
+
+data.push({
+"Sr No": sr++,
+"Project Name": d.projectName || "",
+"Business": d.business || "",
+"Asset": d.assetType || "",
+"Owner": d.ownerName || d.projectOwner || "",
+"Asset Model": d.assetModel || "",
+"Running Task": d.runningTask || "",
+"SPOC": d.projectSpoc || "",
+"Start Date": d.taskStartDate || "",
+"End Date": d.taskEndDate || "",
+"Status": d.taskStatus || "",
+"Priority": d.taskPriority || "",
+"Progress 1": d.progress1 || "",
+"Progress 2": d.progress2 || "",
+"Remarks": d.remarks || "",
+"Added By": d.ownerEmail || ""
+});
+
+});
+
+const ws = XLSX.utils.json_to_sheet(data);
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb, ws, "Projects");
+XLSX.writeFile(wb, "ProjectTracker.xlsx");
+
+};
+
+onAuthStateChanged(auth, async (user)=>{
+
+if(!user){
+window.location.href = "index.html";
+return;
+}
+
+try{
+
+currentUser = user;
+
+const userData = await ensureUserDoc(user);
+currentRole = userData.role || "Viewer";
+currentName = userData.name || user.email;
+
+roleBadge.textContent = `${currentName} · ${currentRole}`;
+
+if(currentRole === "Admin"){
+adminBtn.style.display = "inline-block";
+}
+
+if(currentRole === "Viewer"){
+document.getElementById("projectForm").style.display = "none";
+}
+
+listenProjects();
+
+}catch(error){
+
+console.error("Init error:", error);
+tableBody.innerHTML = `<tr><td colspan='19'>Page failed to load your data (${escapeHtml(error.code || error.message)}). Screenshot this exact message and send it to get it fixed.</td></tr>`;
+if(document.getElementById("scaleNote")){
+scaleNote.innerText = `Error: ${error.code || error.message}`;
+}
+
+}
+
+});
+
+</script>
+
+</body>
+</html>
