@@ -234,26 +234,72 @@ body{ background:var(--bg); color:var(--text); transition:background .3s,color .
 
 .main-content{ padding:28px; flex:1; }
 
-.grid-form{
+/* ---------- Grouped Form Card ---------- */
+.form-card{
   background:var(--card-bg);
   padding:24px;
-  border-radius:14px;
+  border-radius:16px;
   margin-bottom:24px;
-  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  box-shadow:0 4px 20px rgba(0,0,0,0.04);
   border:1px solid var(--border);
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:16px;
 }
 
-.grid-form label{
+.form-card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+
+.form-card-title{
+  font-size:16px;
+  font-weight:800;
+  color:var(--navy);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.form-sections-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  gap:20px;
+}
+
+.form-group-section{
+  background:var(--bg);
+  padding:16px;
+  border-radius:12px;
+  border:1px solid var(--border);
+}
+
+.form-section-label{
   font-size:12px;
+  font-weight:800;
+  color:var(--navy);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.form-field{
+  margin-bottom:12px;
+}
+.form-field:last-child{ margin-bottom:0; }
+
+.form-field label{
+  font-size:11px;
   font-weight:700;
   color:var(--muted);
   text-transform:uppercase;
   letter-spacing:0.5px;
   display:block;
-  margin-bottom:6px;
+  margin-bottom:4px;
 }
 
 input, select{
@@ -267,21 +313,23 @@ input, select{
   outline:none;
   transition:border-color .2s, box-shadow .2s;
 }
-input:focus, select:focus{ border-color:var(--navy); }
+input:focus, select:focus{
+  border-color:var(--navy);
+  box-shadow:0 0 0 3px rgba(56,189,248,0.15);
+}
 
 .form-actions{
-  grid-column:1 / -1;
+  margin-top:20px;
   display:flex;
   gap:12px;
   align-items:center;
-  margin-top:8px;
 }
 
 button{
   background:var(--navy);
   color:white;
   border:none;
-  padding:10px 18px;
+  padding:10px 20px;
   border-radius:8px;
   cursor:pointer;
   font-size:13px;
@@ -296,38 +344,100 @@ button.secondary{ background:#64748b; }
 button.secondary:hover{ background:#475569; }
 button.share{ background:#16a34a; padding:6px 12px; font-size:12px; }
 button.share:hover{ background:#15803d; }
-button.actionBtn{ padding:5px 10px; font-size:12px; border-radius:6px; }
+button.actionBtn{ padding:6px 12px; font-size:12px; border-radius:6px; font-weight:700; }
 button.editBtn{ background:var(--navy); }
 button.deleteBtn{ background:var(--danger); }
 
-.search-section{
-  margin-bottom:16px;
+/* ---------- Filter Bar ---------- */
+.filter-bar{
+  background:var(--card-bg);
+  padding:16px 20px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  margin-bottom:20px;
   display:flex;
-  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:14px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.03);
+}
+
+.search-box-wrap{
+  flex:1;
+  min-width:280px;
+  position:relative;
+}
+
+.search-box-wrap input{
+  padding-left:36px;
+  margin:0;
+}
+
+.search-icon-inside{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+  font-size:14px;
+  pointer-events:none;
+}
+
+.filter-chips{
+  display:flex;
+  gap:8px;
   align-items:center;
   flex-wrap:wrap;
 }
-.search-section input{ margin:0; flex:1; min-width:240px; }
+
+.chip-btn{
+  background:var(--bg);
+  color:var(--muted);
+  border:1px solid var(--border);
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .2s;
+}
+
+.chip-btn:hover, .chip-btn.active{
+  background:var(--navy);
+  color:white;
+  border-color:var(--navy);
+}
 
 #formStatus{
-  grid-column:1 / -1;
   font-size:13px;
-  font-weight:600;
+  font-weight:700;
   color:var(--danger);
   min-height:18px;
 }
 
 .table-wrapper{
   overflow-x:auto;
-  border-radius:12px;
+  border-radius:14px;
   border:1px solid var(--border);
   box-shadow:0 4px 16px rgba(0,0,0,0.04);
   background:var(--card-bg);
 }
 
 table{ width:100%; border-collapse:collapse; background:var(--card-bg); white-space:nowrap; }
-th, td{ border-bottom:1px solid var(--border); padding:12px 14px; font-size:12px; text-align:left; }
-th{ background:var(--navy); color:white; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; position:sticky; top:0; z-index:10; }
+th, td{ border-bottom:1px solid var(--border); padding:12px 16px; font-size:12px; text-align:left; vertical-align:top; }
+.cell-name{ max-width:200px; min-width:140px; white-space:normal; word-break:break-word; line-height:1.4; }
+.cell-truncate{ max-width:180px; min-width:130px; white-space:normal; word-break:break-word; line-height:1.4; }
+th{
+  background:var(--navy);
+  color:white;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
 
 tr:hover{ background:rgba(0,0,0,0.02); }
 [data-theme="dark"] tr:hover{ background:rgba(255,255,255,0.02); }
@@ -348,10 +458,10 @@ tr.overdue{ background:#fef2f2; }
   background:#64748b;
   color:white;
   border:none;
-  padding:10px 20px;
+  padding:10px 24px;
   border-radius:8px;
   cursor:pointer;
-  margin-top:16px;
+  margin-top:20px;
   font-size:13px;
   font-weight:700;
 }
@@ -397,10 +507,7 @@ tr.overdue{ background:#fef2f2; }
       <span class="icon">👁️</span>
       <span>Public View</span>
     </a>
-    <button class="nav-item" onclick="openPasswordModal()">
-      <span class="icon">🔑</span>
-      <span>Change Password</span>
-    </button>
+
     <button class="nav-item" onclick="logout()" style="color:#fca5a5;">
       <span class="icon">🚪</span>
       <span>Logout</span>
@@ -431,93 +538,151 @@ tr.overdue{ background:#fef2f2; }
       <h1 class="page-header-title">📋 Project Manager</h1>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
+      <button onclick="toggleFormCard()" id="toggleFormBtn" style="background:var(--navy);color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;">+ Add New Project</button>
       <button onclick="exportExcel()" class="secondary" style="margin:0;padding:8px 14px;font-size:12px;">📥 Export Excel</button>
     </div>
   </header>
 
   <main class="main-content">
 
-    <div class="grid-form" id="projectForm">
-      <div>
-        <label for="projectName">Project Name *</label>
-        <input id="projectName" placeholder="e.g. Battery Swapping Hub Gurgaon">
+    <!-- Grouped Project Form -->
+    <div class="form-card" id="projectFormCard" style="display:none">
+      <div class="form-card-header">
+        <span class="form-card-title" id="formHeaderTitle">➕ Create New Project</span>
+        <button onclick="toggleFormCard()" class="secondary" style="padding:6px 12px;font-size:12px;">✕ Close</button>
       </div>
-      <div>
-        <label for="business">Type Of Business</label>
-        <input id="business" placeholder="e.g. B2B / Swap Station">
-      </div>
-      <div>
-        <label for="assetType">Type Of Asset</label>
-        <input id="assetType" placeholder="e.g. Smart Dock v3">
-      </div>
-      <div>
-        <label for="projectOwner">Project Owner</label>
-        <input id="projectOwner" placeholder="Lead owner name">
-      </div>
-      <div>
-        <label for="assetModel">Asset Model</label>
-        <input id="assetModel" placeholder="e.g. MS-48V-200">
-      </div>
-      <div>
-        <label for="runningTask">Running Task</label>
-        <input id="runningTask" placeholder="Current milestone / task">
-      </div>
-      <div>
-        <label for="projectSpoc">Project SPOC</label>
-        <input id="projectSpoc" placeholder="SPOC contact person">
-      </div>
-      <div>
-        <label for="taskStartDate">Task Start Date</label>
-        <input type="date" id="taskStartDate">
-      </div>
-      <div>
-        <label for="taskEndDate">Task End Date</label>
-        <input type="date" id="taskEndDate">
-      </div>
-      <div>
-        <label for="taskPriority">Priority</label>
-        <select id="taskPriority">
-          <option>Low</option>
-          <option>Medium</option>
-          <option>High</option>
-        </select>
-      </div>
-      <div>
-        <label for="progress1">Progress 1</label>
-        <input id="progress1" placeholder="Updates / status check 1">
-      </div>
-      <div>
-        <label for="progress2">Progress 2</label>
-        <input id="progress2" placeholder="Updates / status check 2">
-      </div>
-      <div>
-        <label for="remarks">Remarks</label>
-        <input id="remarks" placeholder="Additional notes">
-      </div>
-      <div>
-        <label for="taskStatus">Status</label>
-        <select id="taskStatus">
-          <option>Pending</option>
-          <option>In Progress</option>
-          <option>Complete</option>
-        </select>
+
+      <div class="form-sections-grid">
+        
+        <!-- Section 1: Basic Info -->
+        <div class="form-group-section">
+          <div class="form-section-label">📌 Basic Details</div>
+          
+          <div class="form-field">
+            <label for="projectName">Project Name *</label>
+            <input id="projectName" placeholder="e.g. Battery Swapping Hub Gurgaon">
+          </div>
+
+          <div class="form-field">
+            <label for="business">Type Of Business</label>
+            <input id="business" placeholder="e.g. B2B / Swap Station">
+          </div>
+
+          <div class="form-field">
+            <label for="assetType">Type Of Asset</label>
+            <input id="assetType" placeholder="e.g. Smart Dock v3">
+          </div>
+
+          <div class="form-field">
+            <label for="assetModel">Asset Model</label>
+            <input id="assetModel" placeholder="e.g. MS-48V-200">
+          </div>
+        </div>
+
+        <!-- Section 2: Ownership & SPOC -->
+        <div class="form-group-section">
+          <div class="form-section-label">👤 Ownership &amp; SPOC</div>
+          
+          <div class="form-field">
+            <label for="projectOwner">Project Owner</label>
+            <input id="projectOwner" placeholder="Lead owner name">
+          </div>
+
+          <div class="form-field">
+            <label for="projectSpoc">Project SPOC</label>
+            <input id="projectSpoc" placeholder="SPOC contact person">
+          </div>
+
+          <div class="form-field">
+            <label for="runningTask">Running Task</label>
+            <input id="runningTask" placeholder="Current milestone / task">
+          </div>
+        </div>
+
+        <!-- Section 3: Timeline & Priority -->
+        <div class="form-group-section">
+          <div class="form-section-label">📅 Schedule &amp; Priority</div>
+          
+          <div class="form-field">
+            <label for="taskStartDate">Task Start Date</label>
+            <input type="date" id="taskStartDate">
+          </div>
+
+          <div class="form-field">
+            <label for="taskEndDate">Task End Date</label>
+            <input type="date" id="taskEndDate">
+          </div>
+
+          <div class="form-field">
+            <label for="taskPriority">Priority</label>
+            <select id="taskPriority">
+              <option>Low</option>
+              <option>Medium</option>
+              <option>High</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="taskStatus">Status</label>
+            <select id="taskStatus">
+              <option>Pending</option>
+              <option>In Progress</option>
+              <option>Complete</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Section 4: Progress & Remarks -->
+        <div class="form-group-section">
+          <div class="form-section-label">📝 Progress &amp; Notes</div>
+          
+          <div class="form-field">
+            <label for="progress1">Progress Update 1</label>
+            <input id="progress1" placeholder="Updates / status check 1">
+          </div>
+
+          <div class="form-field">
+            <label for="progress2">Progress Update 2</label>
+            <input id="progress2" placeholder="Updates / status check 2">
+          </div>
+
+          <div class="form-field">
+            <label for="remarks">Remarks</label>
+            <input id="remarks" placeholder="Additional notes / comments">
+          </div>
+        </div>
+
       </div>
 
       <div id="formStatus"></div>
 
       <div class="form-actions">
         <button id="saveBtn">Save Project</button>
-        <button id="cancelEditBtn" class="secondary" type="button" style="display:none">Cancel Edit</button>
+        <button id="cancelEditBtn" class="secondary" type="button" onclick="resetForm()">Cancel Edit</button>
       </div>
     </div>
 
-    <div class="search-section">
-      <input id="searchBox" placeholder="🔍 Search Projects by name, owner, status, priority..." onkeyup="filterLoadedProjects()">
-      <button class="secondary" onclick="shareAllLink()">🔗 Share View-Only Link</button>
+    <!-- Filter & Search Bar -->
+    <div class="filter-bar">
+      <div class="search-box-wrap">
+        <span class="search-icon-inside">🔍</span>
+        <input id="searchBox" placeholder="Search Projects by name, owner, status, priority, business..." onkeyup="filterLoadedProjects()">
+      </div>
+
+      <div class="filter-chips">
+        <button class="chip-btn active" onclick="setFilterChip('All', this)">All</button>
+        <button class="chip-btn" onclick="setFilterChip('Pending', this)">Pending</button>
+        <button class="chip-btn" onclick="setFilterChip('In Progress', this)">In Progress</button>
+        <button class="chip-btn" onclick="setFilterChip('Complete', this)">Completed</button>
+        <button class="chip-btn" onclick="setFilterChip('High', this)">High Priority</button>
+      </div>
+
+      <button class="secondary" onclick="shareAllLink()" style="padding:6px 14px;font-size:12px;">🔗 Share Link</button>
     </div>
 
     <div class="scale-note" id="scaleNote">Loading projects...</div>
 
+    <!-- Data Table Container -->
     <div class="table-wrapper">
       <table>
         <thead>
@@ -554,19 +719,7 @@ tr.overdue{ background:#fef2f2; }
   </main>
 </div>
 
-<!-- Password Modal -->
-<div class="modalOverlay" id="passwordModal">
-  <div class="modalBox" style="background:var(--card-bg);padding:24px;border-radius:12px;width:90%;max-width:400px;">
-    <h2>Change Password</h2>
-    <input type="password" id="currentPassword" placeholder="Current Password">
-    <input type="password" id="newPassword" placeholder="New Password (min 6 chars)">
-    <div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:6px;"></div>
-    <div style="display:flex;gap:10px;margin-top:16px;">
-      <button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">Update Password</button>
-      <button onclick="closePasswordModal()" style="background:#64748b;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700;">Cancel</button>
-    </div>
-  </div>
-</div>
+
 
 <script>
 (function(){
@@ -592,6 +745,17 @@ function toggleMobileSidebar(){
   const overlay = document.getElementById("sidebarOverlay");
   if(sidebar) sidebar.classList.toggle("sidebar-open");
   if(overlay) overlay.classList.toggle("sidebar-open");
+}
+
+function toggleFormCard(){
+  const formCard = document.getElementById("projectFormCard");
+  if(formCard){
+    const isHidden = formCard.style.display === "none" || !formCard.style.display;
+    formCard.style.display = isHidden ? "block" : "none";
+    if(isHidden){
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+  }
 }
 </script>
 
@@ -653,6 +817,7 @@ let currentRole = "Viewer";
 let currentName = "";
 let latestProjects = [];
 let lastVisible = null;
+let activeChipFilter = "All";
 
 function escapeHtml(value){
 if(value === undefined || value === null) return "";
@@ -710,18 +875,13 @@ targetUid: targetUid, title: title, message: message, read: false, createdAt: se
 async function ensureUserDoc(user){
 const ref = doc(db,"users",user.uid);
 const snap = await getDoc(ref);
-
-if(snap.exists()){
-return snap.data();
-}
-
+if(snap.exists()) return snap.data();
 const data = {
 name: user.displayName || user.email,
 email: user.email,
 role: "User",
 createdAt: new Date().toISOString()
 };
-
 await setDoc(ref, data);
 return data;
 }
@@ -741,7 +901,7 @@ const formStatusEl = document.getElementById("formStatus");
 if(formStatusEl) formStatusEl.textContent = msg || "";
 }
 
-function resetForm(){
+window.resetForm = function(){
 const fields = ["projectName","business","assetType","projectOwner","assetModel","runningTask","projectSpoc","taskStartDate","taskEndDate","progress1","progress2","remarks"];
 fields.forEach(id=>{
   const el = document.getElementById(id);
@@ -751,6 +911,7 @@ const priorityEl = document.getElementById("taskPriority");
 const statusEl = document.getElementById("taskStatus");
 const saveBtnEl = document.getElementById("saveBtn");
 const cancelBtnEl = document.getElementById("cancelEditBtn");
+const headerTitleEl = document.getElementById("formHeaderTitle");
 
 if(priorityEl) priorityEl.selectedIndex = 0;
 if(statusEl) statusEl.selectedIndex = 0;
@@ -759,8 +920,9 @@ editOwnerUid = null;
 editOwnerName = null;
 if(saveBtnEl) saveBtnEl.textContent = "Save Project";
 if(cancelBtnEl) cancelBtnEl.style.display = "none";
+if(headerTitleEl) headerTitleEl.textContent = "➕ Create New Project";
 setStatus("");
-}
+};
 
 window.saveProject = async function(){
 const projectNameEl = document.getElementById("projectName");
@@ -863,6 +1025,8 @@ alert("Project Saved Successfully!");
 }
 
 resetForm();
+const formCard = document.getElementById("projectFormCard");
+if(formCard) formCard.style.display = "none";
 
 }catch(error){
 
@@ -878,9 +1042,7 @@ if(saveBtnEl) saveBtnEl.disabled = false;
 };
 
 const saveBtnEl = document.getElementById("saveBtn");
-const cancelEditBtnEl = document.getElementById("cancelEditBtn");
 if(saveBtnEl) saveBtnEl.onclick = window.saveProject;
-if(cancelEditBtnEl) cancelEditBtnEl.onclick = resetForm;
 
 function renderTable(itemsToRender){
 const tableBodyEl = document.getElementById("tableBody");
@@ -906,38 +1068,45 @@ html += `
 <tr class="${overdueFlag ? 'overdue' : ''}">
 
 <td>${sr++}</td>
-<td><b>${escapeHtml(d.projectName)}</b></td>
+<td class="cell-name"><b>${escapeHtml(d.projectName)}</b></td>
 <td>${escapeHtml(d.business)}</td>
 <td>${escapeHtml(d.assetType)}</td>
 <td>${escapeHtml(d.ownerName || d.projectOwner)}</td>
 <td>${escapeHtml(d.assetModel)}</td>
-<td>${escapeHtml(d.runningTask)}</td>
+<td class="cell-truncate">${escapeHtml(d.runningTask)}</td>
 <td>${escapeHtml(d.projectSpoc)}</td>
-<td>${escapeHtml(d.taskStartDate)}</td>
-<td>${escapeHtml(d.taskEndDate)}</td>
+<td style="white-space:nowrap;">${escapeHtml(d.taskStartDate)}</td>
+<td style="white-space:nowrap;">${escapeHtml(d.taskEndDate)}</td>
 <td><span class="badge-status ${statusBadgeClass}">${escapeHtml(d.taskStatus)}</span></td>
 <td><span class="badge-priority priority-${escapeHtml(d.taskPriority)}">${escapeHtml(d.taskPriority)}</span></td>
-<td>${escapeHtml(d.progress1)}</td>
-<td>${escapeHtml(d.progress2)}</td>
-<td>${escapeHtml(d.remarks)}</td>
-<td>${calculateAgeing(d)}</td>
+<td class="cell-truncate">${escapeHtml(d.progress1)}</td>
+<td class="cell-truncate">${escapeHtml(d.progress2)}</td>
+<td class="cell-truncate">${escapeHtml(d.remarks)}</td>
+<td style="white-space:nowrap;">${calculateAgeing(d)}</td>
 
-<td><button class="share" onclick="shareProject('${id}')">Share</button></td>
-<td>${allowed ? `<button class="actionBtn editBtn" onclick="editProject('${id}')">Edit</button>` : "-"}</td>
-<td>${canDelete() ? `<button class="actionBtn deleteBtn" onclick="deleteProject('${id}')">Delete</button>` : "-"}</td>
+<td><button class="share" onclick="shareProject('${id}')">🔗 Share</button></td>
+<td>${allowed ? `<button class="actionBtn editBtn" onclick="editProject('${id}')">✏️ Edit</button>` : "-"}</td>
+<td>${canDelete() ? `<button class="actionBtn deleteBtn" onclick="deleteProject('${id}')">🗑️ Delete</button>` : "-"}</td>
 
 </tr>
 `;
 
 });
 
-tableBodyEl.innerHTML = html || "<tr><td colspan='19' style='text-align:center;padding:20px;color:var(--muted);'>No projects found.</td></tr>";
+tableBodyEl.innerHTML = html || "<tr><td colspan='19' style='text-align:center;padding:24px;color:var(--muted);'>No projects found matching filter.</td></tr>";
 
 if(scaleNoteEl){
-scaleNoteEl.innerText = `Showing ${list.length} project(s). Use "Load More" below for older data, or the search box to filter records.`;
+scaleNoteEl.innerText = `Showing ${list.length} project(s). Use "Load More" for older records, or the search bar above to filter.`;
 }
 
 }
+
+window.setFilterChip = function(filterVal, btnEl){
+activeChipFilter = filterVal;
+document.querySelectorAll(".chip-btn").forEach(c => c.classList.remove("active"));
+if(btnEl) btnEl.classList.add("active");
+filterLoadedProjects();
+};
 
 let searchDebounce = null;
 window.filterLoadedProjects = function(){
@@ -945,18 +1114,20 @@ clearTimeout(searchDebounce);
 searchDebounce = setTimeout(()=>{
   const searchBoxEl = document.getElementById("searchBox");
   const term = searchBoxEl ? searchBoxEl.value.toLowerCase().trim() : "";
-  if(!term){
-    renderTable(latestProjects);
-    return;
-  }
+  
   const filtered = latestProjects.filter(item=>{
     const d = item.data;
+    if(activeChipFilter !== "All"){
+      if(activeChipFilter === "High" && d.taskPriority !== "High") return false;
+      if(["Pending","In Progress","Complete"].includes(activeChipFilter) && d.taskStatus !== activeChipFilter) return false;
+    }
+    if(!term) return true;
     const haystack = [d.projectName, d.business, d.assetType, d.ownerName, d.projectOwner, d.assetModel, d.runningTask, d.projectSpoc, d.taskStatus, d.taskPriority, d.remarks]
       .map(v => (v || "").toString().toLowerCase()).join(" ");
     return haystack.includes(term);
   });
   renderTable(filtered);
-}, 200);
+}, 150);
 };
 
 let usingFallbackListener = false;
@@ -995,7 +1166,7 @@ snapshot.forEach(d=>latestProjects.push({id:d.id, data:d.data()}));
 if(snapshot.docs.length){
 lastVisible = snapshot.docs[snapshot.docs.length-1];
 }
-renderTable();
+filterLoadedProjects();
 }, (error)=>{
 
 clearTimeout(loadingTimeout);
@@ -1015,7 +1186,7 @@ const at = a.data.createdAt && a.data.createdAt.toMillis ? a.data.createdAt.toMi
 const bt = b.data.createdAt && b.data.createdAt.toMillis ? b.data.createdAt.toMillis() : 0;
 return bt - at;
 });
-renderTable();
+filterLoadedProjects();
 }, (fallbackError)=>{
 const tableBodyEl = document.getElementById("tableBody");
 if(tableBodyEl){
@@ -1048,7 +1219,7 @@ return;
 
 snap.forEach(d=>latestProjects.push({id:d.id, data:d.data()}));
 lastVisible = snap.docs[snap.docs.length-1];
-renderTable();
+filterLoadedProjects();
 
 }catch(error){
 console.error(error);
@@ -1105,10 +1276,17 @@ document.getElementById("remarks").value = d.remarks || "";
 editId = id;
 editOwnerUid = d.ownerUid || null;
 editOwnerName = d.ownerName || null;
+
 const saveBtnEl = document.getElementById("saveBtn");
 const cancelBtnEl = document.getElementById("cancelEditBtn");
+const headerTitleEl = document.getElementById("formHeaderTitle");
+const formCard = document.getElementById("projectFormCard");
+
 if(saveBtnEl) saveBtnEl.textContent = "Update Project";
-if(cancelBtnEl) cancelBtnEl.style.display = "inline-block";
+if(cancelBtnEl) cancelBtnEl.style.display = "inline-flex";
+if(headerTitleEl) headerTitleEl.textContent = "✏️ Edit Project";
+if(formCard) formCard.style.display = "block";
+
 setStatus("");
 
 window.scrollTo({ top:0, behavior:'smooth' });
@@ -1142,6 +1320,8 @@ alert("Project Deleted");
 
 if(editId === id){
 resetForm();
+const formCard = document.getElementById("projectFormCard");
+if(formCard) formCard.style.display = "none";
 }
 
 }catch(error){
@@ -1195,43 +1375,7 @@ XLSX.writeFile(wb, "ProjectTracker.xlsx");
 
 };
 
-window.openPasswordModal = function(){
-const modal = document.getElementById("passwordModal");
-if(modal) modal.style.display = "flex";
-};
 
-window.closePasswordModal = function(){
-const modal = document.getElementById("passwordModal");
-if(modal) modal.style.display = "none";
-};
-
-window.changePassword = async function(){
-const curEl = document.getElementById("currentPassword");
-const nextEl = document.getElementById("newPassword");
-const msgEl = document.getElementById("passwordMsg");
-
-const cur = curEl ? curEl.value : "";
-const next = nextEl ? nextEl.value : "";
-
-if(!cur || !next){ if(msgEl) msgEl.innerText = "Both fields are required."; return; }
-if(next.length < 6){ if(msgEl) msgEl.innerText = "New password must be at least 6 characters."; return; }
-
-try{
-const credential = EmailAuthProvider.credential(currentUser.email, cur);
-await reauthenticateWithCredential(currentUser, credential);
-await updatePassword(currentUser, next);
-if(msgEl){
-  msgEl.style.color = "var(--success)";
-  msgEl.innerText = "Password updated successfully.";
-}
-setTimeout(closePasswordModal, 1200);
-}catch(error){
-if(msgEl){
-  msgEl.style.color = "var(--danger)";
-  msgEl.innerText = error.message;
-}
-}
-};
 
 window.logout = async function(){
 await logActivity("Logout", "");
@@ -1263,7 +1407,7 @@ const userNameLabel = document.getElementById("userNameLabel");
 const userRoleBadge = document.getElementById("userRoleBadge");
 const userAvatar = document.getElementById("userAvatar");
 const sidebarAdminLink = document.getElementById("sidebarAdminLink");
-const projectFormEl = document.getElementById("projectForm");
+const toggleFormBtn = document.getElementById("toggleFormBtn");
 
 if(userNameLabel) userNameLabel.textContent = currentName;
 if(userRoleBadge) userRoleBadge.textContent = currentRole;
@@ -1273,8 +1417,8 @@ if(currentRole === "Admin" && sidebarAdminLink){
 sidebarAdminLink.style.display = "flex";
 }
 
-if(currentRole === "Viewer" && projectFormEl){
-projectFormEl.style.display = "none";
+if(currentRole === "Viewer" && toggleFormBtn){
+toggleFormBtn.style.display = "none";
 }
 
 listenProjects();
