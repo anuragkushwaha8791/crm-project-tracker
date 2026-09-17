@@ -515,31 +515,7 @@ tr.userRow:hover{ background:rgba(0,0,0,0.03); }
       <div class="card" id="totalAdminsCardContainer"><h3>Total Admins</h3><h2 id="totalAdminsCard">-</h2></div>
     </div>
 
-    <!-- Overall Analytics & Charts Section -->
-    <div id="adminAnalytics" class="panel">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <h2 style="margin:0">📊 Overall Analytics</h2>
-        <button style="background:none;border:1px solid var(--border);padding:6px 12px;border-radius:6px;cursor:pointer;color:var(--text);font-size:12px;font-weight:700;" onclick="refreshAggregateStats()">↻ Refresh Analytics</button>
-      </div>
-      <div class="searchRow" style="margin-bottom:12px">
-        <label style="align-self:center;font-size:12px;color:var(--muted);font-weight:700;">Pie chart shows:</label>
-        <select id="pieFilter" onchange="renderFilterablePie(this.value)" style="max-width:220px;margin:0">
-          <option value="status">Overall Status</option>
-          <option value="priority">By Priority</option>
-          <option value="users">Top Users by Task Count</option>
-          <option value="pending">Pending Only (by Priority)</option>
-        </select>
-      </div>
-      <div class="charts-row" style="margin-bottom:20px">
-        <div class="chart-box"><canvas id="statusPie"></canvas></div>
-        <div class="chart-box"><canvas id="priorityBar"></canvas></div>
-      </div>
-      <div class="charts-row" style="margin-bottom:20px">
-        <div class="chart-box"><canvas id="monthlyTrend"></canvas></div>
-        <div class="chart-box"><canvas id="completionTrend"></canvas></div>
-      </div>
-      <div class="chart-box"><canvas id="userBar"></canvas></div>
-    </div>
+
 
     <!-- Per-User Team Report (Visible to Admins) -->
     <div class="panel" id="teamReportPanel" style="display:none">
