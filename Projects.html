@@ -4,341 +4,595 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Project Manager</title>
+<title>Project Manager - Mooving CRM</title>
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
 <style>
-
 :root{
---bg:#f4f7fb;
---card-bg:#ffffff;
---text:#222;
---muted:#666;
---border:#ddd;
---navy:#1f4e79;
---navy-dark:#163a5c;
---danger:#c0392b;
+  --bg:#f8fafc;
+  --card-bg:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --sidebar-bg:#0f172a;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#1f4e79;
+  --navy-dark:#163a5c;
+  --red:#e2131f;
+  --danger:#dc2626;
+  --success:#16a34a;
+  --warn:#d97706;
+  --badge-pending-bg:#fef3c7;
+  --badge-pending-txt:#92400e;
+  --badge-progress-bg:#dbeafe;
+  --badge-progress-txt:#1e40af;
+  --badge-complete-bg:#dcfce7;
+  --badge-complete-txt:#166534;
 }
 
 [data-theme="dark"]{
---bg:#0f1720;
---card-bg:#1b2530;
---text:#e6edf3;
---muted:#9fb0bf;
---border:#2c3947;
---navy:#3f7cc0;
---navy-dark:#2f6096;
+  --bg:#0f172a;
+  --card-bg:#1e293b;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:#334155;
+  --sidebar-bg:#090d16;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#38bdf8;
+  --navy-dark:#0284c7;
+  --badge-pending-bg:#451a03;
+  --badge-pending-txt:#fde68a;
+  --badge-progress-bg:#172554;
+  --badge-progress-txt:#bfdbfe;
+  --badge-complete-bg:#052e16;
+  --badge-complete-txt:#86efac;
 }
 
-body{
-    font-family:Arial,sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    padding:20px;
-    transition:background .3s,color .3s;
+*{ margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+body{ background:var(--bg); color:var(--text); transition:background .3s,color .3s; display:flex; min-height:100vh; }
+
+/* ---------- Sidebar Navigation ---------- */
+.sidebar-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99; }
+
+.app-sidebar{
+  width:260px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-txt);
+  position:fixed;
+  top:0; bottom:0; left:0;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  transition:transform .3s ease;
+  border-right:1px solid rgba(255,255,255,0.08);
 }
 
-h1{ color:var(--navy); }
-
-.header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-flex-wrap:wrap;
-gap:10px;
-margin-bottom:10px;
+.sidebar-header{
+  padding:24px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.08);
 }
 
-.nav{
-display:flex;
-gap:10px;
-align-items:center;
-flex-wrap:wrap;
+.brand-title{
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:1px;
+  color:white;
+  text-decoration:none;
+}
+.brand-title span{ color:var(--red); }
+
+.brand-badge{
+  font-size:10px;
+  font-weight:800;
+  background:var(--red);
+  color:white;
+  padding:2px 6px;
+  border-radius:4px;
+  text-transform:uppercase;
 }
 
-#roleBadge{
-background:var(--card-bg);
-border:1px solid var(--border);
-color:var(--navy);
-padding:6px 12px;
-border-radius:20px;
-font-size:12px;
-font-weight:bold;
+.sidebar-nav{
+  padding:20px 12px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  overflow-y:auto;
 }
 
-.form, .grid-form{
-    background:var(--card-bg);
-    padding:20px;
-    border-radius:10px;
-    margin-bottom:20px;
-    box-shadow:0 2px 5px rgba(0,0,0,0.08);
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:0 15px;
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  color:#94a3b8;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:600;
+  border-radius:8px;
+  transition:all .2s ease;
+  cursor:pointer;
+  border:none;
+  background:none;
+  width:100%;
+  text-align:left;
+}
+
+.nav-item:hover{
+  background:rgba(255,255,255,0.06);
+  color:white;
+}
+
+.nav-item.active{
+  background:linear-gradient(90deg, var(--navy), #2563eb);
+  color:white;
+  box-shadow:0 4px 12px rgba(37,99,235,0.3);
+}
+
+.nav-item .icon{ font-size:18px; width:22px; text-align:center; }
+
+.sidebar-footer{
+  padding:16px;
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.user-profile-chip{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  background:rgba(255,255,255,0.04);
+  border-radius:8px;
+}
+
+.avatar-circle{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:var(--navy);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:14px;
+}
+
+.user-info-text{ display:flex; flex-direction:column; overflow:hidden; }
+.user-info-name{ font-size:13px; font-weight:700; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-info-role{ font-size:11px; color:#94a3b8; }
+
+.theme-toggle-btn{
+  background:rgba(255,255,255,0.08);
+  color:white;
+  border:none;
+  padding:8px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:background .2s;
+}
+.theme-toggle-btn:hover{ background:rgba(255,255,255,0.15); }
+
+/* ---------- Main Content Container ---------- */
+.app-main{
+  flex:1;
+  margin-left:260px;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  transition:margin-left .3s ease;
+}
+
+.top-app-bar{
+  background:var(--card-bg);
+  border-bottom:1px solid var(--border);
+  padding:16px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:90;
+}
+
+.mobile-hamburger{
+  display:none;
+  background:none;
+  border:none;
+  font-size:22px;
+  cursor:pointer;
+  color:var(--text);
+}
+
+.page-header-title{
+  font-size:20px;
+  font-weight:800;
+  color:var(--navy);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.main-content{ padding:28px; flex:1; }
+
+.grid-form{
+  background:var(--card-bg);
+  padding:24px;
+  border-radius:14px;
+  margin-bottom:24px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  border:1px solid var(--border);
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
 }
 
 .grid-form label{
-    font-size:13px;
-    color:var(--navy);
-    margin-top:8px;
-    margin-bottom:-4px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  display:block;
+  margin-bottom:6px;
 }
 
-.grid-form button{
-    grid-column:1 / -1;
-    justify-self:start;
+input, select{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--card-bg);
+  color:var(--text);
+  font-size:13px;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s;
 }
+input:focus, select:focus{ border-color:var(--navy); }
 
-input,select{
-    width:100%;
-    padding:10px;
-    margin-top:8px;
-    margin-bottom:10px;
-    box-sizing:border-box;
-    background:var(--card-bg);
-    color:var(--text);
-    border:1px solid var(--border);
-    border-radius:5px;
+.form-actions{
+  grid-column:1 / -1;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-top:8px;
 }
 
 button{
-    background:var(--navy);
-    color:white;
-    border:none;
-    padding:10px 15px;
-    border-radius:5px;
-    cursor:pointer;
+  background:var(--navy);
+  color:white;
+  border:none;
+  padding:10px 18px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:700;
+  transition:all .2s;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
 }
-
-button:hover{ background:var(--navy-dark); }
-
-button.secondary{ background:#8a94a3; }
-button.secondary:hover{ background:#6b7480; }
-button.ghost{ background:var(--card-bg); color:var(--text); border:1px solid var(--border); }
-
-button.share{
-    background:#1e8449;
-    padding:6px 10px;
-    font-size:11px;
-}
-button.share:hover{ background:#166638; }
-
-table{
-    width:100%;
-    border-collapse:collapse;
-    background:var(--card-bg);
-}
-
-th,td{
-    border:1px solid var(--border);
-    padding:8px;
-    font-size:12px;
-    text-align:left;
-}
-
-th{ background:var(--navy); color:white; }
-tr.overdue{ background:#fdecea; }
-[data-theme="dark"] tr.overdue{ background:#3a2226; }
+button:hover{ background:var(--navy-dark); transform:translateY(-1px); }
+button.secondary{ background:#64748b; }
+button.secondary:hover{ background:#475569; }
+button.share{ background:#16a34a; padding:6px 12px; font-size:12px; }
+button.share:hover{ background:#15803d; }
+button.actionBtn{ padding:5px 10px; font-size:12px; border-radius:6px; }
+button.editBtn{ background:var(--navy); }
+button.deleteBtn{ background:var(--danger); }
 
 .search-section{
-    margin-bottom:15px;
-    display:flex;
-    gap:10px;
-    align-items:center;
-    flex-wrap:wrap;
+  margin-bottom:16px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
 }
-
-.search-section input{ margin:0; flex:1; min-width:200px; }
+.search-section input{ margin:0; flex:1; min-width:240px; }
 
 #formStatus{
-    grid-column:1 / -1;
-    font-size:13px;
-    color:var(--danger);
-    min-height:16px;
+  grid-column:1 / -1;
+  font-size:13px;
+  font-weight:600;
+  color:var(--danger);
+  min-height:18px;
 }
+
+.table-wrapper{
+  overflow-x:auto;
+  border-radius:12px;
+  border:1px solid var(--border);
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  background:var(--card-bg);
+}
+
+table{ width:100%; border-collapse:collapse; background:var(--card-bg); white-space:nowrap; }
+th, td{ border-bottom:1px solid var(--border); padding:12px 14px; font-size:12px; text-align:left; }
+th{ background:var(--navy); color:white; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; position:sticky; top:0; z-index:10; }
+
+tr:hover{ background:rgba(0,0,0,0.02); }
+[data-theme="dark"] tr:hover{ background:rgba(255,255,255,0.02); }
+tr.overdue{ background:#fef2f2; }
+[data-theme="dark"] tr.overdue{ background:#451a1a; }
+
+.badge-status{ display:inline-block; padding:4px 10px; border-radius:12px; font-weight:700; font-size:11px; }
+.badge-pending{ background:var(--badge-pending-bg); color:var(--badge-pending-txt); }
+.badge-progress{ background:var(--badge-progress-bg); color:var(--badge-progress-txt); }
+.badge-complete{ background:var(--badge-complete-bg); color:var(--badge-complete-txt); }
+
+.badge-priority{ display:inline-block; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; }
+.priority-High{ background:#fee2e2; color:#991b1b; }
+.priority-Medium{ background:#fef3c7; color:#92400e; }
+.priority-Low{ background:#e0f2fe; color:#075985; }
 
 .loadMoreBtn{
-background:#8a94a3;
-color:white;
-border:none;
-padding:8px 14px;
-border-radius:5px;
-cursor:pointer;
-margin-top:10px;
-font-size:12px;
+  background:#64748b;
+  color:white;
+  border:none;
+  padding:10px 20px;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:16px;
+  font-size:13px;
+  font-weight:700;
 }
 
-.scale-note{
-font-size:11px;
-color:var(--muted);
-margin:-8px 0 12px;
+.scale-note{ font-size:12px; color:var(--muted); margin-bottom:12px; }
+
+@media (max-width:768px){
+  .app-sidebar{ transform:translateX(-100%); }
+  .app-sidebar.sidebar-open{ transform:translateX(0); }
+  .sidebar-overlay.sidebar-open{ display:block; }
+  .app-main{ margin-left:0; }
+  .mobile-hamburger{ display:block; }
 }
 
 </style>
-
 </head>
 
 <body>
 
-<div class="header">
-<h1>Project Manager</h1>
-<div class="nav">
-<span id="roleBadge"></span>
-<button class="ghost" onclick="toggleTheme()" id="themeToggle">🌙 Dark</button>
-<button onclick="window.location.href='dashboard.html'">Dashboard</button>
-<button id="adminBtn" style="display:none" onclick="window.location.href='admin.html'">Admin Panel</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
+<!-- Left Sidebar Navigation -->
+<aside class="app-sidebar" id="appSidebar">
+  <div class="sidebar-header">
+    <a href="dashboard.html" class="brand-title">MO<span>O</span>VING</a>
+    <span class="brand-badge">CRM</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-item">
+      <span class="icon">📊</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="Projects.html" class="nav-item active">
+      <span class="icon">📋</span>
+      <span>Project Manager</span>
+    </a>
+    <a href="admin.html" class="nav-item" id="sidebarAdminLink" style="display:none">
+      <span class="icon">⚙️</span>
+      <span>Admin Panel</span>
+    </a>
+    <a href="view.html" class="nav-item" target="_blank">
+      <span class="icon">👁️</span>
+      <span>Public View</span>
+    </a>
+    <button class="nav-item" onclick="openPasswordModal()">
+      <span class="icon">🔑</span>
+      <span>Change Password</span>
+    </button>
+    <button class="nav-item" onclick="logout()" style="color:#fca5a5;">
+      <span class="icon">🚪</span>
+      <span>Logout</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-profile-chip">
+      <div class="avatar-circle" id="userAvatar">U</div>
+      <div class="user-info-text">
+        <span class="user-info-name" id="userNameLabel">Loading...</span>
+        <span class="user-info-role" id="userRoleBadge">User</span>
+      </div>
+    </div>
+
+    <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">
+      <span>🌙</span> <span id="themeToggleText">Dark Theme</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Main Content Area -->
+<div class="app-main">
+
+  <header class="top-app-bar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="mobile-hamburger" onclick="toggleMobileSidebar()">☰</button>
+      <h1 class="page-header-title">📋 Project Manager</h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button onclick="exportExcel()" class="secondary" style="margin:0;padding:8px 14px;font-size:12px;">📥 Export Excel</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <div class="grid-form" id="projectForm">
+      <div>
+        <label for="projectName">Project Name *</label>
+        <input id="projectName" placeholder="e.g. Battery Swapping Hub Gurgaon">
+      </div>
+      <div>
+        <label for="business">Type Of Business</label>
+        <input id="business" placeholder="e.g. B2B / Swap Station">
+      </div>
+      <div>
+        <label for="assetType">Type Of Asset</label>
+        <input id="assetType" placeholder="e.g. Smart Dock v3">
+      </div>
+      <div>
+        <label for="projectOwner">Project Owner</label>
+        <input id="projectOwner" placeholder="Lead owner name">
+      </div>
+      <div>
+        <label for="assetModel">Asset Model</label>
+        <input id="assetModel" placeholder="e.g. MS-48V-200">
+      </div>
+      <div>
+        <label for="runningTask">Running Task</label>
+        <input id="runningTask" placeholder="Current milestone / task">
+      </div>
+      <div>
+        <label for="projectSpoc">Project SPOC</label>
+        <input id="projectSpoc" placeholder="SPOC contact person">
+      </div>
+      <div>
+        <label for="taskStartDate">Task Start Date</label>
+        <input type="date" id="taskStartDate">
+      </div>
+      <div>
+        <label for="taskEndDate">Task End Date</label>
+        <input type="date" id="taskEndDate">
+      </div>
+      <div>
+        <label for="taskPriority">Priority</label>
+        <select id="taskPriority">
+          <option>Low</option>
+          <option>Medium</option>
+          <option>High</option>
+        </select>
+      </div>
+      <div>
+        <label for="progress1">Progress 1</label>
+        <input id="progress1" placeholder="Updates / status check 1">
+      </div>
+      <div>
+        <label for="progress2">Progress 2</label>
+        <input id="progress2" placeholder="Updates / status check 2">
+      </div>
+      <div>
+        <label for="remarks">Remarks</label>
+        <input id="remarks" placeholder="Additional notes">
+      </div>
+      <div>
+        <label for="taskStatus">Status</label>
+        <select id="taskStatus">
+          <option>Pending</option>
+          <option>In Progress</option>
+          <option>Complete</option>
+        </select>
+      </div>
+
+      <div id="formStatus"></div>
+
+      <div class="form-actions">
+        <button id="saveBtn">Save Project</button>
+        <button id="cancelEditBtn" class="secondary" type="button" style="display:none">Cancel Edit</button>
+      </div>
+    </div>
+
+    <div class="search-section">
+      <input id="searchBox" placeholder="🔍 Search Projects by name, owner, status, priority..." onkeyup="filterLoadedProjects()">
+      <button class="secondary" onclick="shareAllLink()">🔗 Share View-Only Link</button>
+    </div>
+
+    <div class="scale-note" id="scaleNote">Loading projects...</div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Sr No</th>
+            <th>Project Name</th>
+            <th>Business</th>
+            <th>Asset</th>
+            <th>Owner</th>
+            <th>Asset Model</th>
+            <th>Running Task</th>
+            <th>SPOC</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Progress 1</th>
+            <th>Progress 2</th>
+            <th>Remarks</th>
+            <th>Ageing</th>
+            <th>Share</th>
+            <th>Edit</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"><tr><td colspan="19">Loading your projects...</td></tr></tbody>
+      </table>
+    </div>
+
+    <div style="text-align:center">
+      <button class="loadMoreBtn" id="loadMoreBtn" onclick="loadMore()">Load More Records</button>
+    </div>
+
+  </main>
 </div>
-</div>
 
-<div class="grid-form" id="projectForm">
-
-<div>
-<label>Project Name</label>
-<input id="projectName" placeholder="Project Name">
-</div>
-
-<div>
-<label>Type Of Business</label>
-<input id="business" placeholder="Type Of Business">
-</div>
-
-<div>
-<label>Type Of Asset</label>
-<input id="assetType" placeholder="Type Of Asset">
-</div>
-
-<div>
-<label>Project Owner</label>
-<input id="projectOwner" placeholder="Project Owner">
-</div>
-
-<div>
-<label>Asset Model</label>
-<input id="assetModel" placeholder="Asset Model">
-</div>
-
-<div>
-<label>Running Task</label>
-<input id="runningTask" placeholder="Running Task">
-</div>
-
-<div>
-<label>Project SPOC</label>
-<input id="projectSpoc" placeholder="Project SPOC">
-</div>
-
-<div>
-<label>Task Start Date</label>
-<input type="date" id="taskStartDate">
-</div>
-
-<div>
-<label>Task End Date</label>
-<input type="date" id="taskEndDate">
-</div>
-
-<div>
-<label>Priority</label>
-<select id="taskPriority">
-<option>Low</option>
-<option>Medium</option>
-<option>High</option>
-</select>
-</div>
-
-<div>
-<label>Progress 1</label>
-<input id="progress1" placeholder="Progress 1">
-</div>
-
-<div>
-<label>Progress 2</label>
-<input id="progress2" placeholder="Progress 2">
-</div>
-
-<div>
-<label>Remarks</label>
-<input id="remarks" placeholder="Remarks">
-</div>
-
-<div>
-<label>Status</label>
-<select id="taskStatus">
-<option>Pending</option>
-<option>In Progress</option>
-<option>Complete</option>
-</select>
-</div>
-
-<div id="formStatus"></div>
-
-<button id="saveBtn">Save Project</button>
-<button id="cancelEditBtn" class="secondary" type="button">Cancel Edit</button>
-
-</div>
-
-<div class="search-section">
-
-<input id="searchBox" placeholder="Search Project (loaded records only)" onkeyup="loadProjects()">
-
-<button onclick="exportExcel()">Export Excel</button>
-<button class="secondary" onclick="shareAllLink()">Share View-Only Link (All Projects)</button>
-
-</div>
-
-<div class="scale-note" id="scaleNote"></div>
-
-<table>
-
-<thead>
-<tr>
-<th>Sr No</th>
-<th>Project Name</th>
-<th>Business</th>
-<th>Asset</th>
-<th>Owner</th>
-<th>Asset Model</th>
-<th>Running Task</th>
-<th>SPOC</th>
-<th>Start Date</th>
-<th>End Date</th>
-<th>Status</th>
-<th>Priority</th>
-<th>Progress 1</th>
-<th>Progress 2</th>
-<th>Remarks</th>
-<th>Ageing</th>
-<th>Share</th>
-<th>Edit</th>
-<th>Delete</th>
-</tr>
-</thead>
-
-<tbody id="tableBody"><tr><td colspan="19">Loading your projects...</td></tr></tbody>
-
-</table>
-
-<div style="text-align:center">
-<button class="loadMoreBtn" id="loadMoreBtn" onclick="loadMore()">Load More</button>
+<!-- Password Modal -->
+<div class="modalOverlay" id="passwordModal">
+  <div class="modalBox" style="background:var(--card-bg);padding:24px;border-radius:12px;width:90%;max-width:400px;">
+    <h2>Change Password</h2>
+    <input type="password" id="currentPassword" placeholder="Current Password">
+    <input type="password" id="newPassword" placeholder="New Password (min 6 chars)">
+    <div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:6px;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">Update Password</button>
+      <button onclick="closePasswordModal()" style="background:#64748b;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700;">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <script>
 (function(){
-const saved = localStorage.getItem("crm-theme") || "light";
-document.documentElement.setAttribute("data-theme", saved);
+  const saved = localStorage.getItem("crm-theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const btnText = document.getElementById("themeToggleText");
+    if(btnText) btnText.textContent = saved === "dark" ? "Light Theme" : "Dark Theme";
+  });
 })();
+
 function toggleTheme(){
-const current = document.documentElement.getAttribute("data-theme");
-const next = current === "dark" ? "light" : "dark";
-document.documentElement.setAttribute("data-theme", next);
-localStorage.setItem("crm-theme", next);
-document.getElementById("themeToggle").textContent = next === "dark" ? "☀️ Light" : "🌙 Dark";
+  const current = document.documentElement.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("crm-theme", next);
+  const btnText = document.getElementById("themeToggleText");
+  if(btnText) btnText.textContent = next === "dark" ? "Light Theme" : "Dark Theme";
 }
-document.addEventListener("DOMContentLoaded", ()=>{
-document.getElementById("themeToggle").textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️ Light" : "🌙 Dark";
-});
+
+function toggleMobileSidebar(){
+  const sidebar = document.getElementById("appSidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  if(sidebar) sidebar.classList.toggle("sidebar-open");
+  if(overlay) overlay.classList.toggle("sidebar-open");
+}
 </script>
 
 <script type="module">
@@ -348,7 +602,11 @@ from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 
 import {
 getAuth,
-onAuthStateChanged
+onAuthStateChanged,
+signOut,
+reauthenticateWithCredential,
+EmailAuthProvider,
+updatePassword
 }
 from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
@@ -405,6 +663,29 @@ return String(value)
 .replaceAll('"',"&quot;");
 }
 
+function parseLocalDate(dateStr){
+if(!dateStr) return null;
+const parts = dateStr.split("-");
+if(parts.length !== 3) return null;
+return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+}
+
+function isOverdue(d){
+if(!d.taskEndDate || d.taskStatus === "Complete") return false;
+const today = new Date(); today.setHours(0,0,0,0);
+const end = parseLocalDate(d.taskEndDate);
+return end ? end < today : false;
+}
+
+function calculateAgeing(d){
+const start = parseLocalDate(d.taskStartDate);
+const end = parseLocalDate(d.taskEndDate);
+if(!start || !end) return "-";
+const diffMs = end - start;
+const diffDays = Math.round(diffMs / 86400000);
+return (diffDays >= 0 ? diffDays : 0) + " Days";
+}
+
 async function logActivity(action, details){
 try{
 await addDoc(collection(db,"activityLogs"), {
@@ -426,12 +707,7 @@ targetUid: targetUid, title: title, message: message, read: false, createdAt: se
 }catch(e){ console.error(e); }
 }
 
-// Fallback bootstrap only — normal accounts are created by an Admin from
-// the Admin Panel. This just makes sure a profile exists (e.g. for the
-// very first Admin, created directly in the Firebase Console) and never
-// grants Admin from the client.
 async function ensureUserDoc(user){
-
 const ref = doc(db,"users",user.uid);
 const snap = await getDoc(ref);
 
@@ -448,7 +724,6 @@ createdAt: new Date().toISOString()
 
 await setDoc(ref, data);
 return data;
-
 }
 
 function canEdit(project){
@@ -462,55 +737,94 @@ return currentRole === "Admin";
 }
 
 function setStatus(msg){
-formStatus.textContent = msg || "";
+const formStatusEl = document.getElementById("formStatus");
+if(formStatusEl) formStatusEl.textContent = msg || "";
 }
 
 function resetForm(){
-document.querySelectorAll(".grid-form input").forEach(x=>x.value="");
-taskPriority.selectedIndex = 0;
-taskStatus.selectedIndex = 0;
+const fields = ["projectName","business","assetType","projectOwner","assetModel","runningTask","projectSpoc","taskStartDate","taskEndDate","progress1","progress2","remarks"];
+fields.forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.value = "";
+});
+const priorityEl = document.getElementById("taskPriority");
+const statusEl = document.getElementById("taskStatus");
+const saveBtnEl = document.getElementById("saveBtn");
+const cancelBtnEl = document.getElementById("cancelEditBtn");
+
+if(priorityEl) priorityEl.selectedIndex = 0;
+if(statusEl) statusEl.selectedIndex = 0;
 editId = null;
 editOwnerUid = null;
 editOwnerName = null;
-saveBtn.textContent = "Save Project";
+if(saveBtnEl) saveBtnEl.textContent = "Save Project";
+if(cancelBtnEl) cancelBtnEl.style.display = "none";
+setStatus("");
 }
 
 window.saveProject = async function(){
+const projectNameEl = document.getElementById("projectName");
+const businessEl = document.getElementById("business");
+const assetTypeEl = document.getElementById("assetType");
+const projectOwnerEl = document.getElementById("projectOwner");
+const assetModelEl = document.getElementById("assetModel");
+const runningTaskEl = document.getElementById("runningTask");
+const projectSpocEl = document.getElementById("projectSpoc");
+const taskStartDateEl = document.getElementById("taskStartDate");
+const taskEndDateEl = document.getElementById("taskEndDate");
+const taskPriorityEl = document.getElementById("taskPriority");
+const taskStatusEl = document.getElementById("taskStatus");
+const progress1El = document.getElementById("progress1");
+const progress2El = document.getElementById("progress2");
+const remarksEl = document.getElementById("remarks");
+const saveBtnEl = document.getElementById("saveBtn");
 
-if(!projectName.value.trim()){
+const projName = projectNameEl ? projectNameEl.value.trim() : "";
+if(!projName){
 setStatus("Project Name is required.");
-projectName.focus();
+if(projectNameEl) projectNameEl.focus();
 return;
 }
 
-const status = taskStatus.value;
+const startDateVal = taskStartDateEl ? taskStartDateEl.value : "";
+const endDateVal = taskEndDateEl ? taskEndDateEl.value : "";
+
+if(startDateVal && endDateVal){
+  const sDate = parseLocalDate(startDateVal);
+  const eDate = parseLocalDate(endDateVal);
+  if(sDate && eDate && eDate < sDate){
+    setStatus("Task End Date cannot be earlier than Task Start Date.");
+    if(taskEndDateEl) taskEndDateEl.focus();
+    return;
+  }
+}
+
+const status = taskStatusEl ? taskStatusEl.value : "Pending";
 
 const projectData = {
-
-projectName: projectName.value.trim(),
-business: business.value.trim(),
-assetType: assetType.value.trim(),
-projectOwner: projectOwner.value.trim(),
-assetModel: assetModel.value.trim(),
-runningTask: runningTask.value.trim(),
-projectSpoc: projectSpoc.value.trim(),
-taskStartDate: taskStartDate.value,
-taskEndDate: taskEndDate.value,
-taskPriority: taskPriority.value,
+projectName: projName,
+business: businessEl ? businessEl.value.trim() : "",
+assetType: assetTypeEl ? assetTypeEl.value.trim() : "",
+projectOwner: projectOwnerEl ? projectOwnerEl.value.trim() : "",
+assetModel: assetModelEl ? assetModelEl.value.trim() : "",
+runningTask: runningTaskEl ? runningTaskEl.value.trim() : "",
+projectSpoc: projectSpocEl ? projectSpocEl.value.trim() : "",
+taskStartDate: startDateVal,
+taskEndDate: endDateVal,
+taskPriority: taskPriorityEl ? taskPriorityEl.value : "Low",
 taskStatus: status,
-progress1: progress1.value.trim(),
-progress2: progress2.value.trim(),
-remarks: remarks.value.trim(),
+progress1: progress1El ? progress1El.value.trim() : "",
+progress2: progress2El ? progress2El.value.trim() : "",
+remarks: remarksEl ? remarksEl.value.trim() : "",
 lastModifiedByUid: currentUser ? currentUser.uid : "",
 lastModifiedByName: currentName
-
 };
 
 if(status === "Complete"){
 projectData.completedAt = serverTimestamp();
 }
 
-saveBtn.disabled = true;
+if(saveBtnEl) saveBtnEl.disabled = true;
 setStatus("");
 
 try{
@@ -519,7 +833,7 @@ if(editId){
 
 if(!canEdit({ownerUid: editOwnerUid})){
 setStatus("You don't have permission to edit this project.");
-saveBtn.disabled = false;
+if(saveBtnEl) saveBtnEl.disabled = false;
 return;
 }
 
@@ -527,13 +841,11 @@ await updateDoc(doc(db,"crmprojects",editId), projectData);
 
 await logActivity("Project Updated", projectData.projectName);
 
-// If someone other than the project's owner (i.e. an Admin) made this
-// edit, let the owner know.
 if(editOwnerUid && editOwnerUid !== currentUser.uid){
 await notifyUser(editOwnerUid, "Project Updated", `${currentName} updated your project "${projectData.projectName}".`);
 }
 
-alert("Project Updated");
+alert("Project Updated Successfully!");
 
 }else{
 
@@ -546,7 +858,7 @@ await addDoc(collection(db,"crmprojects"), projectData);
 
 await logActivity("Project Created", projectData.projectName);
 
-alert("Project Saved");
+alert("Project Saved Successfully!");
 
 }
 
@@ -555,56 +867,46 @@ resetForm();
 }catch(error){
 
 console.error(error);
-setStatus("Error saving data. " + error.message);
+setStatus("Error saving project. " + error.message);
 
 }finally{
 
-saveBtn.disabled = false;
+if(saveBtnEl) saveBtnEl.disabled = false;
 
 }
 
 };
 
-saveBtn.onclick = saveProject;
-cancelEditBtn.onclick = resetForm;
+const saveBtnEl = document.getElementById("saveBtn");
+const cancelEditBtnEl = document.getElementById("cancelEditBtn");
+if(saveBtnEl) saveBtnEl.onclick = window.saveProject;
+if(cancelEditBtnEl) cancelEditBtnEl.onclick = resetForm;
 
-function isOverdue(d){
-if(!d.taskEndDate || d.taskStatus === "Complete") return false;
-const today = new Date(); today.setHours(0,0,0,0);
-return new Date(d.taskEndDate) < today;
-}
-
-function renderTable(){
+function renderTable(itemsToRender){
+const tableBodyEl = document.getElementById("tableBody");
+const scaleNoteEl = document.getElementById("scaleNote");
+if(!tableBodyEl) return;
 
 let html = "";
 let sr = 1;
+const list = itemsToRender || latestProjects;
 
-const search = searchBox.value.toLowerCase();
-
-latestProjects.forEach((item)=>{
+list.forEach((item)=>{
 
 const d = item.data;
 const id = item.id;
-
-const txt = JSON.stringify(d).toLowerCase();
-if(search && !txt.includes(search)) return;
-
-let ageing = "-";
-if(d.taskStartDate && d.taskEndDate){
-const start = new Date(d.taskStartDate);
-const end = new Date(d.taskEndDate);
-const diffDays = Math.floor((end-start)/86400000);
-ageing = (diffDays >= 0 ? diffDays : 0) + " Days";
-}
-
 const overdueFlag = isOverdue(d);
 const allowed = canEdit(d);
+
+let statusBadgeClass = "badge-pending";
+if(d.taskStatus === "In Progress") statusBadgeClass = "badge-progress";
+if(d.taskStatus === "Complete") statusBadgeClass = "badge-complete";
 
 html += `
 <tr class="${overdueFlag ? 'overdue' : ''}">
 
 <td>${sr++}</td>
-<td>${escapeHtml(d.projectName)}</td>
+<td><b>${escapeHtml(d.projectName)}</b></td>
 <td>${escapeHtml(d.business)}</td>
 <td>${escapeHtml(d.assetType)}</td>
 <td>${escapeHtml(d.ownerName || d.projectOwner)}</td>
@@ -613,26 +915,49 @@ html += `
 <td>${escapeHtml(d.projectSpoc)}</td>
 <td>${escapeHtml(d.taskStartDate)}</td>
 <td>${escapeHtml(d.taskEndDate)}</td>
-<td>${escapeHtml(d.taskStatus)}</td>
-<td>${escapeHtml(d.taskPriority)}</td>
+<td><span class="badge-status ${statusBadgeClass}">${escapeHtml(d.taskStatus)}</span></td>
+<td><span class="badge-priority priority-${escapeHtml(d.taskPriority)}">${escapeHtml(d.taskPriority)}</span></td>
 <td>${escapeHtml(d.progress1)}</td>
 <td>${escapeHtml(d.progress2)}</td>
 <td>${escapeHtml(d.remarks)}</td>
-<td>${ageing}</td>
+<td>${calculateAgeing(d)}</td>
 
 <td><button class="share" onclick="shareProject('${id}')">Share</button></td>
-<td>${allowed ? `<button onclick="editProject('${id}')">Edit</button>` : "-"}</td>
-<td>${canDelete() ? `<button onclick="deleteProject('${id}')">Delete</button>` : "-"}</td>
+<td>${allowed ? `<button class="actionBtn editBtn" onclick="editProject('${id}')">Edit</button>` : "-"}</td>
+<td>${canDelete() ? `<button class="actionBtn deleteBtn" onclick="deleteProject('${id}')">Delete</button>` : "-"}</td>
 
 </tr>
 `;
 
 });
 
-tableBody.innerHTML = html || "<tr><td colspan='19'>No projects found.</td></tr>";
-scaleNote.innerText = `Showing ${latestProjects.length} most recent record(s). Use "Load More" below for older data, or the search box to filter within loaded records.`;
+tableBodyEl.innerHTML = html || "<tr><td colspan='19' style='text-align:center;padding:20px;color:var(--muted);'>No projects found.</td></tr>";
+
+if(scaleNoteEl){
+scaleNoteEl.innerText = `Showing ${list.length} project(s). Use "Load More" below for older data, or the search box to filter records.`;
+}
 
 }
+
+let searchDebounce = null;
+window.filterLoadedProjects = function(){
+clearTimeout(searchDebounce);
+searchDebounce = setTimeout(()=>{
+  const searchBoxEl = document.getElementById("searchBox");
+  const term = searchBoxEl ? searchBoxEl.value.toLowerCase().trim() : "";
+  if(!term){
+    renderTable(latestProjects);
+    return;
+  }
+  const filtered = latestProjects.filter(item=>{
+    const d = item.data;
+    const haystack = [d.projectName, d.business, d.assetType, d.ownerName, d.projectOwner, d.assetModel, d.runningTask, d.projectSpoc, d.taskStatus, d.taskPriority, d.remarks]
+      .map(v => (v || "").toString().toLowerCase()).join(" ");
+    return haystack.includes(term);
+  });
+  renderTable(filtered);
+}, 200);
+};
 
 let usingFallbackListener = false;
 
@@ -655,14 +980,16 @@ function listenProjects(){
 const q = buildProjectsQuery();
 
 const loadingTimeout = setTimeout(()=>{
-if(!tableBody.dataset.loaded){
-tableBody.innerHTML = "<tr><td colspan='19'>Still loading after 10 seconds — this usually means the connection to Firebase is stuck. Try a hard refresh (Ctrl+Shift+R). If it keeps happening, screenshot this message.</td></tr>";
+const tableBodyEl = document.getElementById("tableBody");
+if(tableBodyEl && !tableBodyEl.dataset.loaded){
+tableBodyEl.innerHTML = "<tr><td colspan='19' style='text-align:center;padding:20px;color:var(--danger)'>Still loading... If this persists, try a hard refresh (Ctrl+Shift+R).</td></tr>";
 }
 }, 10000);
 
 onSnapshot(q, (snapshot)=>{
 clearTimeout(loadingTimeout);
-tableBody.dataset.loaded = "1";
+const tableBodyEl = document.getElementById("tableBody");
+if(tableBodyEl) tableBodyEl.dataset.loaded = "1";
 latestProjects = [];
 snapshot.forEach(d=>latestProjects.push({id:d.id, data:d.data()}));
 if(snapshot.docs.length){
@@ -676,14 +1003,11 @@ console.error("Primary listener error:", error);
 if(usingFallbackListener) return;
 usingFallbackListener = true;
 
-// Fall back to a query that needs no composite index at all, so data
-// still shows while any required index finishes building in the
-// background. Still scoped by owner for non-Admins — never falls back
-// to an unscoped, all-users query.
 const fallbackQ = buildFallbackQuery();
 
 onSnapshot(fallbackQ, (snapshot)=>{
-tableBody.dataset.loaded = "1";
+const tableBodyEl = document.getElementById("tableBody");
+if(tableBodyEl) tableBodyEl.dataset.loaded = "1";
 latestProjects = [];
 snapshot.forEach(d=>latestProjects.push({id:d.id, data:d.data()}));
 latestProjects.sort((a,b)=>{
@@ -692,19 +1016,12 @@ const bt = b.data.createdAt && b.data.createdAt.toMillis ? b.data.createdAt.toMi
 return bt - at;
 });
 renderTable();
-if(!document.getElementById("fallbackNote")){
-const note = document.createElement("div");
-note.id = "fallbackNote";
-note.className = "note";
-note.textContent = error.code === "failed-precondition"
-? "Mayank"
-: `Live sort unavailable right now (${error.code || error.message}) — showing available data.`;
-tableBody.parentElement.appendChild(note);
-}
 }, (fallbackError)=>{
-tableBody.dataset.loaded = "1";
-console.error("Fallback listener also failed:", fallbackError);
-tableBody.innerHTML = `<tr><td colspan='19'>Could not load data (${escapeHtml(fallbackError.code || fallbackError.message)}). Check that Firestore Security Rules are published and that you're online.</td></tr>`;
+const tableBodyEl = document.getElementById("tableBody");
+if(tableBodyEl){
+tableBodyEl.dataset.loaded = "1";
+tableBodyEl.innerHTML = `<tr><td colspan='19' style='color:var(--danger);padding:20px;'>Could not load data (${escapeHtml(fallbackError.code || fallbackError.message)}). Check connection or security rules.</td></tr>`;
+}
 });
 
 });
@@ -740,10 +1057,6 @@ alert("Error loading more data.");
 
 };
 
-window.loadProjects = function(){
-renderTable();
-};
-
 window.shareProject = function(id){
 const link = `${window.location.origin}${window.location.pathname.replace("Projects.html","view.html")}?id=${id}`;
 navigator.clipboard.writeText(link).then(()=>{
@@ -774,25 +1087,28 @@ alert("You don't have permission to edit this project.");
 return;
 }
 
-projectName.value = d.projectName || "";
-business.value = d.business || "";
-assetType.value = d.assetType || "";
-projectOwner.value = d.projectOwner || "";
-assetModel.value = d.assetModel || "";
-runningTask.value = d.runningTask || "";
-projectSpoc.value = d.projectSpoc || "";
-taskStartDate.value = d.taskStartDate || "";
-taskEndDate.value = d.taskEndDate || "";
-taskPriority.value = d.taskPriority || "Low";
-taskStatus.value = d.taskStatus || "Pending";
-progress1.value = d.progress1 || "";
-progress2.value = d.progress2 || "";
-remarks.value = d.remarks || "";
+document.getElementById("projectName").value = d.projectName || "";
+document.getElementById("business").value = d.business || "";
+document.getElementById("assetType").value = d.assetType || "";
+document.getElementById("projectOwner").value = d.projectOwner || "";
+document.getElementById("assetModel").value = d.assetModel || "";
+document.getElementById("runningTask").value = d.runningTask || "";
+document.getElementById("projectSpoc").value = d.projectSpoc || "";
+document.getElementById("taskStartDate").value = d.taskStartDate || "";
+document.getElementById("taskEndDate").value = d.taskEndDate || "";
+document.getElementById("taskPriority").value = d.taskPriority || "Low";
+document.getElementById("taskStatus").value = d.taskStatus || "Pending";
+document.getElementById("progress1").value = d.progress1 || "";
+document.getElementById("progress2").value = d.progress2 || "";
+document.getElementById("remarks").value = d.remarks || "";
 
 editId = id;
 editOwnerUid = d.ownerUid || null;
 editOwnerName = d.ownerName || null;
-saveBtn.textContent = "Update Project";
+const saveBtnEl = document.getElementById("saveBtn");
+const cancelBtnEl = document.getElementById("cancelEditBtn");
+if(saveBtnEl) saveBtnEl.textContent = "Update Project";
+if(cancelBtnEl) cancelBtnEl.style.display = "inline-block";
 setStatus("");
 
 window.scrollTo({ top:0, behavior:'smooth' });
@@ -810,7 +1126,7 @@ alert("Only an Admin can delete projects.");
 return;
 }
 
-if(confirm("Delete Project ?")){
+if(confirm(`Are you sure you want to delete project "${d.projectName}"?`)){
 
 try{
 
@@ -830,7 +1146,7 @@ resetForm();
 
 }catch(error){
 console.error(error);
-alert("Error deleting project.");
+alert("Error deleting project. " + error.message);
 }
 
 }
@@ -879,6 +1195,49 @@ XLSX.writeFile(wb, "ProjectTracker.xlsx");
 
 };
 
+window.openPasswordModal = function(){
+const modal = document.getElementById("passwordModal");
+if(modal) modal.style.display = "flex";
+};
+
+window.closePasswordModal = function(){
+const modal = document.getElementById("passwordModal");
+if(modal) modal.style.display = "none";
+};
+
+window.changePassword = async function(){
+const curEl = document.getElementById("currentPassword");
+const nextEl = document.getElementById("newPassword");
+const msgEl = document.getElementById("passwordMsg");
+
+const cur = curEl ? curEl.value : "";
+const next = nextEl ? nextEl.value : "";
+
+if(!cur || !next){ if(msgEl) msgEl.innerText = "Both fields are required."; return; }
+if(next.length < 6){ if(msgEl) msgEl.innerText = "New password must be at least 6 characters."; return; }
+
+try{
+const credential = EmailAuthProvider.credential(currentUser.email, cur);
+await reauthenticateWithCredential(currentUser, credential);
+await updatePassword(currentUser, next);
+if(msgEl){
+  msgEl.style.color = "var(--success)";
+  msgEl.innerText = "Password updated successfully.";
+}
+setTimeout(closePasswordModal, 1200);
+}catch(error){
+if(msgEl){
+  msgEl.style.color = "var(--danger)";
+  msgEl.innerText = error.message;
+}
+}
+};
+
+window.logout = async function(){
+await logActivity("Logout", "");
+signOut(auth).then(()=>{ window.location.href = "index.html"; });
+};
+
 onAuthStateChanged(auth, async (user)=>{
 
 if(!user){
@@ -891,17 +1250,31 @@ try{
 currentUser = user;
 
 const userData = await ensureUserDoc(user);
+
+if(userData.disabled === true || userData.deleted === true){
+  window.location.href = "index.html";
+  return;
+}
+
 currentRole = userData.role || "Viewer";
 currentName = userData.name || user.email;
 
-roleBadge.textContent = `${currentName} · ${currentRole}`;
+const userNameLabel = document.getElementById("userNameLabel");
+const userRoleBadge = document.getElementById("userRoleBadge");
+const userAvatar = document.getElementById("userAvatar");
+const sidebarAdminLink = document.getElementById("sidebarAdminLink");
+const projectFormEl = document.getElementById("projectForm");
 
-if(currentRole === "Admin"){
-adminBtn.style.display = "inline-block";
+if(userNameLabel) userNameLabel.textContent = currentName;
+if(userRoleBadge) userRoleBadge.textContent = currentRole;
+if(userAvatar) userAvatar.textContent = (currentName || "U").charAt(0).toUpperCase();
+
+if(currentRole === "Admin" && sidebarAdminLink){
+sidebarAdminLink.style.display = "flex";
 }
 
-if(currentRole === "Viewer"){
-document.getElementById("projectForm").style.display = "none";
+if(currentRole === "Viewer" && projectFormEl){
+projectFormEl.style.display = "none";
 }
 
 listenProjects();
@@ -909,9 +1282,9 @@ listenProjects();
 }catch(error){
 
 console.error("Init error:", error);
-tableBody.innerHTML = `<tr><td colspan='19'>Page failed to load your data (${escapeHtml(error.code || error.message)}). Screenshot this exact message and send it to get it fixed.</td></tr>`;
-if(document.getElementById("scaleNote")){
-scaleNote.innerText = `Error: ${error.code || error.message}`;
+const tableBodyEl = document.getElementById("tableBody");
+if(tableBodyEl){
+tableBodyEl.innerHTML = `<tr><td colspan='19' style='color:var(--danger);padding:20px;'>Page failed to load data (${escapeHtml(error.code || error.message)}).</td></tr>`;
 }
 
 }

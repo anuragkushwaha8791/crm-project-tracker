@@ -7,314 +7,393 @@
 <title>Mooving CRM Login</title>
 
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Segoe UI,sans-serif;
-}
-
 :root{
---bg:#f4f7fb;
---card-bg:#ffffff;
---text:#1c1c1c;
---muted:#777;
---border:#ccc;
---navy:#1f4e79;
---red:#e2131f;
---red-dark:#b80f1a;
+  --bg:#f4f7fb;
+  --card-bg:#ffffff;
+  --text:#1c1c1c;
+  --muted:#64748b;
+  --border:#cbd5e1;
+  --navy:#1f4e79;
+  --navy-dark:#163a5c;
+  --red:#e2131f;
+  --red-dark:#b80f1a;
+  --ring:#38bdf8;
 }
 
 [data-theme="dark"]{
---bg:#0f1720;
---card-bg:#1b2530;
---text:#e6edf3;
---muted:#9fb0bf;
---border:#2c3947;
---navy:#3f7cc0;
+  --bg:#0f172a;
+  --card-bg:#1e293b;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:#334155;
+  --navy:#38bdf8;
+  --navy-dark:#0284c7;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
 body{
-background:var(--bg);
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-overflow:hidden;
-color:var(--text);
-transition:background .3s ease,color .3s ease;
+  background:var(--bg);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  overflow:hidden;
+  color:var(--text);
+  transition:background .3s ease,color .3s ease;
 }
 
 /* ---------- Theme toggle ---------- */
-
 #themeToggle{
-position:fixed;
-top:16px;
-right:16px;
-z-index:1001;
-background:var(--card-bg);
-border:1px solid var(--border);
-color:var(--text);
-border-radius:20px;
-padding:8px 14px;
-cursor:pointer;
-font-size:13px;
+  position:fixed;
+  top:20px;
+  right:20px;
+  z-index:1001;
+  background:var(--card-bg);
+  border:1px solid var(--border);
+  color:var(--text);
+  border-radius:30px;
+  padding:8px 16px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:600;
+  box-shadow:0 4px 12px rgba(0,0,0,0.06);
+  transition:all .2s ease;
+}
+#themeToggle:hover{
+  transform:translateY(-1px);
 }
 
 /* ---------- Welcome Splash ---------- */
-
 #splash{
-position:fixed;
-inset:0;
-background:linear-gradient(135deg,#1f4e79,#2f6fae);
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-z-index:999;
-color:white;
-text-align:center;
-transition:opacity .6s ease;
+  position:fixed;
+  inset:0;
+  background:linear-gradient(135deg,#0f172a 0%, #1f4e79 100%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+  color:white;
+  text-align:center;
+  transition:opacity .6s ease;
+  padding:20px;
 }
 
 #splash.hide{
-opacity:0;
-pointer-events:none;
+  opacity:0;
+  pointer-events:none;
 }
 
 .company-name{
-font-size:20px;
-font-weight:bold;
-letter-spacing:.5px;
-margin-bottom:6px;
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:1px;
+  margin-bottom:6px;
 }
 
 .crm-shimmer{
-background:linear-gradient(90deg,#ffffff,#ffe08a,#ffffff);
-background-size:200% auto;
--webkit-background-clip:text;
-background-clip:text;
-color:transparent;
-font-weight:bold;
-animation:shimmer 2.8s linear infinite;
+  background:linear-gradient(90deg,#ffffff,#ffe08a,#ffffff);
+  background-size:200% auto;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  font-weight:bold;
+  animation:shimmer 2.8s linear infinite;
 }
 
 @keyframes shimmer{
-0%{ background-position:0% center; }
-100%{ background-position:200% center; }
+  0%{ background-position:0% center; }
+  100%{ background-position:200% center; }
 }
 
 .company-sub{
-font-size:12px;
-opacity:.85;
-margin-bottom:20px;
+  font-size:13px;
+  opacity:.85;
+  margin-bottom:24px;
 }
 
 .robot-wrap{
-width:180px;
-height:200px;
-margin-bottom:10px;
+  width:160px;
+  height:180px;
+  margin-bottom:12px;
 }
 
 .r-arm-left{
-transform-origin:70px 100px;
-animation:armLeft 2.4s ease-in-out infinite;
+  transform-origin:70px 100px;
+  animation:armLeft 2.4s ease-in-out infinite;
 }
 
 .r-arm-right{
-transform-origin:130px 100px;
-animation:armRight 2.4s ease-in-out infinite;
+  transform-origin:130px 100px;
+  animation:armRight 2.4s ease-in-out infinite;
 }
 
 @keyframes armLeft{
-0%,100%{transform:rotate(0deg);}
-45%,65%{transform:rotate(35deg);}
+  0%,100%{transform:rotate(0deg);}
+  45%,65%{transform:rotate(35deg);}
 }
 
 @keyframes armRight{
-0%,100%{transform:rotate(0deg);}
-45%,65%{transform:rotate(-35deg);}
+  0%,100%{transform:rotate(0deg);}
+  45%,65%{transform:rotate(-35deg);}
 }
 
 .r-eye{ animation:blink 3s infinite; }
 
 @keyframes blink{
-0%,92%,100%{opacity:1;}
-95%{opacity:0.1;}
+  0%,92%,100%{opacity:1;}
+  95%{opacity:0.1;}
 }
 
 .welcome-text{
-font-size:22px;
-font-weight:bold;
-opacity:0;
-animation:fadeUp 1s ease forwards;
-animation-delay:.6s;
+  font-size:24px;
+  font-weight:700;
+  opacity:0;
+  animation:fadeUp 1s ease forwards;
+  animation-delay:.6s;
 }
 
 @keyframes fadeUp{
-from{opacity:0; transform:translateY(15px);}
-to{opacity:1; transform:translateY(0);}
+  from{opacity:0; transform:translateY(15px);}
+  to{opacity:1; transform:translateY(0);}
 }
 
 #enterBtn{
-margin-top:22px;
-background:white;
-color:#1f4e79;
-border:none;
-padding:10px 22px;
-border-radius:20px;
-font-size:13px;
-font-weight:bold;
-cursor:pointer;
-opacity:0;
-animation:fadeUp 1s ease forwards;
-animation-delay:1.4s;
+  margin-top:24px;
+  background:white;
+  color:#1f4e79;
+  border:none;
+  padding:12px 28px;
+  border-radius:30px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  opacity:0;
+  animation:fadeUp 1s ease forwards;
+  animation-delay:1.2s;
+  box-shadow:0 4px 15px rgba(0,0,0,0.15);
+  transition:all .2s ease;
 }
 
-#enterBtn:hover{ background:#e8eef7; }
+#enterBtn:hover{
+  background:#f8fafc;
+  transform:scale(1.03);
+}
 
 /* ---------- Split Login Layout ---------- */
-
 .wrap{
-display:flex;
-width:100%;
-height:100%;
+  display:flex;
+  width:100%;
+  height:100%;
 }
 
 .leftPanel{
-flex:1.2;
-background:linear-gradient(160deg,#101820,#1f4e79 70%);
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:flex-start;
-padding:60px;
-color:white;
-position:relative;
-overflow:hidden;
+  flex:1.3;
+  background:linear-gradient(150deg, #0f172a 0%, #1e3a8a 50%, #1f4e79 100%);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-start;
+  padding:80px;
+  color:white;
+  position:relative;
+  overflow:hidden;
 }
 
 .leftPanel .brand{
-font-size:34px;
-font-weight:900;
-letter-spacing:1px;
-margin-bottom:8px;
+  font-size:42px;
+  font-weight:900;
+  letter-spacing:1px;
+  margin-bottom:12px;
 }
 
 .leftPanel .brand span{ color:var(--red); }
 
 .leftPanel .tagline{
-font-size:14px;
-opacity:.85;
-max-width:320px;
-line-height:1.5;
-margin-bottom:30px;
+  font-size:15px;
+  opacity:.9;
+  max-width:380px;
+  line-height:1.6;
+  margin-bottom:30px;
 }
 
 .leftPanel .mini-robot{
-position:absolute;
-right:40px;
-bottom:30px;
-width:120px;
-opacity:.9;
+  position:absolute;
+  right:50px;
+  bottom:40px;
+  width:140px;
+  opacity:.85;
 }
 
 .rightPanel{
-flex:1;
-display:flex;
-justify-content:center;
-align-items:center;
-background:var(--bg);
+  flex:1;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:var(--bg);
+  padding:20px;
 }
 
 .login-box{
-background:var(--card-bg);
-width:380px;
-padding:34px;
-border-radius:14px;
-box-shadow:0 0 25px rgba(0,0,0,.12);
-border-top:4px solid var(--red);
+  background:var(--card-bg);
+  width:100%;
+  max-width:400px;
+  padding:40px;
+  border-radius:18px;
+  box-shadow:0 20px 40px rgba(0,0,0,0.08);
+  border:1px solid var(--border);
+  position:relative;
+}
+
+.login-box::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:4px;
+  background:linear-gradient(90deg, var(--navy), var(--red));
+  border-radius:18px 18px 0 0;
 }
 
 h1{
-text-align:center;
-margin-bottom:6px;
-color:var(--navy);
-font-size:22px;
+  text-align:center;
+  margin-bottom:6px;
+  color:var(--navy);
+  font-size:24px;
+  font-weight:800;
 }
 
 .subtitle{
-text-align:center;
-color:var(--muted);
-font-size:13px;
-margin-bottom:14px;
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  margin-bottom:24px;
+}
+
+.input-group{
+  margin-bottom:16px;
+}
+
+.input-group label{
+  display:block;
+  font-size:12px;
+  font-weight:600;
+  color:var(--muted);
+  margin-bottom:6px;
 }
 
 input{
-width:100%;
-padding:12px;
-margin-top:10px;
-border:1px solid var(--border);
-border-radius:6px;
-background:var(--card-bg);
-color:var(--text);
+  width:100%;
+  padding:12px 14px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--card-bg);
+  color:var(--text);
+  font-size:14px;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s;
 }
 
-button{
-width:100%;
-padding:12px;
-margin-top:16px;
-background:var(--red);
-color:white;
-border:none;
-border-radius:6px;
-cursor:pointer;
-font-size:16px;
-font-weight:bold;
+input:focus{
+  border-color:var(--navy);
+  box-shadow:0 0 0 3px rgba(31,78,121,0.15);
 }
 
-button:hover{ background:var(--red-dark); }
+button.submitBtn{
+  width:100%;
+  padding:13px;
+  margin-top:10px;
+  background:var(--red);
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:15px;
+  font-weight:700;
+  transition:background .2s, transform .1s;
+  box-shadow:0 4px 12px rgba(226,19,31,0.25);
+}
+
+button.submitBtn:hover{ background:var(--red-dark); }
+button.submitBtn:active{ transform:scale(0.99); }
 
 button:disabled{
-background:#8a94a3;
-cursor:not-allowed;
+  background:#94a3b8 !important;
+  cursor:not-allowed;
+  box-shadow:none !important;
 }
 
 .forgot{
-text-align:center;
-margin-top:14px;
-font-size:12px;
-color:var(--muted);
-cursor:pointer;
-text-decoration:underline;
+  text-align:center;
+  margin-top:16px;
+  font-size:13px;
+  color:var(--muted);
+  cursor:pointer;
+  font-weight:500;
+  transition:color .2s;
+}
+
+.forgot:hover{
+  color:var(--navy);
+  text-decoration:underline;
 }
 
 .self-note{
-text-align:center;
-margin-top:16px;
-font-size:11px;
-color:var(--muted);
+  text-align:center;
+  margin-top:20px;
+  padding-top:16px;
+  border-top:1px solid var(--border);
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.4;
 }
 
 .error{
-color:#c0392b;
-margin-top:10px;
-text-align:center;
-font-size:13px;
+  color:#dc2626;
+  background:#fef2f2;
+  border:1px solid #fecaca;
+  padding:10px;
+  border-radius:6px;
+  margin-top:14px;
+  text-align:center;
+  font-size:13px;
+  font-weight:500;
+}
+
+[data-theme="dark"] .error{
+  background:#451a1a;
+  border-color:#7f1d1d;
+  color:#fca5a5;
 }
 
 .success{
-color:#1e8449;
-margin-top:10px;
-text-align:center;
-font-size:13px;
+  color:#16a34a;
+  background:#f0fdf4;
+  border:1px solid #bbf7d0;
+  padding:10px;
+  border-radius:6px;
+  margin-top:14px;
+  text-align:center;
+  font-size:13px;
+  font-weight:500;
 }
 
-@media (max-width:760px){
-.leftPanel{ display:none; }
+[data-theme="dark"] .success{
+  background:#14532d;
+  border-color:#166534;
+  color:#86efac;
 }
 
+@media (max-width:840px){
+  .leftPanel{ display:none; }
+}
 </style>
 
 </head>
@@ -343,7 +422,7 @@ font-size:13px;
 
 <div class="welcome-text">🙏 Welcome to Mooving</div>
 
-<button id="enterBtn" onclick="document.getElementById('splash').classList.add('hide')" style="width:auto">Continue to Login</button>
+<button id="enterBtn" onclick="document.getElementById('splash').classList.add('hide')">Continue to Login</button>
 
 </div>
 
@@ -372,10 +451,19 @@ font-size:13px;
 <h1>CRM Login</h1>
 <div class="subtitle">Access your Mooving project dashboard</div>
 
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
+<form onsubmit="event.preventDefault(); submitForm();">
+<div class="input-group">
+  <label for="email">Work Email</label>
+  <input type="email" id="email" placeholder="name@mooving.com" required autocomplete="username">
+</div>
 
-<button id="submitBtn" onclick="submitForm()">Login</button>
+<div class="input-group">
+  <label for="password">Password</label>
+  <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+</div>
+
+<button id="submitBtn" type="submit" class="submitBtn">Sign In</button>
+</form>
 
 <div class="forgot" id="forgotLink" onclick="forgotPassword()">Forgot password?</div>
 
@@ -390,21 +478,22 @@ font-size:13px;
 </div>
 
 <script>
-// Theme init (runs before firebase, purely UI preference stored locally)
 (function(){
 const saved = localStorage.getItem("crm-theme") || "light";
 document.documentElement.setAttribute("data-theme", saved);
 document.addEventListener("DOMContentLoaded", ()=>{
-document.getElementById("themeToggle").textContent = saved === "dark" ? "☀️ Light" : "🌙 Dark";
+  const btn = document.getElementById("themeToggle");
+  if(btn) btn.textContent = saved === "dark" ? "☀️ Light" : "🌙 Dark";
 });
 })();
 
 function toggleTheme(){
-const current = document.documentElement.getAttribute("data-theme");
-const next = current === "dark" ? "light" : "dark";
-document.documentElement.setAttribute("data-theme", next);
-localStorage.setItem("crm-theme", next);
-document.getElementById("themeToggle").textContent = next === "dark" ? "☀️ Light" : "🌙 Dark";
+  const current = document.documentElement.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("crm-theme", next);
+  const btn = document.getElementById("themeToggle");
+  if(btn) btn.textContent = next === "dark" ? "☀️ Light" : "🌙 Dark";
 }
 </script>
 
@@ -417,7 +506,8 @@ import {
 getAuth,
 onAuthStateChanged,
 signInWithEmailAndPassword,
-sendPasswordResetEmail
+sendPasswordResetEmail,
+signOut
 }
 from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
@@ -445,8 +535,28 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// auto-hide splash after a few seconds even if user doesn't click
-setTimeout(()=>{ document.getElementById('splash').classList.add('hide'); }, 4000);
+// auto-hide splash after a few seconds
+setTimeout(()=>{
+  const splash = document.getElementById('splash');
+  if(splash) splash.classList.add('hide');
+}, 4000);
+
+function formatAuthError(code){
+  switch(code){
+    case 'auth/invalid-credential':
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return "Invalid email or password. Please check your credentials.";
+    case 'auth/too-many-requests':
+      return "Account temporarily locked due to multiple failed login attempts. Please reset password or try again later.";
+    case 'auth/invalid-email':
+      return "Please enter a valid email address.";
+    case 'auth/user-disabled':
+      return "This account has been disabled by an Administrator.";
+    default:
+      return "Authentication failed. Please check your connection and try again.";
+  }
+}
 
 async function logActivity(action, details, email){
 try{
@@ -460,33 +570,41 @@ timestamp: serverTimestamp()
 }
 
 window.forgotPassword = async function(){
+const msgEl = document.getElementById("msg");
+const emailEl = document.getElementById("email");
+let defaultEmail = emailEl ? emailEl.value.trim() : "";
 
-const emailVal = prompt("Enter the email address linked to your account:");
+const emailVal = prompt("Enter the email address linked to your account:", defaultEmail);
 if(!emailVal) return;
 
 try{
 await sendPasswordResetEmail(auth, emailVal.trim());
-msg.className = "success";
-msg.innerHTML = "Password reset email sent. Check your inbox (and spam folder).";
+if(msgEl){
+  msgEl.className = "success";
+  msgEl.innerHTML = "Password reset email sent. Check your inbox (and spam folder).";
+}
 }catch(error){
-msg.className = "error";
-msg.innerHTML = error.message;
+if(msgEl){
+  msgEl.className = "error";
+  msgEl.innerHTML = formatAuthError(error.code) || error.message;
+}
 }
 
 };
 
 async function ensureUserDoc(user){
-
 const ref = doc(db,"users",user.uid);
 const snap = await getDoc(ref);
 
 if(snap.exists()){
-return snap.data();
+  const data = snap.data();
+  if(data.disabled === true || data.deleted === true){
+    await signOut(auth);
+    throw { code: 'auth/user-disabled', message: "Your account has been disabled by an Administrator." };
+  }
+  return data;
 }
 
-// Fallback bootstrap: if somehow no profile exists yet for a valid Auth
-// login (e.g. very first admin created directly in Firebase Console),
-// create a minimal profile.
 const data = {
 name: user.displayName || user.email,
 email: user.email,
@@ -497,23 +615,30 @@ lastLogin: new Date().toISOString()
 
 await setDoc(ref, data);
 return data;
-
 }
 
 window.submitForm = async function(){
+const emailEl = document.getElementById("email");
+const passwordEl = document.getElementById("password");
+const submitBtnEl = document.getElementById("submitBtn");
+const msgEl = document.getElementById("msg");
 
-const emailVal = email.value.trim();
-const passwordVal = password.value;
+const emailVal = emailEl ? emailEl.value.trim() : "";
+const passwordVal = passwordEl ? passwordEl.value : "";
 
 if(!emailVal || !passwordVal){
-msg.className = "error";
-msg.innerHTML = "Email and password are required.";
+if(msgEl){
+  msgEl.className = "error";
+  msgEl.innerHTML = "Email and password are required.";
+}
 return;
 }
 
-submitBtn.disabled = true;
-msg.className = "";
-msg.innerHTML = "";
+if(submitBtnEl) submitBtnEl.disabled = true;
+if(msgEl){
+  msgEl.className = "";
+  msgEl.innerHTML = "";
+}
 
 try{
 
@@ -526,8 +651,10 @@ await setDoc(doc(db,"users",userCred.user.uid), { lastLogin: serverTimestamp() }
 
 await logActivity("Login", `${userData.name || emailVal} logged in`, emailVal);
 
-msg.className = "success";
-msg.innerHTML = "Login Successful ✅";
+if(msgEl){
+  msgEl.className = "success";
+  msgEl.innerHTML = "Login Successful ✅ Redirecting...";
+}
 
 setTimeout(()=>{
 window.location.href = "dashboard.html";
@@ -535,21 +662,35 @@ window.location.href = "dashboard.html";
 
 }catch(error){
 
-msg.className = "error";
-msg.innerHTML = error.message;
+if(msgEl){
+  msgEl.className = "error";
+  msgEl.innerHTML = formatAuthError(error.code) || error.message;
+}
 
 }finally{
 
-submitBtn.disabled = false;
+if(submitBtnEl) submitBtnEl.disabled = false;
 
 }
 
 };
 
-// If already logged in, skip straight to dashboard.
-onAuthStateChanged(auth, (user)=>{
+onAuthStateChanged(auth, async (user)=>{
 if(user){
-window.location.href = "dashboard.html";
+  try{
+    const ref = doc(db,"users",user.uid);
+    const snap = await getDoc(ref);
+    if(snap.exists()){
+      const d = snap.data();
+      if(d.disabled === true || d.deleted === true){
+        await signOut(auth);
+        return;
+      }
+    }
+    window.location.href = "dashboard.html";
+  }catch(e){
+    window.location.href = "dashboard.html";
+  }
 }
 });
 

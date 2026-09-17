@@ -3,338 +3,535 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRM Admin Panel</title>
+<title>CRM Admin Panel - Mooving</title>
 
 <style>
-
 :root{
---bg:#f4f7fb;
---card-bg:#ffffff;
---text:#222;
---muted:#666;
---border:#ddd;
---navy:#1f4e79;
---danger:#c0392b;
---success:#1e8449;
+  --bg:#f8fafc;
+  --card-bg:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --sidebar-bg:#0f172a;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#1f4e79;
+  --navy-dark:#163a5c;
+  --red:#e2131f;
+  --danger:#dc2626;
+  --success:#16a34a;
 }
 
 [data-theme="dark"]{
---bg:#0f1720;
---card-bg:#1b2530;
---text:#e6edf3;
---muted:#9fb0bf;
---border:#2c3947;
---navy:#3f7cc0;
+  --bg:#0f172a;
+  --card-bg:#1e293b;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:#334155;
+  --sidebar-bg:#090d16;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#38bdf8;
 }
 
-body{
-font-family:Segoe UI,sans-serif;
-background:var(--bg);
-color:var(--text);
-margin:0;
-padding:20px;
-transition:background .3s,color .3s;
+*{ margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+body{ background:var(--bg); color:var(--text); transition:background .3s,color .3s; display:flex; min-height:100vh; }
+
+/* ---------- Sidebar Navigation ---------- */
+.sidebar-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99; }
+
+.app-sidebar{
+  width:260px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-txt);
+  position:fixed;
+  top:0; bottom:0; left:0;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  transition:transform .3s ease;
+  border-right:1px solid rgba(255,255,255,0.08);
 }
 
-.header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:20px;
-flex-wrap:wrap;
-gap:10px;
+.sidebar-header{
+  padding:24px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.08);
 }
 
-h1{ color:var(--navy); }
+.brand-title{
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:1px;
+  color:white;
+  text-decoration:none;
+}
+.brand-title span{ color:var(--red); }
 
-.nav button, .logout{
-background:var(--navy);
-color:white;
-border:none;
-padding:10px 15px;
-border-radius:5px;
-cursor:pointer;
-font-size:13px;
-margin-left:8px;
+.brand-badge{
+  font-size:10px;
+  font-weight:800;
+  background:var(--red);
+  color:white;
+  padding:2px 6px;
+  border-radius:4px;
+  text-transform:uppercase;
 }
 
-.logout{ background:var(--danger); }
-.nav button.secondary{ background:var(--success); }
-.nav button.ghost{ background:var(--card-bg); color:var(--text); border:1px solid var(--border); }
+.sidebar-nav{
+  padding:20px 12px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  overflow-y:auto;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  color:#94a3b8;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:600;
+  border-radius:8px;
+  transition:all .2s ease;
+  cursor:pointer;
+  border:none;
+  background:none;
+  width:100%;
+  text-align:left;
+}
+
+.nav-item:hover{
+  background:rgba(255,255,255,0.06);
+  color:white;
+}
+
+.nav-item.active{
+  background:linear-gradient(90deg, var(--navy), #2563eb);
+  color:white;
+  box-shadow:0 4px 12px rgba(37,99,235,0.3);
+}
+
+.nav-item .icon{ font-size:18px; width:22px; text-align:center; }
+
+.sidebar-footer{
+  padding:16px;
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.user-profile-chip{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  background:rgba(255,255,255,0.04);
+  border-radius:8px;
+}
+
+.avatar-circle{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:var(--navy);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:14px;
+}
+
+.user-info-text{ display:flex; flex-direction:column; overflow:hidden; }
+.user-info-name{ font-size:13px; font-weight:700; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-info-role{ font-size:11px; color:#94a3b8; }
+
+.theme-toggle-btn{
+  background:rgba(255,255,255,0.08);
+  color:white;
+  border:none;
+  padding:8px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:background .2s;
+}
+.theme-toggle-btn:hover{ background:rgba(255,255,255,0.15); }
+
+/* ---------- Main Content Container ---------- */
+.app-main{
+  flex:1;
+  margin-left:260px;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  transition:margin-left .3s ease;
+}
+
+.top-app-bar{
+  background:var(--card-bg);
+  border-bottom:1px solid var(--border);
+  padding:16px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:90;
+}
+
+.mobile-hamburger{
+  display:none;
+  background:none;
+  border:none;
+  font-size:22px;
+  cursor:pointer;
+  color:var(--text);
+}
+
+.page-header-title{
+  font-size:20px;
+  font-weight:800;
+  color:var(--navy);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.main-content{ padding:28px; flex:1; }
 
 .cards{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:15px;
-margin-bottom:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px;
+  margin-bottom:24px;
 }
 
 .card{
-background:var(--card-bg);
-padding:18px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,.08);
+  background:var(--card-bg);
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  border:1px solid var(--border);
 }
-
-.card h3{ font-size:13px; color:var(--muted); font-weight:normal; }
-.card h2{ color:var(--navy); margin-top:6px; }
+.card h3{ font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+.card h2{ color:var(--navy); margin-top:8px; font-size:24px; font-weight:800; }
 
 .panel{
-background:var(--card-bg);
-padding:20px;
-border-radius:10px;
-margin-bottom:20px;
-box-shadow:0 0 10px rgba(0,0,0,.06);
+  background:var(--card-bg);
+  padding:24px;
+  border-radius:14px;
+  margin-bottom:24px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  border:1px solid var(--border);
 }
+.panel h2{ color:var(--navy); font-size:16px; font-weight:800; margin-bottom:12px; }
 
-.panel h2{ color:var(--navy); font-size:16px; margin-bottom:10px; }
-
-table{ width:100%; border-collapse:collapse; }
-
-th,td{
-border:1px solid var(--border);
-padding:8px;
-font-size:13px;
-text-align:left;
-}
-
-th{ background:var(--navy); color:white; }
+.table-wrapper{ overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
+table{ width:100%; border-collapse:collapse; white-space:nowrap; }
+th, td{ border-bottom:1px solid var(--border); padding:10px 12px; font-size:12px; text-align:left; }
+th{ background:var(--navy); color:white; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
 
 select, input{
-padding:8px;
-background:var(--card-bg);
-color:var(--text);
-border:1px solid var(--border);
-border-radius:5px;
+  padding:10px 12px;
+  background:var(--card-bg);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-size:13px;
+  outline:none;
 }
 
-.note{ font-size:12px; color:var(--muted); margin-top:10px; }
+.note{ font-size:12px; color:var(--muted); margin-top:12px; line-height:1.4; }
 
 #accessDenied{
-display:none;
-text-align:center;
-margin-top:80px;
-color:var(--danger);
+  display:none;
+  text-align:center;
+  margin-top:80px;
+  color:var(--danger);
 }
 
-.searchRow{ margin-bottom:12px; }
-.searchRow input{ width:100%; max-width:400px; padding:10px; box-sizing:border-box; }
+.searchRow{ margin-bottom:14px; }
+.searchRow input{ width:100%; max-width:400px; }
 
 .createForm{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:10px;
-align-items:end;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+  align-items:end;
 }
-
-.createForm input, .createForm select{
-width:100%;
-box-sizing:border-box;
-padding:10px;
-}
-
+.createForm input, .createForm select{ width:100%; box-sizing:border-box; }
 .createForm button{
-background:var(--navy);
-color:white;
-border:none;
-padding:10px 15px;
-border-radius:5px;
-cursor:pointer;
+  background:var(--navy);
+  color:white;
+  border:none;
+  padding:11px 18px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:700;
 }
 
-.viewBtn{
-background:var(--navy);
-color:white;
-border:none;
-padding:6px 10px;
-border-radius:5px;
-cursor:pointer;
-font-size:11px;
-margin-right:5px;
-}
-
-.deleteBtn{
-background:var(--danger);
-color:white;
-border:none;
-padding:6px 10px;
-border-radius:5px;
-cursor:pointer;
-font-size:11px;
-}
+.viewBtn{ background:var(--navy); color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700; margin-right:4px; }
+.deleteBtn{ background:var(--danger); color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700; }
 
 .modalOverlay{
-display:none;
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.45);
-z-index:200;
-justify-content:center;
-align-items:center;
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(3px);
+  z-index:200;
+  justify-content:center;
+  align-items:center;
 }
-
 .modalOverlay.show{ display:flex; }
 
 .modalBox{
-background:var(--card-bg);
-padding:24px;
-border-radius:10px;
-width:90%;
-max-width:450px;
+  background:var(--card-bg);
+  padding:28px;
+  border-radius:14px;
+  width:90%;
+  max-width:460px;
+  border:1px solid var(--border);
+  box-shadow:0 20px 40px rgba(0,0,0,0.2);
 }
-
-.modalBox h2{ color:var(--navy); margin-bottom:12px; font-size:16px; }
-.modalBox input{ width:100%; padding:10px; margin-top:8px; box-sizing:border-box; }
-.modalBox .closeBtn{
-background:#8a94a3;
-color:white;
-border:none;
-padding:8px 14px;
-border-radius:5px;
-cursor:pointer;
-margin-top:10px;
-}
+.modalBox h2{ color:var(--navy); margin-bottom:14px; font-size:18px; font-weight:800; }
+.modalBox input{ width:100%; padding:10px 12px; margin-top:8px; box-sizing:border-box; }
+.modalBox .closeBtn{ background:#64748b; color:white; border:none; padding:9px 16px; border-radius:8px; cursor:pointer; margin-top:12px; font-weight:700; }
 
 .credsBox{
-background:var(--bg);
-border:1px dashed var(--border);
-padding:12px;
-border-radius:8px;
-font-size:13px;
-margin-top:10px;
+  background:var(--bg);
+  border:1px dashed var(--border);
+  padding:14px;
+  border-radius:8px;
+  font-size:13px;
+  margin-top:14px;
+  line-height:1.5;
+}
+
+@media (max-width:768px){
+  .app-sidebar{ transform:translateX(-100%); }
+  .app-sidebar.sidebar-open{ transform:translateX(0); }
+  .sidebar-overlay.sidebar-open{ display:block; }
+  .app-main{ margin-left:0; }
+  .mobile-hamburger{ display:block; }
 }
 
 </style>
-
 </head>
 
 <body>
 
-<div id="accessDenied">
-<h1>Access Denied</h1>
-<p>Only Admin users can view this page.</p>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
+<!-- Left Sidebar Navigation -->
+<aside class="app-sidebar" id="appSidebar">
+  <div class="sidebar-header">
+    <a href="dashboard.html" class="brand-title">MO<span>O</span>VING</a>
+    <span class="brand-badge">CRM</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-item">
+      <span class="icon">📊</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="Projects.html" class="nav-item">
+      <span class="icon">📋</span>
+      <span>Project Manager</span>
+    </a>
+    <a href="admin.html" class="nav-item active">
+      <span class="icon">⚙️</span>
+      <span>Admin Panel</span>
+    </a>
+    <a href="view.html" class="nav-item" target="_blank">
+      <span class="icon">👁️</span>
+      <span>Public View</span>
+    </a>
+    <button class="nav-item" onclick="openPasswordModal()">
+      <span class="icon">🔑</span>
+      <span>Change Password</span>
+    </button>
+    <button class="nav-item" onclick="logout()" style="color:#fca5a5;">
+      <span class="icon">🚪</span>
+      <span>Logout</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-profile-chip">
+      <div class="avatar-circle" id="userAvatar">A</div>
+      <div class="user-info-text">
+        <span class="user-info-name" id="userNameLabel">Admin</span>
+        <span class="user-info-role" id="userRoleBadge">Admin</span>
+      </div>
+    </div>
+
+    <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">
+      <span>🌙</span> <span id="themeToggleText">Dark Theme</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Main App Area -->
+<div class="app-main">
+
+  <header class="top-app-bar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="mobile-hamburger" onclick="toggleMobileSidebar()">☰</button>
+      <h1 class="page-header-title">⚙️ Admin Panel</h1>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <div id="accessDenied">
+      <h1>Access Denied</h1>
+      <p>Only Admin users can view this page.</p>
+    </div>
+
+    <div id="adminContent" style="display:none">
+
+      <div class="cards">
+        <div class="card"><h3>Total Users</h3><h2 id="totalUsers">0</h2></div>
+        <div class="card"><h3>Total Projects</h3><h2 id="totalProjects">0</h2></div>
+        <div class="card"><h3>Pending Tasks</h3><h2 id="pendingTasks">0</h2></div>
+        <div class="card"><h3>High Priority Tasks</h3><h2 id="highPriorityTasks">0</h2></div>
+        <div class="card"><h3>Overdue Tasks</h3><h2 id="overdueTasks">0</h2></div>
+      </div>
+
+      <div class="panel">
+        <h2>➕ Create New User</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+          Fill in details to provision an internal account. Share email + temporary password with the user.
+        </p>
+        <div class="createForm">
+          <input id="newName" placeholder="Full Name">
+          <input id="newEmail" type="email" placeholder="Email">
+          <input id="newPassword" type="text" placeholder="Temp Password (min 6 chars)">
+          <select id="newRole">
+            <option>User</option>
+            <option>Admin</option>
+            <option>Viewer</option>
+          </select>
+          <button onclick="createUser()">Create Account</button>
+        </div>
+        <div id="createMsg" style="font-size:13px;color:var(--danger);margin-top:8px;font-weight:600;"></div>
+        <div id="createdCreds" class="credsBox" style="display:none"></div>
+      </div>
+
+      <div class="panel">
+        <h2>👥 Users, Roles &amp; Task Report</h2>
+        <div class="searchRow">
+          <input id="userSearch" placeholder="Search user by name or email..." onkeyup="renderUsersInPlace()">
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th>Last Login</th>
+                <th>Total Tasks</th>
+                <th>Completed</th>
+                <th>Efficiency</th>
+                <th>Change Role</th>
+                <th>Dashboard</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody id="userTable"></tbody>
+          </table>
+        </div>
+        <div class="note">
+          Deletions mark profiles as disabled immediately, revoking access across all CRM dashboards.
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>🗒 Activity Log</h2>
+        <div class="table-wrapper" id="activityLogBody">Loading...</div>
+      </div>
+
+    </div>
+
+  </main>
 </div>
 
-<div id="adminContent" style="display:none">
-
-<div class="header">
-<h1>Admin Panel</h1>
-<div class="nav">
-<button class="ghost" onclick="toggleTheme()" id="themeToggle">🌙 Dark</button>
-<button onclick="window.location.href='dashboard.html'">Dashboard</button>
-<button onclick="window.location.href='Projects.html'">Project Manager</button>
-<button onclick="openPasswordModal()">Change Password</button>
-<button class="logout" onclick="logout()">Logout</button>
-</div>
-</div>
-
-<div class="cards">
-<div class="card"><h3>Total Users</h3><h2 id="totalUsers">0</h2></div>
-<div class="card"><h3>Total Projects</h3><h2 id="totalProjects">0</h2></div>
-<div class="card"><h3>Pending Tasks</h3><h2 id="pendingTasks">0</h2></div>
-<div class="card"><h3>High Priority Tasks</h3><h2 id="highPriorityTasks">0</h2></div>
-<div class="card"><h3>Overdue Tasks</h3><h2 id="overdueTasks">0</h2></div>
-</div>
-
-<div class="panel">
-<h2>➕ Create New User</h2>
-<p style="font-size:13px;color:var(--muted);margin-bottom:10px">
-Only Admins can create accounts now — there's no public sign-up page anymore. Fill this in, then share the email + temporary password with the person yourself (WhatsApp, email, in person etc.) and ask them to change it after first login.
-</p>
-<div class="createForm">
-<input id="newName" placeholder="Full Name">
-<input id="newEmail" type="email" placeholder="Email">
-<input id="newPassword" type="text" placeholder="Temporary Password (min 6 chars)">
-<select id="newRole">
-<option>User</option>
-<option>Admin</option>
-<option>Viewer</option>
-</select>
-<button onclick="createUser()">Create Account</button>
-</div>
-<div id="createMsg" style="font-size:13px;color:var(--danger);margin-top:8px"></div>
-<div id="createdCreds" class="credsBox" style="display:none"></div>
-</div>
-
-<div class="panel">
-<h2>Users, Roles &amp; Task Report</h2>
-<div class="searchRow">
-<input id="userSearch" placeholder="Search by name or email..." onkeyup="renderUsers()">
-</div>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Email</th>
-<th>Role</th>
-<th>Joined</th>
-<th>Last Login</th>
-<th>Total Tasks</th>
-<th>Completed</th>
-<th>Efficiency</th>
-<th>Change Role</th>
-<th>Dashboard</th>
-<th>Delete</th>
-</tr>
-</thead>
-<tbody id="userTable"></tbody>
-</table>
-<div class="note">
-"Delete" permanently removes the person's login if you've deployed the optional Cloud Function
-(see functions/index.js + SETUP-README.md); either way it always removes their CRM profile/role
-immediately. Their existing projects are kept (still visible, just unassigned from an active account)
-unless you tick "also delete their projects".
-</div>
-</div>
-
-<div class="panel">
-<h2>🗒 Activity Log</h2>
-<div id="activityLogBody">Loading...</div>
-</div>
-
-</div>
-
-<!-- Password change modal -->
+<!-- Password Modal -->
 <div class="modalOverlay" id="passwordModal">
-<div class="modalBox">
-<h2>Change Password</h2>
-<input type="password" id="currentPassword" placeholder="Current Password">
-<input type="password" id="newPasswordSelf" placeholder="New Password (min 6 chars)">
-<div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px"></div>
-<button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 15px;border-radius:5px;cursor:pointer">Update Password</button>
-<button class="closeBtn" onclick="closePasswordModal()">Cancel</button>
-</div>
+  <div class="modalBox">
+    <h2>Change Password</h2>
+    <input type="password" id="currentPassword" placeholder="Current Password">
+    <input type="password" id="newPasswordSelf" placeholder="New Password (min 6 chars)">
+    <div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:6px;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">Update Password</button>
+      <button class="closeBtn" onclick="closePasswordModal()" style="margin:0;">Cancel</button>
+    </div>
+  </div>
 </div>
 
-<!-- Delete confirmation modal -->
+<!-- Delete Confirmation Modal -->
 <div class="modalOverlay" id="deleteModal">
-<div class="modalBox">
-<h2>Permanently Delete User</h2>
-<p id="deleteModalText" style="font-size:13px;color:var(--muted)"></p>
-<label style="font-size:13px;display:flex;gap:8px;align-items:center;margin-top:10px">
-<input type="checkbox" id="deleteProjectsToo" style="width:auto;margin:0"> Also permanently delete all of their projects
-</label>
-<div id="deleteMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:8px"></div>
-<button onclick="confirmDeleteUser()" style="background:var(--danger);color:white;border:none;padding:10px 15px;border-radius:5px;cursor:pointer">Yes, Delete Permanently</button>
-<button class="closeBtn" onclick="closeDeleteModal()">Cancel</button>
-</div>
+  <div class="modalBox">
+    <h2>Permanently Delete User</h2>
+    <p id="deleteModalText" style="font-size:13px;color:var(--muted)"></p>
+    <label style="font-size:13px;display:flex;gap:8px;align-items:center;margin-top:12px">
+      <input type="checkbox" id="deleteProjectsToo" style="width:auto;margin:0"> Also permanently delete all of their projects
+    </label>
+    <div id="deleteMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:8px"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="confirmDeleteUser()" style="background:var(--danger);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">Yes, Delete User</button>
+      <button class="closeBtn" onclick="closeDeleteModal()" style="margin:0;">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <script>
 (function(){
-const saved = localStorage.getItem("crm-theme") || "light";
-document.documentElement.setAttribute("data-theme", saved);
+  const saved = localStorage.getItem("crm-theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const btnText = document.getElementById("themeToggleText");
+    if(btnText) btnText.textContent = saved === "dark" ? "Light Theme" : "Dark Theme";
+  });
 })();
+
 function toggleTheme(){
-const current = document.documentElement.getAttribute("data-theme");
-const next = current === "dark" ? "light" : "dark";
-document.documentElement.setAttribute("data-theme", next);
-localStorage.setItem("crm-theme", next);
-document.getElementById("themeToggle").textContent = next === "dark" ? "☀️ Light" : "🌙 Dark";
+  const current = document.documentElement.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("crm-theme", next);
+  const btnText = document.getElementById("themeToggleText");
+  if(btnText) btnText.textContent = next === "dark" ? "Light Theme" : "Dark Theme";
 }
-document.addEventListener("DOMContentLoaded", ()=>{
-document.getElementById("themeToggle").textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️ Light" : "🌙 Dark";
-});
+
+function toggleMobileSidebar(){
+  const sidebar = document.getElementById("appSidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  if(sidebar) sidebar.classList.toggle("sidebar-open");
+  if(overlay) overlay.classList.toggle("sidebar-open");
+}
 </script>
 
 <script type="module">
@@ -398,6 +595,7 @@ const functionsClient = getFunctions(app);
 let currentUser = null;
 let currentName = "";
 let usersMap = {};
+let userMetricsCache = {};
 let deleteTargetUid = null;
 
 function escapeHtml(value){
@@ -452,40 +650,35 @@ await logActivity("Logout", "");
 signOut(auth).then(()=>{ window.location.href = "index.html"; });
 };
 
-/* ---------------- Create new user (Admin-only, secondary-app trick) ---------------- */
-/* Uses a SECOND Firebase App instance so creating the account doesn't sign
-   the current Admin out of their own session. This is a well-known, fully
-   client-side-safe pattern (no server needed) — it does NOT expose any
-   secret, because Firebase web config is not a secret key; real protection
-   comes from firestore.rules, which only Admin accounts are allowed to
-   write "role" through anyway. */
-
 window.createUser = async function(){
-
-const name = document.getElementById("newName").value.trim();
-const emailVal = document.getElementById("newEmail").value.trim();
-const passwordVal = document.getElementById("newPassword").value;
-const role = document.getElementById("newRole").value;
+const nameEl = document.getElementById("newName");
+const emailEl = document.getElementById("newEmail");
+const passwordEl = document.getElementById("newPassword");
+const roleEl = document.getElementById("newRole");
 const msgEl = document.getElementById("createMsg");
-const credsBox = document.getElementById("createdCreds");
+const credsBoxEl = document.getElementById("createdCreds");
 
-msgEl.innerText = "";
-credsBox.style.display = "none";
+const name = nameEl ? nameEl.value.trim() : "";
+const emailVal = emailEl ? emailEl.value.trim() : "";
+const passwordVal = passwordEl ? passwordEl.value : "";
+const role = roleEl ? roleEl.value : "User";
+
+if(msgEl) msgEl.innerText = "";
+if(credsBoxEl) credsBoxEl.style.display = "none";
 
 if(!name || !emailVal || !passwordVal){
-msgEl.innerText = "Name, email and password are all required.";
+if(msgEl) msgEl.innerText = "Name, email and password are all required.";
 return;
 }
 
 if(passwordVal.length < 6){
-msgEl.innerText = "Password must be at least 6 characters.";
+if(msgEl) msgEl.innerText = "Password must be at least 6 characters.";
 return;
 }
 
 let secondaryApp;
 
 try{
-
 secondaryApp = initializeApp(firebaseConfig, "SecondaryCreateUser_" + Date.now());
 const secondaryAuth = getAuth(secondaryApp);
 
@@ -505,26 +698,23 @@ await deleteApp(secondaryApp);
 
 await logActivity("User Created", `${name} (${emailVal}) created as ${role}`);
 
-document.getElementById("newName").value = "";
-document.getElementById("newEmail").value = "";
-document.getElementById("newPassword").value = "";
-document.getElementById("newRole").selectedIndex = 0;
+if(nameEl) nameEl.value = "";
+if(emailEl) emailEl.value = "";
+if(passwordEl) passwordEl.value = "";
+if(roleEl) roleEl.selectedIndex = 0;
 
-credsBox.style.display = "block";
-credsBox.innerHTML = `✅ Account created. Share these with <b>${escapeHtml(name)}</b>:<br>Email: <b>${escapeHtml(emailVal)}</b><br>Temporary Password: <b>${escapeHtml(passwordVal)}</b><br><span style="color:var(--muted)">Ask them to use "Forgot password?" on the login page to set their own password.</span>`;
+if(credsBoxEl){
+credsBoxEl.style.display = "block";
+credsBoxEl.innerHTML = `✅ Account created. Share credentials with <b>${escapeHtml(name)}</b>:<br>Email: <b>${escapeHtml(emailVal)}</b><br>Temporary Password: <b>${escapeHtml(passwordVal)}</b>`;
+}
 
 }catch(error){
-
-msgEl.innerText = error.message;
+if(msgEl) msgEl.innerText = error.message;
 if(secondaryApp){
 try{ await deleteApp(secondaryApp); }catch(e){}
 }
-
 }
-
 };
-
-/* ---------------- Role change ---------------- */
 
 window.changeRole = async function(uid, newRole){
 try{
@@ -538,36 +728,41 @@ alert("Error updating role. " + error.message);
 }
 };
 
-/* ---------------- Delete user ---------------- */
-
 window.openDeleteModal = function(uid, email){
 deleteTargetUid = uid;
-document.getElementById("deleteModalText").innerText = `This will remove ${email}'s CRM profile permanently. If the Cloud Function is deployed, their login itself will also be deleted.`;
-document.getElementById("deleteProjectsToo").checked = false;
-document.getElementById("deleteMsg").innerText = "";
-document.getElementById("deleteModal").classList.add("show");
+const textEl = document.getElementById("deleteModalText");
+const projectsTooEl = document.getElementById("deleteProjectsToo");
+const deleteMsgEl = document.getElementById("deleteMsg");
+const modal = document.getElementById("deleteModal");
+
+if(textEl) textEl.innerText = `This will revoke access for ${email} across all dashboards and remove their user profile.`;
+if(projectsTooEl) projectsTooEl.checked = false;
+if(deleteMsgEl) deleteMsgEl.innerText = "";
+if(modal) modal.classList.add("show");
 };
 
 window.closeDeleteModal = function(){
-document.getElementById("deleteModal").classList.remove("show");
+const modal = document.getElementById("deleteModal");
+if(modal) modal.classList.remove("show");
 deleteTargetUid = null;
 };
 
 window.confirmDeleteUser = async function(){
-
 if(!deleteTargetUid) return;
 
+const deleteMsgEl = document.getElementById("deleteMsg");
+
 if(deleteTargetUid === currentUser.uid){
-document.getElementById("deleteMsg").innerText = "You can't delete your own account.";
+if(deleteMsgEl) deleteMsgEl.innerText = "You cannot delete your own account.";
 return;
 }
 
 const uid = deleteTargetUid;
 const u = usersMap[uid] || {};
-const alsoDeleteProjects = document.getElementById("deleteProjectsToo").checked;
+const projectsTooEl = document.getElementById("deleteProjectsToo");
+const alsoDeleteProjects = projectsTooEl ? projectsTooEl.checked : false;
 
 try{
-
 if(alsoDeleteProjects){
 const projSnap = await getDocs(query(collection(db,"crmprojects"), where("ownerUid","==",uid)));
 const batch = writeBatch(db);
@@ -586,21 +781,18 @@ console.warn("Cloud Function deleteUserAccount not available:", fnError.message)
 }
 
 if(!authDeleted){
-await deleteDoc(doc(db,"users",uid));
+await setDoc(doc(db,"users",uid), { disabled: true, deleted: true }, { merge: true });
 }
 
-await logActivity("User Deleted", `${u.name || u.email || uid} removed by Admin${authDeleted ? " (login also deleted)" : " (profile only — deploy Cloud Function for full deletion)"}`);
+await logActivity("User Deleted", `${u.name || u.email || uid} removed by Admin`);
 
 closeDeleteModal();
-alert(authDeleted ? "User permanently deleted (login + profile)." : "User's CRM profile removed. Their login still technically exists — deploy the Cloud Function (see SETUP-README.md) to remove it too.");
+alert("User account has been disabled and removed from active users.");
 
 }catch(error){
-document.getElementById("deleteMsg").innerText = error.message;
+if(deleteMsgEl) deleteMsgEl.innerText = error.message;
 }
-
 };
-
-/* ---------------- Users + task report ---------------- */
 
 async function countQ(...constraints){
 const q = query(collection(db,"crmprojects"), ...constraints);
@@ -608,35 +800,56 @@ const snap = await getCountFromServer(q);
 return snap.data().count;
 }
 
-window.renderUsers = async function(){
+async function computeUserMetrics(){
+const uids = Object.keys(usersMap);
+userMetricsCache = {};
 
-const search = (document.getElementById("userSearch").value || "").toLowerCase();
-let html = "";
-
-for(const uid of Object.keys(usersMap)){
-
+for(const uid of uids){
 const u = usersMap[uid];
-const txt = ((u.name||"") + " " + (u.email||"")).toLowerCase();
-if(search && !txt.includes(search)) continue;
-
+if(u.disabled === true || u.deleted === true) continue;
 let total = 0, completed = 0;
 try{
 total = await countQ(where("ownerUid","==",uid));
 completed = await countQ(where("ownerUid","==",uid), where("taskStatus","==","Complete"));
 }catch(e){}
+userMetricsCache[uid] = { total, completed };
+}
+renderUsersFromCache();
+}
 
+function renderUsersFromCache(){
+const searchEl = document.getElementById("userSearch");
+const userTableEl = document.getElementById("userTable");
+const totalUsersEl = document.getElementById("totalUsers");
+if(!userTableEl) return;
+
+const search = searchEl ? searchEl.value.trim().toLowerCase() : "";
+let html = "";
+let activeCount = 0;
+
+for(const uid of Object.keys(usersMap)){
+const u = usersMap[uid];
+if(u.disabled === true || u.deleted === true) continue;
+activeCount++;
+
+const txt = ((u.name||"") + " " + (u.email||"")).toLowerCase();
+if(search && !txt.includes(search)) continue;
+
+const metrics = userMetricsCache[uid] || { total: 0, completed: 0 };
+const total = metrics.total;
+const completed = metrics.completed;
 const efficiency = total ? Math.round((completed/total)*100) : 0;
 
 html += `
 <tr>
-<td>${escapeHtml(u.name)}</td>
+<td><b>${escapeHtml(u.name)}</b></td>
 <td>${escapeHtml(u.email)}</td>
 <td>${escapeHtml(u.role)}</td>
 <td>${escapeHtml((u.createdAt && u.createdAt.toDate) ? u.createdAt.toDate().toLocaleDateString() : (u.createdAt||"").slice(0,10))}</td>
 <td>${formatTimestamp(u.lastLogin)}</td>
 <td>${total}</td>
 <td>${completed}</td>
-<td>${efficiency}%</td>
+<td><b>${efficiency}%</b></td>
 <td>
 <select onchange="changeRole('${uid}', this.value)">
 <option ${u.role==="Admin"?"selected":""}>Admin</option>
@@ -648,24 +861,29 @@ html += `
 <td><button class="deleteBtn" onclick="openDeleteModal('${uid}','${escapeHtml(u.email)}')">Delete</button></td>
 </tr>
 `;
-
 }
 
-userTable.innerHTML = html || "<tr><td colspan='11'>No users found.</td></tr>";
-totalUsers.innerText = Object.keys(usersMap).length;
+userTableEl.innerHTML = html || "<tr><td colspan='11' style='text-align:center;padding:16px;color:var(--muted);'>No users found.</td></tr>";
+if(totalUsersEl) totalUsersEl.innerText = activeCount;
+}
 
+let userSearchDebounce = null;
+window.renderUsersInPlace = function(){
+clearTimeout(userSearchDebounce);
+userSearchDebounce = setTimeout(()=>{
+  renderUsersFromCache();
+}, 150);
 };
 
 function loadUsers(){
 onSnapshot(collection(db,"users"), (snapshot)=>{
 usersMap = {};
 snapshot.forEach(docSnap=>{ usersMap[docSnap.id] = docSnap.data(); });
-renderUsers();
+computeUserMetrics();
 });
 }
 
 function loadProjectStats(){
-
 async function refresh(){
 try{
 const todayStr = new Date().toISOString().slice(0,10);
@@ -675,24 +893,23 @@ const high = await countQ(where("taskPriority","==","High"));
 const overdueP = await countQ(where("taskStatus","==","Pending"), where("taskEndDate","<",todayStr));
 const overdueI = await countQ(where("taskStatus","==","In Progress"), where("taskEndDate","<",todayStr));
 
-totalProjects.innerText = total;
-pendingTasks.innerText = pending;
-highPriorityTasks.innerText = high;
-overdueTasks.innerText = overdueP + overdueI;
+const totalProjectsEl = document.getElementById("totalProjects");
+const pendingTasksEl = document.getElementById("pendingTasks");
+const highPriorityTasksEl = document.getElementById("highPriorityTasks");
+const overdueTasksEl = document.getElementById("overdueTasks");
+
+if(totalProjectsEl) totalProjectsEl.innerText = total !== null ? total : "—";
+if(pendingTasksEl) pendingTasksEl.innerText = pending !== null ? pending : "—";
+if(highPriorityTasksEl) highPriorityTasksEl.innerText = high !== null ? high : "—";
+if(overdueTasksEl) overdueTasksEl.innerText = (overdueP !== null && overdueI !== null) ? (overdueP + overdueI) : "—";
 }catch(e){ console.error(e); }
 }
 
 refresh();
 setInterval(refresh, 30000);
-
-// keep counts reasonably fresh on any project write too
-onSnapshot(query(collection(db,"crmprojects"), orderBy("createdAt","desc"), limit(1)), ()=>{ refresh(); });
-
 }
 
-/* ---------------- Activity log viewer ---------------- */
-
-const ACTIVITY_LOG_CAP = 70;
+const ACTIVITY_LOG_CAP = 50;
 
 function loadActivityLog(){
 const q = query(collection(db,"activityLogs"), orderBy("timestamp","desc"), limit(ACTIVITY_LOG_CAP));
@@ -700,73 +917,53 @@ onSnapshot(q, (snapshot)=>{
 let html = "<table><thead><tr><th>When</th><th>Action</th><th>By</th><th>Details</th></tr></thead><tbody>";
 snapshot.forEach(docSnap=>{
 const d = docSnap.data();
-html += `<tr><td>${formatTimestamp(d.timestamp)}</td><td>${escapeHtml(d.action)}</td><td>${escapeHtml(d.userName || d.userEmail)}</td><td>${escapeHtml(d.details)}</td></tr>`;
+html += `<tr><td>${formatTimestamp(d.timestamp)}</td><td><b>${escapeHtml(d.action)}</b></td><td>${escapeHtml(d.userName || d.userEmail)}</td><td>${escapeHtml(d.details)}</td></tr>`;
 });
 html += "</tbody></table>";
-document.getElementById("activityLogBody").innerHTML = html || "No activity yet.";
-pruneOldActivityLogs();
+const container = document.getElementById("activityLogBody");
+if(container) container.innerHTML = html || "<div style='padding:16px;color:var(--muted);'>No activity yet.</div>";
 }, (error)=>{
-document.getElementById("activityLogBody").innerHTML = `Could not load activity log (${escapeHtml(error.code || error.message)}). If this persists, confirm Firestore Security Rules are published and your account's role is "Admin".`;
-console.error(error);
+const container = document.getElementById("activityLogBody");
+if(container) container.innerHTML = `<div style='padding:16px;color:var(--danger);'>Could not load activity log (${escapeHtml(error.code || error.message)}).</div>`;
 });
 }
 
-let pruning = false;
-
-async function pruneOldActivityLogs(){
-if(pruning) return;
-pruning = true;
-try{
-const countSnap = await getCountFromServer(collection(db,"activityLogs"));
-const total = countSnap.data().count;
-if(total > ACTIVITY_LOG_CAP){
-const excess = total - ACTIVITY_LOG_CAP;
-const oldestSnap = await getDocs(query(collection(db,"activityLogs"), orderBy("timestamp","asc"), limit(excess)));
-const batch = writeBatch(db);
-oldestSnap.forEach(d=>batch.delete(d.ref));
-await batch.commit();
-}
-}catch(error){
-console.error("pruneOldActivityLogs error:", error);
-}finally{
-pruning = false;
-}
-}
-
-/* ---------------- Password change ---------------- */
-
 window.openPasswordModal = function(){
-document.getElementById("currentPassword").value = "";
-document.getElementById("newPasswordSelf").value = "";
-document.getElementById("passwordMsg").innerText = "";
-document.getElementById("passwordModal").classList.add("show");
+const modal = document.getElementById("passwordModal");
+if(modal) modal.style.display = "flex";
 };
 
 window.closePasswordModal = function(){
-document.getElementById("passwordModal").classList.remove("show");
+const modal = document.getElementById("passwordModal");
+if(modal) modal.style.display = "none";
 };
 
 window.changePassword = async function(){
-
-const cur = document.getElementById("currentPassword").value;
-const next = document.getElementById("newPasswordSelf").value;
+const curEl = document.getElementById("currentPassword");
+const nextEl = document.getElementById("newPasswordSelf");
 const msgEl = document.getElementById("passwordMsg");
 
-if(!cur || !next){ msgEl.innerText = "Both fields are required."; return; }
-if(next.length < 6){ msgEl.innerText = "New password must be at least 6 characters."; return; }
+const cur = curEl ? curEl.value : "";
+const next = nextEl ? nextEl.value : "";
+
+if(!cur || !next){ if(msgEl) msgEl.innerText = "Both fields are required."; return; }
+if(next.length < 6){ if(msgEl) msgEl.innerText = "New password must be at least 6 characters."; return; }
 
 try{
 const credential = EmailAuthProvider.credential(currentUser.email, cur);
 await reauthenticateWithCredential(currentUser, credential);
 await updatePassword(currentUser, next);
-msgEl.style.color = "var(--success)";
-msgEl.innerText = "Password updated successfully.";
+if(msgEl){
+  msgEl.style.color = "var(--success)";
+  msgEl.innerText = "Password updated successfully.";
+}
 setTimeout(closePasswordModal, 1200);
 }catch(error){
-msgEl.style.color = "var(--danger)";
-msgEl.innerText = error.message;
+if(msgEl){
+  msgEl.style.color = "var(--danger)";
+  msgEl.innerText = error.message;
 }
-
+}
 };
 
 onAuthStateChanged(auth, async (user)=>{
@@ -781,13 +978,23 @@ currentUser = user;
 const userData = await ensureUserDoc(user);
 currentName = userData.name || user.email;
 
-if(userData.role !== "Admin"){
-document.getElementById("accessDenied").style.display = "block";
+if(userData.disabled === true || userData.deleted === true || userData.role !== "Admin"){
+const deniedEl = document.getElementById("accessDenied");
+if(deniedEl) deniedEl.style.display = "block";
 setTimeout(()=>{ window.location.href = "dashboard.html"; }, 1500);
 return;
 }
 
-document.getElementById("adminContent").style.display = "block";
+const userNameLabel = document.getElementById("userNameLabel");
+const userRoleBadge = document.getElementById("userRoleBadge");
+const userAvatar = document.getElementById("userAvatar");
+const contentEl = document.getElementById("adminContent");
+
+if(userNameLabel) userNameLabel.textContent = currentName;
+if(userRoleBadge) userRoleBadge.textContent = userData.role || "Admin";
+if(userAvatar) userAvatar.textContent = (currentName || "A").charAt(0).toUpperCase();
+
+if(contentEl) contentEl.style.display = "block";
 
 loadUsers();
 loadProjectStats();
