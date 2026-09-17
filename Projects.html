@@ -425,7 +425,9 @@ button.deleteBtn{ background:var(--danger); }
 }
 
 table{ width:100%; border-collapse:collapse; background:var(--card-bg); white-space:nowrap; }
-th, td{ border-bottom:1px solid var(--border); padding:12px 16px; font-size:12px; text-align:left; }
+th, td{ border-bottom:1px solid var(--border); padding:12px 16px; font-size:12px; text-align:left; vertical-align:top; }
+.cell-name{ max-width:200px; min-width:140px; white-space:normal; word-break:break-word; line-height:1.4; }
+.cell-truncate{ max-width:180px; min-width:130px; white-space:normal; word-break:break-word; line-height:1.4; }
 th{
   background:var(--navy);
   color:white;
@@ -717,19 +719,7 @@ tr.overdue{ background:#fef2f2; }
   </main>
 </div>
 
-<!-- Password Modal -->
-<div class="modalOverlay" id="passwordModal">
-  <div class="modalBox" style="background:var(--card-bg);padding:24px;border-radius:12px;width:90%;max-width:400px;">
-    <h2>Change Password</h2>
-    <input type="password" id="currentPassword" placeholder="Current Password">
-    <input type="password" id="newPassword" placeholder="New Password (min 6 chars)">
-    <div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:6px;"></div>
-    <div style="display:flex;gap:10px;margin-top:16px;">
-      <button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">Update Password</button>
-      <button onclick="closePasswordModal()" style="background:#64748b;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700;">Cancel</button>
-    </div>
-  </div>
-</div>
+
 
 <script>
 (function(){
@@ -1078,21 +1068,21 @@ html += `
 <tr class="${overdueFlag ? 'overdue' : ''}">
 
 <td>${sr++}</td>
-<td><b>${escapeHtml(d.projectName)}</b></td>
+<td class="cell-name"><b>${escapeHtml(d.projectName)}</b></td>
 <td>${escapeHtml(d.business)}</td>
 <td>${escapeHtml(d.assetType)}</td>
 <td>${escapeHtml(d.ownerName || d.projectOwner)}</td>
 <td>${escapeHtml(d.assetModel)}</td>
-<td>${escapeHtml(d.runningTask)}</td>
+<td class="cell-truncate">${escapeHtml(d.runningTask)}</td>
 <td>${escapeHtml(d.projectSpoc)}</td>
-<td>${escapeHtml(d.taskStartDate)}</td>
-<td>${escapeHtml(d.taskEndDate)}</td>
+<td style="white-space:nowrap;">${escapeHtml(d.taskStartDate)}</td>
+<td style="white-space:nowrap;">${escapeHtml(d.taskEndDate)}</td>
 <td><span class="badge-status ${statusBadgeClass}">${escapeHtml(d.taskStatus)}</span></td>
 <td><span class="badge-priority priority-${escapeHtml(d.taskPriority)}">${escapeHtml(d.taskPriority)}</span></td>
-<td>${escapeHtml(d.progress1)}</td>
-<td>${escapeHtml(d.progress2)}</td>
-<td>${escapeHtml(d.remarks)}</td>
-<td>${calculateAgeing(d)}</td>
+<td class="cell-truncate">${escapeHtml(d.progress1)}</td>
+<td class="cell-truncate">${escapeHtml(d.progress2)}</td>
+<td class="cell-truncate">${escapeHtml(d.remarks)}</td>
+<td style="white-space:nowrap;">${calculateAgeing(d)}</td>
 
 <td><button class="share" onclick="shareProject('${id}')">🔗 Share</button></td>
 <td>${allowed ? `<button class="actionBtn editBtn" onclick="editProject('${id}')">✏️ Edit</button>` : "-"}</td>
@@ -1385,43 +1375,7 @@ XLSX.writeFile(wb, "ProjectTracker.xlsx");
 
 };
 
-window.openPasswordModal = function(){
-const modal = document.getElementById("passwordModal");
-if(modal) modal.style.display = "flex";
-};
 
-window.closePasswordModal = function(){
-const modal = document.getElementById("passwordModal");
-if(modal) modal.style.display = "none";
-};
-
-window.changePassword = async function(){
-const curEl = document.getElementById("currentPassword");
-const nextEl = document.getElementById("newPassword");
-const msgEl = document.getElementById("passwordMsg");
-
-const cur = curEl ? curEl.value : "";
-const next = nextEl ? nextEl.value : "";
-
-if(!cur || !next){ if(msgEl) msgEl.innerText = "Both fields are required."; return; }
-if(next.length < 6){ if(msgEl) msgEl.innerText = "New password must be at least 6 characters."; return; }
-
-try{
-const credential = EmailAuthProvider.credential(currentUser.email, cur);
-await reauthenticateWithCredential(currentUser, credential);
-await updatePassword(currentUser, next);
-if(msgEl){
-  msgEl.style.color = "var(--success)";
-  msgEl.innerText = "Password updated successfully.";
-}
-setTimeout(closePasswordModal, 1200);
-}catch(error){
-if(msgEl){
-  msgEl.style.color = "var(--danger)";
-  msgEl.innerText = error.message;
-}
-}
-};
 
 window.logout = async function(){
 await logActivity("Logout", "");
