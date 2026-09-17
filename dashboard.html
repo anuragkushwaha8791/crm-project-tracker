@@ -3,495 +3,649 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRM Dashboard</title>
+<title>CRM Dashboard - Mooving</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
 <style>
-
 :root{
---bg:#f4f7fb;
---card-bg:#ffffff;
---text:#222;
---muted:#666;
---border:#ddd;
---navy:#1f4e79;
---navy-dark:#163a5c;
---danger:#c0392b;
---danger-bg:#fdecea;
---success:#1e8449;
---warn:#f39c12;
---warn-bg:#fff8ec;
+  --bg:#f8fafc;
+  --card-bg:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --sidebar-bg:#0f172a;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#1f4e79;
+  --navy-dark:#163a5c;
+  --red:#e2131f;
+  --danger:#dc2626;
+  --danger-bg:#fef2f2;
+  --success:#16a34a;
+  --success-bg:#f0fdf4;
+  --warn:#d97706;
+  --warn-bg:#fffbeb;
+  --badge-pending-bg:#fef3c7;
+  --badge-pending-txt:#92400e;
+  --badge-progress-bg:#dbeafe;
+  --badge-progress-txt:#1e40af;
+  --badge-complete-bg:#dcfce7;
+  --badge-complete-txt:#166534;
 }
 
 [data-theme="dark"]{
---bg:#0f1720;
---card-bg:#1b2530;
---text:#e6edf3;
---muted:#9fb0bf;
---border:#2c3947;
---navy:#3f7cc0;
---navy-dark:#2f6096;
---danger-bg:#3a2226;
---warn-bg:#3a3122;
+  --bg:#0f172a;
+  --card-bg:#1e293b;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:#334155;
+  --sidebar-bg:#090d16;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#38bdf8;
+  --navy-dark:#0284c7;
+  --danger-bg:#451a1a;
+  --success-bg:#14532d;
+  --warn-bg:#451a03;
+  --badge-pending-bg:#451a03;
+  --badge-pending-txt:#fde68a;
+  --badge-progress-bg:#172554;
+  --badge-progress-txt:#bfdbfe;
+  --badge-complete-bg:#052e16;
+  --badge-complete-txt:#86efac;
 }
 
-body{
-font-family:Segoe UI,sans-serif;
-background:var(--bg);
-color:var(--text);
-margin:0;
-padding:20px;
-transition:background .3s,color .3s;
+*{ margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+body{ background:var(--bg); color:var(--text); transition:background .3s,color .3s; display:flex; min-height:100vh; }
+
+/* ---------- Sidebar Navigation ---------- */
+.sidebar-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99; }
+
+.app-sidebar{
+  width:260px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-txt);
+  position:fixed;
+  top:0; bottom:0; left:0;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  transition:transform .3s ease;
+  border-right:1px solid rgba(255,255,255,0.08);
 }
 
-.header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:15px;
-flex-wrap:wrap;
-gap:10px;
+.sidebar-header{
+  padding:24px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.08);
 }
 
-h1{ color:var(--navy); }
+.brand-title{
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:1px;
+  color:white;
+  text-decoration:none;
+}
+.brand-title span{ color:var(--red); }
 
-.nav{
-display:flex;
-gap:10px;
-align-items:center;
-flex-wrap:wrap;
+.brand-badge{
+  font-size:10px;
+  font-weight:800;
+  background:var(--red);
+  color:white;
+  padding:2px 6px;
+  border-radius:4px;
+  text-transform:uppercase;
 }
 
-.nav button, .logout{
-background:var(--navy);
-color:white;
-border:none;
-padding:10px 15px;
-border-radius:5px;
-cursor:pointer;
-font-size:13px;
+.sidebar-nav{
+  padding:20px 12px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  overflow-y:auto;
 }
 
-.logout{ background:var(--danger); }
-.nav button:hover{ background:var(--navy-dark); }
-.nav button.ghost{ background:var(--card-bg); color:var(--text); border:1px solid var(--border); }
-
-#roleBadge{
-background:var(--card-bg);
-border:1px solid var(--border);
-color:var(--navy);
-padding:6px 12px;
-border-radius:20px;
-font-size:12px;
-font-weight:bold;
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  color:#94a3b8;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:600;
+  border-radius:8px;
+  transition:all .2s ease;
+  cursor:pointer;
+  border:none;
+  background:none;
+  width:100%;
+  text-align:left;
 }
 
-.crmStrip{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin-bottom:15px;
+.nav-item:hover{
+  background:rgba(255,255,255,0.06);
+  color:white;
 }
 
+.nav-item.active{
+  background:linear-gradient(90deg, var(--navy), #2563eb);
+  color:white;
+  box-shadow:0 4px 12px rgba(37,99,235,0.3);
+}
+
+.nav-item .icon{ font-size:18px; width:22px; text-align:center; }
+
+.sidebar-footer{
+  padding:16px;
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.user-profile-chip{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  background:rgba(255,255,255,0.04);
+  border-radius:8px;
+}
+
+.avatar-circle{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:var(--navy);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:14px;
+}
+
+.user-info-text{ display:flex; flex-direction:column; overflow:hidden; }
+.user-info-name{ font-size:13px; font-weight:700; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-info-role{ font-size:11px; color:#94a3b8; }
+
+.theme-toggle-btn{
+  background:rgba(255,255,255,0.08);
+  color:white;
+  border:none;
+  padding:8px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:background .2s;
+}
+.theme-toggle-btn:hover{ background:rgba(255,255,255,0.15); }
+
+/* ---------- Main Content Container ---------- */
+.app-main{
+  flex:1;
+  margin-left:260px;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  transition:margin-left .3s ease;
+}
+
+.top-app-bar{
+  background:var(--card-bg);
+  border-bottom:1px solid var(--border);
+  padding:16px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:90;
+}
+
+.mobile-hamburger{
+  display:none;
+  background:none;
+  border:none;
+  font-size:22px;
+  cursor:pointer;
+  color:var(--text);
+}
+
+.page-header-title{
+  font-size:20px;
+  font-weight:800;
+  color:var(--navy);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.main-content{ padding:28px; flex:1; }
+
+.crmStrip{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
 .crmChip{
-background:var(--card-bg);
-border:1px solid var(--border);
-color:var(--navy);
-padding:6px 12px;
-border-radius:20px;
-font-size:12px;
-font-weight:600;
-display:flex;
-align-items:center;
-gap:6px;
+  background:var(--card-bg);
+  border:1px solid var(--border);
+  color:var(--navy);
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:6px;
 }
 
 .viewAsBanner{
-display:none;
-background:#fff3cd;
-color:#7a5b00;
-padding:10px 16px;
-border-radius:8px;
-margin-bottom:15px;
-font-size:13px;
-align-items:center;
-justify-content:space-between;
-gap:10px;
+  display:none;
+  background:#fef3c7;
+  color:#92400e;
+  padding:12px 18px;
+  border-radius:10px;
+  margin-bottom:20px;
+  font-size:13px;
+  font-weight:600;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  border:1px solid #fde68a;
 }
-
 .viewAsBanner.show{ display:flex; }
-[data-theme="dark"] .viewAsBanner{ background:#4a3c12; color:#ffe08a; }
 
 .cards{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:15px;
-margin-bottom:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px;
+  margin-bottom:24px;
 }
 
 .card{
-background:var(--card-bg);
-padding:18px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,.08);
+  background:var(--card-bg);
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  border:1px solid var(--border);
+  transition:transform .2s;
 }
-
-.card h3{ font-size:13px; color:var(--muted); font-weight:normal; }
-.card h2{ color:var(--navy); margin-top:6px; }
+.card:hover{ transform:translateY(-2px); }
+.card h3{ font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+.card h2{ color:var(--navy); margin-top:8px; font-size:24px; font-weight:800; }
 .card.warn h2{ color:var(--danger); }
 .card.good h2{ color:var(--success); }
 
 .panel{
-background:var(--card-bg);
-padding:20px;
-border-radius:10px;
-margin-bottom:20px;
-box-shadow:0 0 10px rgba(0,0,0,.06);
+  background:var(--card-bg);
+  padding:24px;
+  border-radius:14px;
+  margin-bottom:24px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  border:1px solid var(--border);
 }
 
-.panel h2{ color:var(--navy); font-size:16px; margin-bottom:10px; }
+.panel h2{ color:var(--navy); font-size:16px; font-weight:800; margin-bottom:14px; }
 
-.charts-row{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:20px;
+.charts-row{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+@media (max-width:900px){ .charts-row{ grid-template-columns:1fr; } }
+
+.chart-box{
+  position:relative;
+  height:260px;
+  background:var(--card-bg);
+  padding:16px;
+  border-radius:10px;
+  border:1px solid var(--border);
 }
-
-.charts-row.three{ grid-template-columns:1fr 1fr 1fr; }
-
-@media (max-width:900px){
-.charts-row, .charts-row.three{ grid-template-columns:1fr; }
-}
-
-.chart-box{ position:relative; height:250px; }
 
 .notif-item{
-padding:8px 10px;
-border-left:4px solid var(--warn);
-background:var(--warn-bg);
-margin-bottom:6px;
-font-size:13px;
-border-radius:4px;
+  padding:10px 14px;
+  border-left:4px solid var(--warn);
+  background:var(--warn-bg);
+  margin-bottom:8px;
+  font-size:13px;
+  border-radius:6px;
+  line-height:1.4;
 }
-
 .notif-item.overdue{ border-left-color:var(--danger); background:var(--danger-bg); }
 .notif-item.info{ border-left-color:var(--navy); background:var(--bg); }
 .notif-item .who{ color:var(--navy); font-weight:bold; }
 
 .addBtn{
-background:var(--navy);
-color:white;
-border:none;
-padding:12px;
-border-radius:5px;
-cursor:pointer;
-margin-bottom:15px;
+  background:var(--navy);
+  color:white;
+  border:none;
+  padding:12px 20px;
+  border-radius:8px;
+  cursor:pointer;
+  margin-bottom:20px;
+  font-weight:700;
+  box-shadow:0 4px 12px rgba(31,78,121,0.2);
 }
+.addBtn:hover{ background:var(--navy-dark); }
 
-input,select{
-width:100%;
-padding:10px;
-margin-top:8px;
-margin-bottom:10px;
-box-sizing:border-box;
-background:var(--card-bg);
-color:var(--text);
-border:1px solid var(--border);
-border-radius:5px;
+input, select{
+  width:100%;
+  padding:10px 12px;
+  margin-top:6px;
+  margin-bottom:12px;
+  box-sizing:border-box;
+  background:var(--card-bg);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-size:13px;
+  outline:none;
 }
+input:focus, select:focus{ border-color:var(--navy); }
 
-.projectForm{
-display:none;
-background:var(--card-bg);
-padding:20px;
-border-radius:10px;
-margin-bottom:20px;
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-gap:0 15px;
-}
-
-.projectForm button{
-grid-column:1 / -1;
-justify-self:start;
-background:var(--navy);
-color:white;
-border:none;
-padding:10px 15px;
-border-radius:5px;
-cursor:pointer;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-background:var(--card-bg);
-}
-
-th,td{
-border:1px solid var(--border);
-padding:8px;
-font-size:12px;
-}
-
-th{ background:var(--navy); color:white; }
+.table-wrapper{ overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
+table{ width:100%; border-collapse:collapse; background:var(--card-bg); white-space:nowrap; }
+th, td{ border-bottom:1px solid var(--border); padding:10px 12px; font-size:12px; text-align:left; }
+th{ background:var(--navy); color:white; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
 tr.overdue{ background:var(--danger-bg); }
 tr.userRow{ cursor:pointer; }
+tr.userRow:hover{ background:rgba(0,0,0,0.03); }
 
-.searchRow{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
-.searchRow input{ margin:0; flex:1; min-width:200px; }
+.badge-status{ display:inline-block; padding:3px 8px; border-radius:10px; font-weight:700; font-size:11px; }
+.badge-pending{ background:var(--badge-pending-bg); color:var(--badge-pending-txt); }
+.badge-progress{ background:var(--badge-progress-bg); color:var(--badge-progress-txt); }
+.badge-complete{ background:var(--badge-complete-bg); color:var(--badge-complete-txt); }
+
+.searchRow{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.searchRow input{ margin:0; flex:1; min-width:220px; }
 
 .loadMoreBtn{
-background:#8a94a3;
-color:white;
-border:none;
-padding:8px 14px;
-border-radius:5px;
-cursor:pointer;
-margin-top:10px;
-font-size:12px;
+  background:#64748b;
+  color:white;
+  border:none;
+  padding:10px 20px;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:16px;
+  font-size:13px;
+  font-weight:700;
 }
 
 .modalOverlay{
-display:none;
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.45);
-z-index:200;
-justify-content:center;
-align-items:center;
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(3px);
+  z-index:200;
+  justify-content:center;
+  align-items:center;
 }
-
 .modalOverlay.show{ display:flex; }
 
 .modalBox{
-background:var(--card-bg);
-padding:24px;
-border-radius:10px;
-width:90%;
-max-width:500px;
-max-height:85vh;
-overflow:auto;
+  background:var(--card-bg);
+  padding:28px;
+  border-radius:14px;
+  width:90%;
+  max-width:480px;
+  border:1px solid var(--border);
+  box-shadow:0 20px 40px rgba(0,0,0,0.2);
 }
+.modalBox h2{ color:var(--navy); margin-bottom:16px; font-size:18px; font-weight:800; }
+.modalBox .closeBtn{ background:#64748b; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; margin-top:12px; font-weight:700; }
 
-.modalBox h2{ color:var(--navy); margin-bottom:12px; font-size:16px; }
-.modalBox .closeBtn{
-background:#8a94a3;
-color:white;
-border:none;
-padding:8px 14px;
-border-radius:5px;
-cursor:pointer;
-margin-top:10px;
+.stale-note{ font-size:11px; color:var(--muted); margin-top:8px; }
+
+@media (max-width:768px){
+  .app-sidebar{ transform:translateX(-100%); }
+  .app-sidebar.sidebar-open{ transform:translateX(0); }
+  .sidebar-overlay.sidebar-open{ display:block; }
+  .app-main{ margin-left:0; }
+  .mobile-hamburger{ display:block; }
 }
-
-.stale-note{ font-size:11px; color:var(--muted); margin-top:6px; }
 
 </style>
-
 </head>
 
 <body>
 
-<div class="header">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
 
-<h1>CRM Dashboard</h1>
+<!-- Left Sidebar Navigation -->
+<aside class="app-sidebar" id="appSidebar">
+  <div class="sidebar-header">
+    <a href="dashboard.html" class="brand-title">MO<span>O</span>VING</a>
+    <span class="brand-badge">CRM</span>
+  </div>
 
-<div class="nav">
-<span id="roleBadge"></span>
-<button class="ghost" onclick="toggleTheme()" id="themeToggle">🌙 Dark</button>
-<button onclick="window.location.href='Projects.html'">Project Manager</button>
-<button id="adminBtn" style="display:none" onclick="window.location.href='admin.html'">Admin Panel</button>
-<button onclick="openPasswordModal()">Change Password</button>
-<button class="logout" onclick="logout()">Logout</button>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-item active">
+      <span class="icon">📊</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="Projects.html" class="nav-item">
+      <span class="icon">📋</span>
+      <span>Project Manager</span>
+    </a>
+    <a href="admin.html" class="nav-item" id="sidebarAdminLink" style="display:none">
+      <span class="icon">⚙️</span>
+      <span>Admin Panel</span>
+    </a>
+    <a href="view.html" class="nav-item" target="_blank">
+      <span class="icon">👁️</span>
+      <span>Public View</span>
+    </a>
+    <button class="nav-item" onclick="openPasswordModal()">
+      <span class="icon">🔑</span>
+      <span>Change Password</span>
+    </button>
+    <button class="nav-item" onclick="logout()" style="color:#fca5a5;">
+      <span class="icon">🚪</span>
+      <span>Logout</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-profile-chip">
+      <div class="avatar-circle" id="userAvatar">U</div>
+      <div class="user-info-text">
+        <span class="user-info-name" id="userNameLabel">Loading...</span>
+        <span class="user-info-role" id="userRoleBadge">User</span>
+      </div>
+    </div>
+
+    <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">
+      <span>🌙</span> <span id="themeToggleText">Dark Theme</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Main App Wrapper -->
+<div class="app-main">
+  
+  <header class="top-app-bar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="mobile-hamburger" onclick="toggleMobileSidebar()">☰</button>
+      <h1 class="page-header-title">📊 CRM Dashboard</h1>
+    </div>
+    
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button onclick="window.location.href='Projects.html'" class="addBtn" style="margin:0;padding:8px 14px;font-size:12px;">+ Add Project</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <div class="crmStrip">
+      <div class="crmChip">🗂️ <span>Project Data</span></div>
+      <div class="crmChip">⚙️ <span>Task Automation</span></div>
+      <div class="crmChip">👥 <span>Team Reporting</span></div>
+      <div class="crmChip">📊 <span>Live Analytics</span></div>
+      <div class="crmChip">🔔 <span>Smart Alerts</span></div>
+    </div>
+
+    <div class="viewAsBanner" id="viewAsBanner">
+      <span>👁 Viewing <b id="viewAsName"></b>'s dashboard (read-only preview).</span>
+      <button onclick="window.location.href='dashboard.html'" style="background:#78350f;color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:700;">Back to My Dashboard</button>
+    </div>
+
+    <!-- Overview Metrics Cards (Visible to all, formatted based on role) -->
+    <div id="adminCards" class="cards">
+      <div class="card"><h3>Total Projects</h3><h2 id="totalProjects">-</h2></div>
+      <div class="card"><h3>Pending</h3><h2 id="pendingProjects">-</h2></div>
+      <div class="card"><h3>In Progress</h3><h2 id="progressProjects">-</h2></div>
+      <div class="card good"><h3>Completed</h3><h2 id="completedProjects">-</h2></div>
+      <div class="card warn"><h3>High Priority</h3><h2 id="highPriorityProjects">-</h2></div>
+      <div class="card warn"><h3>Overdue</h3><h2 id="overdueProjects">-</h2></div>
+      <div class="card good"><h3>Completion %</h3><h2 id="completionPct">-</h2></div>
+      <div class="card" id="totalUsersCardContainer"><h3>Total Users</h3><h2 id="totalUsersCard">-</h2></div>
+      <div class="card" id="totalAdminsCardContainer"><h3>Total Admins</h3><h2 id="totalAdminsCard">-</h2></div>
+    </div>
+
+    <!-- Overall Analytics & Charts Section -->
+    <div id="adminAnalytics" class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h2 style="margin:0">📊 Overall Analytics</h2>
+        <button style="background:none;border:1px solid var(--border);padding:6px 12px;border-radius:6px;cursor:pointer;color:var(--text);font-size:12px;font-weight:700;" onclick="refreshAggregateStats()">↻ Refresh Analytics</button>
+      </div>
+      <div class="searchRow" style="margin-bottom:12px">
+        <label style="align-self:center;font-size:12px;color:var(--muted);font-weight:700;">Pie chart shows:</label>
+        <select id="pieFilter" onchange="renderFilterablePie(this.value)" style="max-width:220px;margin:0">
+          <option value="status">Overall Status</option>
+          <option value="priority">By Priority</option>
+          <option value="users">Top Users by Task Count</option>
+          <option value="pending">Pending Only (by Priority)</option>
+        </select>
+      </div>
+      <div class="charts-row" style="margin-bottom:20px">
+        <div class="chart-box"><canvas id="statusPie"></canvas></div>
+        <div class="chart-box"><canvas id="priorityBar"></canvas></div>
+      </div>
+      <div class="charts-row" style="margin-bottom:20px">
+        <div class="chart-box"><canvas id="monthlyTrend"></canvas></div>
+        <div class="chart-box"><canvas id="completionTrend"></canvas></div>
+      </div>
+      <div class="chart-box"><canvas id="userBar"></canvas></div>
+    </div>
+
+    <!-- Per-User Team Report (Visible to Admins) -->
+    <div class="panel" id="teamReportPanel" style="display:none">
+      <h2>👥 Per-User Team Report</h2>
+      <div class="searchRow">
+        <input id="userSearch" placeholder="Search user by name or email..." onkeyup="filterUserReportInPlace()">
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th><th>Email</th><th>Role</th><th>Total</th><th>Pending</th><th>In Progress</th><th>Completed</th><th>Efficiency</th>
+            </tr>
+          </thead>
+          <tbody id="userReportBody"><tr><td colspan="8">Loading user metrics...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Personal Overview Panel (For regular users or Admin view-as) -->
+    <div class="panel" id="myPanel" style="display:none">
+      <h2 id="myPanelTitle">My Projects Overview</h2>
+      <div class="cards">
+        <div class="card"><h3>Total</h3><h2 id="myTotal">-</h2></div>
+        <div class="card"><h3>Pending</h3><h2 id="myPending">-</h2></div>
+        <div class="card"><h3>In Progress</h3><h2 id="myInProgress">-</h2></div>
+        <div class="card good"><h3>Completed</h3><h2 id="myCompleted">-</h2></div>
+        <div class="card good"><h3>Efficiency</h3><h2 id="myEfficiency">-</h2></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-box"><canvas id="myPie"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Alerts Panel -->
+    <div class="panel">
+      <h2>🔔 Notifications &amp; Smart Alerts</h2>
+      <div id="notifList">Loading alerts...</div>
+    </div>
+
+    <!-- Recent Projects Table -->
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h2 style="margin:0" id="tableTitle">Recent Projects</h2>
+        <button style="background:var(--navy);color:white;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;" onclick="exportExcel()">📥 Export Excel</button>
+      </div>
+      <div class="searchRow">
+        <input id="tableSearch" placeholder="Search loaded projects..." onkeyup="renderTable()">
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Sr No</th><th>Project Name</th><th>Business</th><th>Asset</th><th>Owner</th><th>Running Task</th><th>Status</th><th>Priority</th><th>Ageing</th>
+            </tr>
+          </thead>
+          <tbody id="projectTable"></tbody>
+        </table>
+      </div>
+      <div style="text-align:center">
+        <button class="loadMoreBtn" id="loadMoreBtn" onclick="loadMore()">Load More Records</button>
+      </div>
+    </div>
+
+  </main>
 </div>
 
-</div>
-
-<div class="crmStrip">
-<div class="crmChip">🗂️ <span>Project Data</span></div>
-<div class="crmChip">⚙️ <span>Task Automation</span></div>
-<div class="crmChip">👥 <span>Team Reporting</span></div>
-<div class="crmChip">📊 <span>Live Analytics</span></div>
-<div class="crmChip">🔔 <span>Smart Alerts</span></div>
-</div>
-
-<div class="viewAsBanner" id="viewAsBanner">
-<span>👁 Viewing <b id="viewAsName"></b>'s dashboard (read-only preview). They've been notified you opened it.</span>
-<button class="nav button" onclick="window.location.href='dashboard.html'" style="background:#7a5b00;color:white;border:none;padding:6px 12px;border-radius:5px;cursor:pointer">Back to My Dashboard</button>
-</div>
-
-<!-- Admin-only overview -->
-<div id="adminCards" class="cards" style="display:none">
-
-<div class="card"><h3>Total Projects</h3><h2 id="totalProjects">-</h2></div>
-<div class="card"><h3>Pending</h3><h2 id="pendingProjects">-</h2></div>
-<div class="card"><h3>In Progress</h3><h2 id="progressProjects">-</h2></div>
-<div class="card good"><h3>Completed</h3><h2 id="completedProjects">-</h2></div>
-<div class="card warn"><h3>High Priority</h3><h2 id="highPriorityProjects">-</h2></div>
-<div class="card warn"><h3>Overdue</h3><h2 id="overdueProjects">-</h2></div>
-<div class="card good"><h3>Completion %</h3><h2 id="completionPct">-</h2></div>
-<div class="card"><h3>Total Users</h3><h2 id="totalUsersCard">-</h2></div>
-<div class="card"><h3>Total Admins</h3><h2 id="totalAdminsCard">-</h2></div>
-
-</div>
-
-<!-- Admin-only charts -->
-<div id="adminAnalytics" style="display:none">
-
-<div class="panel">
-<div class="header" style="margin-bottom:6px">
-<h2 style="margin:0">📊 Overall Analytics (accurate at any scale — computed with count queries, not just the loaded page)</h2>
-<button class="ghost" onclick="refreshAggregateStats()">↻ Refresh Now</button>
-</div>
-<div class="searchRow" style="margin-bottom:6px">
-<label style="align-self:center;font-size:12px;color:var(--muted)">Pie chart shows:</label>
-<select id="pieFilter" onchange="renderFilterablePie(this.value)" style="max-width:220px;margin:0">
-<option value="status">Overall Status</option>
-<option value="priority">By Priority</option>
-<option value="users">Top Users by Task Count</option>
-<option value="pending">Pending Only (by Priority)</option>
-</select>
-</div>
-<div class="charts-row" style="margin-bottom:20px">
-<div class="chart-box"><canvas id="statusPie"></canvas></div>
-<div class="chart-box"><canvas id="priorityBar"></canvas></div>
-</div>
-<div class="charts-row" style="margin-bottom:20px">
-<div class="chart-box"><canvas id="monthlyTrend"></canvas></div>
-<div class="chart-box"><canvas id="completionTrend"></canvas></div>
-</div>
-<div class="chart-box"><canvas id="userBar"></canvas></div>
-<div class="stale-note">Auto-refreshes every 30 seconds. Monthly/Completion trend charts only include projects saved after this update (they need the new "created date" / "completed date" tracking fields).</div>
-</div>
-
-<div class="panel">
-<h2>👥 Per-User Report</h2>
-<div class="searchRow">
-<input id="userSearch" placeholder="Search user by name or email..." onkeyup="renderUserReport()">
-</div>
-<table>
-<thead>
-<tr>
-<th>Name</th><th>Email</th><th>Role</th><th>Total</th><th>Pending</th><th>In Progress</th><th>Completed</th><th>Efficiency</th>
-</tr>
-</thead>
-<tbody id="userReportBody"></tbody>
-</table>
-<div class="stale-note">Click a row to open that user's dashboard. Manage roles / last-login / permanent delete from the Admin Panel.</div>
-</div>
-
-</div>
-
-<!-- Personal panel for User/Viewer, or Admin's "view as" mode -->
-<div class="panel" id="myPanel" style="display:none">
-<h2 id="myPanelTitle">My Projects</h2>
-<div class="cards">
-<div class="card"><h3>Total</h3><h2 id="myTotal">-</h2></div>
-<div class="card"><h3>Pending</h3><h2 id="myPending">-</h2></div>
-<div class="card"><h3>In Progress</h3><h2 id="myInProgress">-</h2></div>
-<div class="card good"><h3>Completed</h3><h2 id="myCompleted">-</h2></div>
-<div class="card good"><h3>Efficiency</h3><h2 id="myEfficiency">-</h2></div>
-</div>
-<div class="charts-row">
-<div class="chart-box"><canvas id="myPie"></canvas></div>
-</div>
-</div>
-
-<div class="panel">
-<h2>🔔 Notifications</h2>
-<div id="notifList">Loading...</div>
-</div>
-
-<button class="addBtn" id="toggleFormBtn" onclick="showForm()">Add Project</button>
-
-<div id="projectForm" class="projectForm">
-
-<input id="projectName" placeholder="Project Name">
-<input id="business" placeholder="Type Of Business">
-<input id="assetType" placeholder="Type Of Asset">
-<input id="projectOwner" placeholder="Project Owner">
-<input id="assetModel" placeholder="Asset Model">
-<input id="runningTask" placeholder="Running Task">
-<input id="projectSpoc" placeholder="Project SPOC">
-
-<label>Task Start Date</label>
-<input type="date" id="taskStartDate">
-
-<label>Task End Date</label>
-<input type="date" id="taskEndDate">
-
-<select id="taskStatus">
-<option>Pending</option>
-<option>In Progress</option>
-<option>Complete</option>
-</select>
-
-<select id="taskPriority">
-<option>Low</option>
-<option>Medium</option>
-<option>High</option>
-</select>
-
-<input id="progress1" placeholder="Progress 1">
-<input id="progress2" placeholder="Progress 2">
-<input id="remarks" placeholder="Remarks">
-
-<button onclick="saveProject()">Save Project</button>
-
-</div>
-
-<div class="panel">
-<div class="header" style="margin-bottom:10px">
-<h2 style="margin:0" id="tableTitle">Recent Projects</h2>
-<div class="nav">
-<button onclick="exportExcel()">Export Excel</button>
-</div>
-</div>
-<div class="searchRow">
-<input id="tableSearch" placeholder="Search loaded projects (name, business, owner, status, priority)..." onkeyup="renderTable()">
-</div>
-<table>
-<thead>
-<tr>
-<th>Sr No</th><th>Project Name</th><th>Business</th><th>Asset</th><th>Owner</th><th>Running Task</th><th>Status</th><th>Priority</th><th>Ageing</th>
-</tr>
-</thead>
-<tbody id="projectTable"></tbody>
-</table>
-<div style="text-align:center">
-<button class="loadMoreBtn" id="loadMoreBtn" onclick="loadMore()">Load More</button>
-</div>
-</div>
-
-<!-- Password change modal -->
+<!-- Password Change Modal -->
 <div class="modalOverlay" id="passwordModal">
-<div class="modalBox">
-<h2>Change Password</h2>
-<input type="password" id="currentPassword" placeholder="Current Password">
-<input type="password" id="newPassword" placeholder="New Password (min 6 chars)">
-<div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px"></div>
-<button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 15px;border-radius:5px;cursor:pointer">Update Password</button>
-<button class="closeBtn" onclick="closePasswordModal()">Cancel</button>
-</div>
+  <div class="modalBox">
+    <h2>Change Password</h2>
+    <input type="password" id="currentPassword" placeholder="Current Password">
+    <input type="password" id="newPassword" placeholder="New Password (min 6 chars)">
+    <div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:6px;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">Update Password</button>
+      <button class="closeBtn" onclick="closePasswordModal()" style="margin:0;">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <script>
 (function(){
-const saved = localStorage.getItem("crm-theme") || "light";
-document.documentElement.setAttribute("data-theme", saved);
+  const saved = localStorage.getItem("crm-theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const btnText = document.getElementById("themeToggleText");
+    if(btnText) btnText.textContent = saved === "dark" ? "Light Theme" : "Dark Theme";
+  });
 })();
+
 function toggleTheme(){
-const current = document.documentElement.getAttribute("data-theme");
-const next = current === "dark" ? "light" : "dark";
-document.documentElement.setAttribute("data-theme", next);
-localStorage.setItem("crm-theme", next);
-document.getElementById("themeToggle").textContent = next === "dark" ? "☀️ Light" : "🌙 Dark";
+  const current = document.documentElement.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("crm-theme", next);
+  const btnText = document.getElementById("themeToggleText");
+  if(btnText) btnText.textContent = next === "dark" ? "Light Theme" : "Dark Theme";
 }
-document.addEventListener("DOMContentLoaded", ()=>{
-document.getElementById("themeToggle").textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️ Light" : "🌙 Dark";
-});
+
+function toggleMobileSidebar(){
+  const sidebar = document.getElementById("appSidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  if(sidebar) sidebar.classList.toggle("sidebar-open");
+  if(overlay) overlay.classList.toggle("sidebar-open");
+}
 </script>
 
 <script type="module">
@@ -545,15 +699,18 @@ let currentUser = null;
 let currentRole = "Viewer";
 let currentName = "";
 let allUsersMap = {};
+let userStatsCache = {};
 
-let viewUid = null;      // set when Admin is previewing someone else's dashboard
-let viewUserData = null; // that user's profile
+let viewUid = null;
+let viewUserData = null;
 
 const PAGE_SIZE = 200;
 let lastVisible = null;
 let pagedProjects = [];
 
 let statusChart, userBarChart, myPieChart, priorityChart, monthlyChart, completionChart;
+let lastStats = null;
+let lastUserEfficiency = [];
 
 const params = new URLSearchParams(window.location.search);
 const requestedViewUid = params.get("viewUid");
@@ -565,6 +722,37 @@ return String(value)
 .replaceAll("<","&lt;")
 .replaceAll(">","&gt;")
 .replaceAll('"',"&quot;");
+}
+
+function parseLocalDate(dateStr){
+if(!dateStr) return null;
+const parts = dateStr.split("-");
+if(parts.length !== 3) return null;
+return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+}
+
+function isOverdue(d){
+if(!d.taskEndDate || d.taskStatus === "Complete") return false;
+const today = new Date(); today.setHours(0,0,0,0);
+const end = parseLocalDate(d.taskEndDate);
+return end ? end < today : false;
+}
+
+function isDueSoon(d){
+if(!d.taskEndDate || d.taskStatus === "Complete") return false;
+const today = new Date(); today.setHours(0,0,0,0);
+const end = parseLocalDate(d.taskEndDate);
+if(!end) return false;
+const diff = Math.floor((end - today)/86400000);
+return diff >= 0 && diff <= 3;
+}
+
+function ageing(d){
+const start = parseLocalDate(d.taskStartDate);
+const end = parseLocalDate(d.taskEndDate);
+if(!start || !end) return "-";
+const diff = Math.round((end - start)/86400000);
+return (diff >= 0 ? diff : 0) + " Days";
 }
 
 async function logActivity(action, details){
@@ -593,112 +781,18 @@ createdAt: serverTimestamp()
 }
 
 async function ensureUserDoc(user){
-
 const ref = doc(db,"users",user.uid);
 const snap = await getDoc(ref);
-
-if(snap.exists()){
-return snap.data();
-}
-
+if(snap.exists()) return snap.data();
 const data = {
 name: user.displayName || user.email,
 email: user.email,
 role: "User",
 createdAt: new Date().toISOString()
 };
-
 await setDoc(ref, data);
 return data;
-
 }
-
-window.showForm = function(){
-const form = document.getElementById("projectForm");
-form.style.display = form.style.display === "grid" ? "none" : "grid";
-};
-
-window.saveProject = async function(){
-
-if(!projectName.value.trim()){
-alert("Project Name is required.");
-return;
-}
-
-const status = taskStatus.value;
-
-const payload = {
-projectName: projectName.value.trim(),
-business: business.value.trim(),
-assetType: assetType.value.trim(),
-projectOwner: projectOwner.value.trim(),
-assetModel: assetModel.value.trim(),
-runningTask: runningTask.value.trim(),
-projectSpoc: projectSpoc.value.trim(),
-taskStartDate: taskStartDate.value,
-taskEndDate: taskEndDate.value,
-taskStatus: status,
-taskPriority: taskPriority.value,
-progress1: progress1.value.trim(),
-progress2: progress2.value.trim(),
-remarks: remarks.value.trim(),
-ownerEmail: currentUser ? currentUser.email : "",
-ownerUid: currentUser ? currentUser.uid : "",
-ownerName: currentName,
-createdAt: serverTimestamp()
-};
-
-if(status === "Complete"){
-payload.completedAt = serverTimestamp();
-}
-
-try{
-
-await addDoc(collection(db,"crmprojects"), payload);
-
-await logActivity("Project Created", payload.projectName);
-
-alert("Project Saved Successfully");
-
-document.querySelectorAll("#projectForm input").forEach(x=>x.value="");
-taskStatus.selectedIndex = 0;
-taskPriority.selectedIndex = 0;
-document.getElementById("projectForm").style.display = "none";
-
-refreshAggregateStats();
-
-}catch(error){
-
-console.error(error);
-alert("Error saving project. " + error.message);
-
-}
-
-};
-
-function isOverdue(d){
-if(!d.taskEndDate || d.taskStatus === "Complete") return false;
-const today = new Date(); today.setHours(0,0,0,0);
-return new Date(d.taskEndDate) < today;
-}
-
-function isDueSoon(d){
-if(!d.taskEndDate || d.taskStatus === "Complete") return false;
-const today = new Date(); today.setHours(0,0,0,0);
-const end = new Date(d.taskEndDate);
-const diff = Math.floor((end-today)/86400000);
-return diff >= 0 && diff <= 3;
-}
-
-function ageing(d){
-if(!d.taskStartDate || !d.taskEndDate) return "-";
-const start = new Date(d.taskStartDate);
-const end = new Date(d.taskEndDate);
-const diff = Math.floor((end-start)/86400000);
-return (diff>=0?diff:0) + " Days";
-}
-
-/* ---------------- Live paged table ---------------- */
 
 function buildBaseQuery(){
 if(currentRole === "Admin" && !viewUid){
@@ -711,38 +805,27 @@ return query(collection(db,"crmprojects"), where("ownerUid","==",targetUid), ord
 let unsubscribeFallback = null;
 
 function listenFirstPage(){
-
 const q = buildBaseQuery();
 
 onSnapshot(q, (snapshot)=>{
-
 pagedProjects = [];
 snapshot.forEach(docSnap=>pagedProjects.push({id:docSnap.id, data:docSnap.data()}));
-
 if(snapshot.docs.length){
 lastVisible = snapshot.docs[snapshot.docs.length-1];
 }
-
 renderTable();
 renderMyPersonalIfNeeded();
-
+refreshAggregateStats();
 }, (error)=>{
 
 console.error("Primary listener error:", error);
-
-// The usual cause is a composite index that hasn't finished building yet
-// (Firestore logs a one-click "create index" link to the browser console
-// the first time this runs). Rather than leaving the table stuck, fall
-// back to a query that needs no composite index, so data still shows
-// while the index builds in the background.
-if(unsubscribeFallback) return; // already on the fallback path
+if(unsubscribeFallback) return;
 
 const fallbackQ = (currentRole === "Admin" && !viewUid)
 ? query(collection(db,"crmprojects"), limit(PAGE_SIZE))
 : query(collection(db,"crmprojects"), where("ownerUid","==", viewUid || currentUser.uid), limit(PAGE_SIZE));
 
 unsubscribeFallback = onSnapshot(fallbackQ, (snapshot)=>{
-
 pagedProjects = [];
 snapshot.forEach(docSnap=>pagedProjects.push({id:docSnap.id, data:docSnap.data()}));
 pagedProjects.sort((a,b)=>{
@@ -753,51 +836,33 @@ return bt - at;
 
 renderTable();
 renderMyPersonalIfNeeded();
-
-const noteId = "fallbackNote";
-if(!document.getElementById(noteId)){
-const noteEl = document.createElement("div");
-noteEl.id = noteId;
-noteEl.className = "stale-note";
-noteEl.textContent = error.code === "failed-precondition"
-? "A required Firestore index is still building — data is shown unsorted for now. This resolves itself within a minute or two."
-: `Live sort unavailable right now (${error.code || error.message}) — showing available data.`;
-projectTable.parentElement.appendChild(noteEl);
-}
-
+refreshAggregateStats();
 }, (fallbackError)=>{
-console.error("Fallback listener also failed:", fallbackError);
-projectTable.innerHTML = `<tr><td colspan='9'>Could not load data (${escapeHtml(fallbackError.code || fallbackError.message)}). Check that Firestore Security Rules are published and that you're online.</td></tr>`;
+const projectTableEl = document.getElementById("projectTable");
+if(projectTableEl) projectTableEl.innerHTML = `<tr><td colspan='9' style='color:var(--danger);padding:16px;'>Could not load data (${escapeHtml(fallbackError.code || fallbackError.message)}).</td></tr>`;
 });
 
 });
-
 }
 
-/* Notifications are intentionally independent of the table listener above —
-   a failure loading projects must never block alerts from showing. */
 function startNotificationsLoop(){
 renderNotifications();
-setInterval(renderNotifications, 20000);
+setInterval(renderNotifications, 30000);
 }
 
 window.loadMore = async function(){
-
 if(!lastVisible){
 alert("No more data to load.");
 return;
 }
 
 try{
-
 const targetUid = (currentRole === "Admin" && !viewUid) ? null : (viewUid || currentUser.uid);
-
 const q = targetUid
 ? query(collection(db,"crmprojects"), where("ownerUid","==",targetUid), orderBy("createdAt","desc"), startAfter(lastVisible), limit(PAGE_SIZE))
 : query(collection(db,"crmprojects"), orderBy("createdAt","desc"), startAfter(lastVisible), limit(PAGE_SIZE));
 
 const snap = await getDocs(q);
-
 if(snap.empty){
 alert("No more projects.");
 return;
@@ -805,22 +870,21 @@ return;
 
 snap.forEach(docSnap=>pagedProjects.push({id:docSnap.id, data:docSnap.data()}));
 lastVisible = snap.docs[snap.docs.length-1];
-
 renderTable();
-
+refreshAggregateStats();
 }catch(error){
 console.error(error);
 alert("Error loading more data.");
 }
-
 };
 
-function renderTable(){
+window.renderTable = function(){
+const projectTableEl = document.getElementById("projectTable");
+const searchEl = document.getElementById("tableSearch");
+if(!projectTableEl) return;
 
 let tableHtml = "";
 let sr = 1;
-
-const searchEl = document.getElementById("tableSearch");
 const term = searchEl ? searchEl.value.trim().toLowerCase() : "";
 
 const filtered = term
@@ -833,35 +897,37 @@ return haystack.includes(term);
 : pagedProjects;
 
 filtered.slice(0,150).forEach((item)=>{
-
 const d = item.data;
 const overdueFlag = isOverdue(d);
+
+let badgeClass = "badge-pending";
+if(d.taskStatus === "In Progress") badgeClass = "badge-progress";
+if(d.taskStatus === "Complete") badgeClass = "badge-complete";
 
 tableHtml += `
 <tr class="${overdueFlag ? 'overdue' : ''}">
 <td>${sr++}</td>
-<td>${escapeHtml(d.projectName)}</td>
+<td><b>${escapeHtml(d.projectName)}</b></td>
 <td>${escapeHtml(d.business)}</td>
 <td>${escapeHtml(d.assetType)}</td>
 <td>${escapeHtml(d.ownerName || d.projectOwner)}</td>
 <td>${escapeHtml(d.runningTask)}</td>
-<td>${escapeHtml(d.taskStatus)}</td>
+<td><span class="badge-status ${badgeClass}">${escapeHtml(d.taskStatus)}</span></td>
 <td>${escapeHtml(d.taskPriority)}</td>
 <td>${ageing(d)}</td>
 </tr>
 `;
-
 });
 
-projectTable.innerHTML = tableHtml || (term ? "<tr><td colspan='9'>No loaded projects match your search.</td></tr>" : "<tr><td colspan='9'>No projects yet.</td></tr>");
-
-}
+projectTableEl.innerHTML = tableHtml || (term ? "<tr><td colspan='9' style='text-align:center;padding:16px;color:var(--muted);'>No projects match search.</td></tr>" : "<tr><td colspan='9' style='text-align:center;padding:16px;color:var(--muted);'>No projects yet.</td></tr>");
+};
 
 async function renderNotifications(){
+const notifListEl = document.getElementById("notifList");
+if(!notifListEl) return;
 
 let notifHtml = "";
 
-// computed overdue/due-soon
 pagedProjects.forEach((item)=>{
 const d = item.data;
 const who = (currentRole === "Admin" && !viewUid) ? `<span class="who">${escapeHtml(d.ownerName || d.ownerEmail || "Unknown")}:</span> ` : "";
@@ -873,15 +939,13 @@ notifHtml += `<div class="notif-item">⏰ ${who}Due soon: <b>${escapeHtml(d.proj
 }
 });
 
-// stored notifications (admin edits, role changes, "admin viewed your account" etc.)
 try{
-
 let storedQ;
 if(currentRole === "Admin" && !viewUid){
-storedQ = query(collection(db,"notifications"), orderBy("createdAt","desc"), limit(100));
+storedQ = query(collection(db,"notifications"), orderBy("createdAt","desc"), limit(30));
 }else{
 const targetUid = viewUid || currentUser.uid;
-storedQ = query(collection(db,"notifications"), where("targetUid","==",targetUid), orderBy("createdAt","desc"), limit(50));
+storedQ = query(collection(db,"notifications"), where("targetUid","==",targetUid), orderBy("createdAt","desc"), limit(20));
 }
 
 const snap = await getDocs(storedQ);
@@ -893,14 +957,9 @@ who = `<span class="who">${escapeHtml(allUsersMap[n.targetUid].name || allUsersM
 }
 notifHtml += `<div class="notif-item info">🔔 ${who}<b>${escapeHtml(n.title)}</b> — ${escapeHtml(n.message)}</div>`;
 });
+}catch(e){ console.error(e); }
 
-}catch(e){
-console.error("Notifications query error:", e);
-notifHtml += `<div class="stale-note">Some alerts couldn't load (${escapeHtml(e.code || e.message)}). Task due-date alerts above are still accurate.</div>`;
-}
-
-notifList.innerHTML = notifHtml || "No alerts right now.";
-
+notifListEl.innerHTML = notifHtml || "<div style='color:var(--muted);font-size:13px;'>No notifications right now.</div>";
 }
 
 function renderMyPersonalIfNeeded(){
@@ -910,26 +969,32 @@ computeMyStats();
 }
 
 async function computeMyStats(){
-
 const targetUid = viewUid || currentUser.uid;
 
 try{
-
 const totalSnap = await getCountFromServer(query(collection(db,"crmprojects"), where("ownerUid","==",targetUid)));
 const pendingSnap = await getCountFromServer(query(collection(db,"crmprojects"), where("ownerUid","==",targetUid), where("taskStatus","==","Pending")));
 const progressSnap = await getCountFromServer(query(collection(db,"crmprojects"), where("ownerUid","==",targetUid), where("taskStatus","==","In Progress")));
 const completeSnap = await getCountFromServer(query(collection(db,"crmprojects"), where("ownerUid","==",targetUid), where("taskStatus","==","Complete")));
 
-const total = totalSnap.data().count;
-const pending = pendingSnap.data().count;
-const progress = progressSnap.data().count;
-const completed = completeSnap.data().count;
+let total = totalSnap.data().count;
+let pending = pendingSnap.data().count;
+let progress = progressSnap.data().count;
+let completed = completeSnap.data().count;
 
-myTotal.innerText = total;
-myPending.innerText = pending;
-document.getElementById("myInProgress").innerText = progress;
-myCompleted.innerText = completed;
-document.getElementById("myEfficiency").innerText = total ? Math.round((completed/total)*100) + "%" : "0%";
+if(total === null || total === undefined) total = pagedProjects.length;
+
+const myTotalEl = document.getElementById("myTotal");
+const myPendingEl = document.getElementById("myPending");
+const myInProgressEl = document.getElementById("myInProgress");
+const myCompletedEl = document.getElementById("myCompleted");
+const myEfficiencyEl = document.getElementById("myEfficiency");
+
+if(myTotalEl) myTotalEl.innerText = total;
+if(myPendingEl) myPendingEl.innerText = pending;
+if(myInProgressEl) myInProgressEl.innerText = progress;
+if(myCompletedEl) myCompletedEl.innerText = completed;
+if(myEfficiencyEl) myEfficiencyEl.innerText = total ? Math.round((completed/total)*100) + "%" : "0%";
 
 const ctx = document.getElementById("myPie");
 if(ctx){
@@ -943,40 +1008,28 @@ datasets: [{ data: [pending, progress, completed], backgroundColor: ["#f39c12","
 options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:"bottom" } } }
 });
 }
-
-}catch(error){
-console.error("computeMyStats error:", error);
+}catch(error){ console.error(error); }
 }
-
-}
-
-/* ---------------- Admin aggregate analytics (scale-safe via count queries) ---------------- */
 
 async function countQ(...constraints){
 try{
 const q = query(collection(db,"crmprojects"), ...constraints);
 const snap = await getCountFromServer(q);
 return snap.data().count;
-}catch(error){
-console.error("countQ failed for", constraints, error);
-return null; // null = "couldn't compute this one", not zero
-}
+}catch(error){ return null; }
 }
 
-function showCard(el, value){
-el.innerText = (value === null || value === undefined) ? "—" : value;
+function showCard(elId, value){
+const el = document.getElementById(elId);
+if(el) el.innerText = (value === null || value === undefined) ? "—" : value;
 }
 
 window.refreshAggregateStats = async function(){
-
-if(currentRole !== "Admin" || viewUid) return;
+if(viewUid) return;
 
 const todayStr = new Date().toISOString().slice(0,10);
 
-// Every query below is isolated: if one needs a Firestore index that
-// hasn't finished building yet, it returns null and every OTHER card
-// still renders normally instead of the whole panel going blank.
-const [total, pending, progress, completed, high, medium, low, overduePending, overdueProgress] = await Promise.all([
+let [total, pending, progress, completed, high, medium, low, overduePending, overdueProgress] = await Promise.all([
 countQ(),
 countQ(where("taskStatus","==","Pending")),
 countQ(where("taskStatus","==","In Progress")),
@@ -988,26 +1041,41 @@ countQ(where("taskStatus","==","Pending"), where("taskEndDate","<",todayStr)),
 countQ(where("taskStatus","==","In Progress"), where("taskEndDate","<",todayStr))
 ]);
 
-const overdue = (overduePending === null || overdueProgress === null) ? null : (overduePending + overdueProgress);
+// Robust Fallback: calculate in-memory from loaded pagedProjects if count queries fail (missing indexes)
+if(total === null || total === undefined) total = pagedProjects.length;
+if(pending === null || pending === undefined) pending = pagedProjects.filter(p => p.data && p.data.taskStatus === "Pending").length;
+if(progress === null || progress === undefined) progress = pagedProjects.filter(p => p.data && p.data.taskStatus === "In Progress").length;
+if(completed === null || completed === undefined) completed = pagedProjects.filter(p => p.data && p.data.taskStatus === "Complete").length;
+if(high === null || high === undefined) high = pagedProjects.filter(p => p.data && p.data.taskPriority === "High").length;
+if(medium === null || medium === undefined) medium = pagedProjects.filter(p => p.data && p.data.taskPriority === "Medium").length;
+if(low === null || low === undefined) low = pagedProjects.filter(p => p.data && p.data.taskPriority === "Low").length;
 
-showCard(totalProjects, total);
-showCard(pendingProjects, pending);
-showCard(progressProjects, progress);
-showCard(completedProjects, completed);
-showCard(highPriorityProjects, high);
-showCard(overdueProjects, overdue);
-completionPct.innerText = (total && completed !== null) ? Math.round((completed/total)*100) + "%" : "—";
-totalUsersCard.innerText = Object.keys(allUsersMap).length;
+let overdue = (overduePending === null || overdueProgress === null) ? null : (overduePending + overdueProgress);
+if(overdue === null) overdue = pagedProjects.filter(p => p.data && isOverdue(p.data)).length;
+
+showCard("totalProjects", total);
+showCard("pendingProjects", pending);
+showCard("progressProjects", progress);
+showCard("completedProjects", completed);
+showCard("highPriorityProjects", high);
+showCard("overdueProjects", overdue);
+
+const pctEl = document.getElementById("completionPct");
+if(pctEl) pctEl.innerText = (total && completed !== null) ? Math.round((completed/total)*100) + "%" : "0%";
+showCard("totalUsersCard", Object.keys(allUsersMap).length);
 
 const admins = Object.values(allUsersMap).filter(u=>u.role === "Admin").length;
-if(document.getElementById("totalAdminsCard")) totalAdminsCard.innerText = admins;
+showCard("totalAdminsCard", admins);
 
-// Pending-only breakdown by priority, for the "Pending Only" pie filter.
-const [pendingLow, pendingMedium, pendingHigh] = await Promise.all([
+let [pendingLow, pendingMedium, pendingHigh] = await Promise.all([
 countQ(where("taskStatus","==","Pending"), where("taskPriority","==","Low")),
 countQ(where("taskStatus","==","Pending"), where("taskPriority","==","Medium")),
 countQ(where("taskStatus","==","Pending"), where("taskPriority","==","High"))
 ]);
+
+if(pendingLow === null) pendingLow = pagedProjects.filter(p=>p.data && p.data.taskStatus==="Pending" && p.data.taskPriority==="Low").length;
+if(pendingMedium === null) pendingMedium = pagedProjects.filter(p=>p.data && p.data.taskStatus==="Pending" && p.data.taskPriority==="Medium").length;
+if(pendingHigh === null) pendingHigh = pagedProjects.filter(p=>p.data && p.data.taskStatus==="Pending" && p.data.taskPriority==="High").length;
 
 lastStats = {
 pending: pending||0, progress: progress||0, completed: completed||0,
@@ -1015,21 +1083,16 @@ low: low||0, medium: medium||0, high: high||0,
 pendingLow: pendingLow||0, pendingMedium: pendingMedium||0, pendingHigh: pendingHigh||0
 };
 
-try{ renderPriorityBar(lastStats.low, lastStats.medium, lastStats.high); }catch(e){ console.error(e); }
-try{ await renderMonthlyTrend(); }catch(e){ console.error(e); }
-try{ await renderCompletionTrend(); }catch(e){ console.error(e); }
-try{ await renderUserBarChart(); }catch(e){ console.error(e); }
+try{ renderPriorityBar(lastStats.low, lastStats.medium, lastStats.high); }catch(e){}
+try{ await renderMonthlyTrend(); }catch(e){}
+try{ await renderCompletionTrend(); }catch(e){}
+try{ await fetchAndBuildUserStats(); }catch(e){}
 
 const filterEl = document.getElementById("pieFilter");
 window.renderFilterablePie(filterEl ? filterEl.value : "status");
-
 };
 
-let lastStats = null;
-let lastUserEfficiency = [];
-
 window.renderFilterablePie = function(mode){
-
 const ctx = document.getElementById("statusPie");
 if(!ctx || !lastStats) return;
 
@@ -1061,21 +1124,11 @@ data:{ labels:["Pending","In Progress","Completed"], datasets:[{ data:[lastStats
 options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:"bottom"}, title:{display:true,text:"Status Distribution"} } }
 });
 }
-
 };
-
-function renderStatusPie(pending, progress, completed){
-const ctx = document.getElementById("statusPie");
-if(statusChart) statusChart.destroy();
-statusChart = new Chart(ctx, {
-type: "pie",
-data: { labels: ["Pending","In Progress","Completed"], datasets: [{ data:[pending,progress,completed], backgroundColor:["#f39c12","#2f6fae","#1e8449"] }] },
-options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:"bottom"}, title:{display:true,text:"Status Distribution"} } }
-});
-}
 
 function renderPriorityBar(low, medium, high){
 const ctx = document.getElementById("priorityBar");
+if(!ctx) return;
 if(priorityChart) priorityChart.destroy();
 priorityChart = new Chart(ctx, {
 type: "bar",
@@ -1097,136 +1150,148 @@ return months;
 }
 
 async function renderMonthlyTrend(){
-
 const months = lastNMonths(6);
 const counts = [];
-
 for(const m of months){
 try{
-const c = await countQ(where("createdAt",">=",m.start), where("createdAt","<",m.end));
-counts.push(c);
-}catch(e){
-counts.push(0);
+let c = await countQ(where("createdAt",">=",m.start), where("createdAt","<",m.end));
+if(c === null){
+  c = pagedProjects.filter(p=>{
+    const ca = p.data && p.data.createdAt;
+    if(!ca) return false;
+    const dt = ca.toDate ? ca.toDate() : new Date(ca);
+    return dt >= m.start && dt < m.end;
+  }).length;
 }
+counts.push(c || 0);
+}catch(e){ counts.push(0); }
 }
 
 const ctx = document.getElementById("monthlyTrend");
+if(!ctx) return;
 if(monthlyChart) monthlyChart.destroy();
 monthlyChart = new Chart(ctx, {
 type: "line",
 data: { labels: months.map(m=>m.label), datasets: [{ label:"Projects Created", data:counts, borderColor:"#1f4e79", backgroundColor:"rgba(31,78,121,0.15)", tension:.3, fill:true }] },
 options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, title:{display:true,text:"Monthly Project Trend"} }, scales:{ y:{ beginAtZero:true } } }
 });
-
 }
 
 async function renderCompletionTrend(){
-
 const months = lastNMonths(6);
 const counts = [];
-
 for(const m of months){
 try{
-const c = await countQ(where("taskStatus","==","Complete"), where("completedAt",">=",m.start), where("completedAt","<",m.end));
-counts.push(c);
-}catch(e){
-counts.push(0);
+let c = await countQ(where("taskStatus","==","Complete"), where("completedAt",">=",m.start), where("completedAt","<",m.end));
+if(c === null){
+  c = pagedProjects.filter(p=>{
+    if(!p.data || p.data.taskStatus !== "Complete") return false;
+    const ca = p.data.completedAt;
+    if(!ca) return false;
+    const dt = ca.toDate ? ca.toDate() : new Date(ca);
+    return dt >= m.start && dt < m.end;
+  }).length;
 }
+counts.push(c || 0);
+}catch(e){ counts.push(0); }
 }
 
 const ctx = document.getElementById("completionTrend");
+if(!ctx) return;
 if(completionChart) completionChart.destroy();
 completionChart = new Chart(ctx, {
 type: "line",
 data: { labels: months.map(m=>m.label), datasets: [{ label:"Completed", data:counts, borderColor:"#1e8449", backgroundColor:"rgba(30,132,73,0.15)", tension:.3, fill:true }] },
 options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, title:{display:true,text:"Completion Trend"} }, scales:{ y:{ beginAtZero:true } } }
 });
-
 }
 
-async function renderUserBarChart(){
-
+async function fetchAndBuildUserStats(){
 const uids = Object.keys(allUsersMap);
-const names = [];
-const efficiencies = [];
+userStatsCache = {};
 lastUserEfficiency = [];
 
 for(const uid of uids){
 try{
-const totalC = await countQ(where("ownerUid","==",uid));
-const doneC = await countQ(where("ownerUid","==",uid), where("taskStatus","==","Complete"));
-const name = allUsersMap[uid].name || allUsersMap[uid].email;
-names.push(name);
-efficiencies.push(totalC ? Math.round((doneC/totalC)*100) : 0);
-lastUserEfficiency.push({ uid, name, total: totalC, completed: doneC });
-}catch(e){ /* skip */ }
+const u = allUsersMap[uid];
+let total = await countQ(where("ownerUid","==",uid));
+let pending = await countQ(where("ownerUid","==",uid), where("taskStatus","==","Pending"));
+let progress = await countQ(where("ownerUid","==",uid), where("taskStatus","==","In Progress"));
+let completed = await countQ(where("ownerUid","==",uid), where("taskStatus","==","Complete"));
+
+if(total === null) total = pagedProjects.filter(p=>p.data && p.data.ownerUid===uid).length;
+if(pending === null) pending = pagedProjects.filter(p=>p.data && p.data.ownerUid===uid && p.data.taskStatus==="Pending").length;
+if(progress === null) progress = pagedProjects.filter(p=>p.data && p.data.ownerUid===uid && p.data.taskStatus==="In Progress").length;
+if(completed === null) completed = pagedProjects.filter(p=>p.data && p.data.ownerUid===uid && p.data.taskStatus==="Complete").length;
+
+const name = u.name || u.email;
+userStatsCache[uid] = { uid, name, email: u.email, role: u.role, total: total||0, pending: pending||0, progress: progress||0, completed: completed||0 };
+lastUserEfficiency.push({ uid, name, total: total||0, completed: completed||0 });
+}catch(e){}
 }
 
+renderUserReportFromCache();
+
 const ctx = document.getElementById("userBar");
-if(userBarChart) userBarChart.destroy();
+if(ctx && userBarChart) userBarChart.destroy();
+if(ctx){
+const names = lastUserEfficiency.map(x=>x.name);
+const efficiencies = lastUserEfficiency.map(x=>x.total ? Math.round((x.completed/x.total)*100) : 0);
 userBarChart = new Chart(ctx, {
 type: "bar",
 data: { labels: names, datasets: [{ label:"Efficiency %", data: efficiencies, backgroundColor:"#1f4e79" }] },
 options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, title:{display:true,text:"Efficiency by User"} }, scales:{ y:{ beginAtZero:true, max:100 } } }
 });
-
+}
 }
 
-window.renderUserReport = async function(){
+function renderUserReportFromCache(){
+const userSearchEl = document.getElementById("userSearch");
+const search = userSearchEl ? userSearchEl.value.toLowerCase().trim() : "";
+const tbody = document.getElementById("userReportBody");
+if(!tbody) return;
 
-const search = (document.getElementById("userSearch").value || "").toLowerCase();
-const uids = Object.keys(allUsersMap);
 let html = "";
-
-for(const uid of uids){
-
-const u = allUsersMap[uid];
+for(const uid of Object.keys(userStatsCache)){
+const u = userStatsCache[uid];
 const txt = ((u.name||"") + " " + (u.email||"")).toLowerCase();
 if(search && !txt.includes(search)) continue;
 
-let total = 0, pending = 0, progress = 0, completed = 0;
-try{
-total = await countQ(where("ownerUid","==",uid));
-pending = await countQ(where("ownerUid","==",uid), where("taskStatus","==","Pending"));
-progress = await countQ(where("ownerUid","==",uid), where("taskStatus","==","In Progress"));
-completed = await countQ(where("ownerUid","==",uid), where("taskStatus","==","Complete"));
-}catch(e){}
-
-const efficiency = total ? Math.round((completed/total)*100) : 0;
-
+const efficiency = u.total ? Math.round((u.completed/u.total)*100) : 0;
 html += `
 <tr class="userRow" onclick="window.location.href='dashboard.html?viewUid=${uid}'">
-<td>${escapeHtml(u.name)}</td>
+<td><b>${escapeHtml(u.name)}</b></td>
 <td>${escapeHtml(u.email)}</td>
 <td>${escapeHtml(u.role)}</td>
-<td>${total}</td><td>${pending}</td><td>${progress}</td><td>${completed}</td><td>${efficiency}%</td>
+<td>${u.total}</td><td>${u.pending}</td><td>${u.progress}</td><td>${u.completed}</td><td><b>${efficiency}%</b></td>
 </tr>
 `;
-
 }
 
-userReportBody.innerHTML = html || "<tr><td colspan='8'>No users found.</td></tr>";
+tbody.innerHTML = html || "<tr><td colspan='8' style='text-align:center;padding:16px;color:var(--muted);'>No matching users.</td></tr>";
+}
 
+let userReportDebounce = null;
+window.filterUserReportInPlace = function(){
+clearTimeout(userReportDebounce);
+userReportDebounce = setTimeout(()=>{
+  renderUserReportFromCache();
+}, 150);
 };
 
 function listenUsers(){
 onSnapshot(collection(db,"users"), (snapshot)=>{
 allUsersMap = {};
 snapshot.forEach(docSnap=>{ allUsersMap[docSnap.id] = docSnap.data(); });
-totalUsersCard.innerText = Object.keys(allUsersMap).length;
-if(document.getElementById("totalAdminsCard")){
-totalAdminsCard.innerText = Object.values(allUsersMap).filter(u=>u.role === "Admin").length;
-}
+showCard("totalUsersCard", Object.keys(allUsersMap).length);
+showCard("totalAdminsCard", Object.values(allUsersMap).filter(u=>u.role === "Admin").length);
 if(currentRole === "Admin" && !viewUid){
-renderUserReport();
+fetchAndBuildUserStats();
 }
 });
 }
 
-/* ---------------- Excel export ---------------- */
-
 window.exportExcel = function(){
-
 if(!pagedProjects.length){
 alert("No projects to export.");
 return;
@@ -1257,43 +1322,50 @@ const ws = XLSX.utils.json_to_sheet(data);
 const wb = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb, ws, "Projects");
 XLSX.writeFile(wb, "ProjectTracker.xlsx");
-
 };
 
-/* ---------------- Password change ---------------- */
-
 window.openPasswordModal = function(){
-document.getElementById("currentPassword").value = "";
-document.getElementById("newPassword").value = "";
-document.getElementById("passwordMsg").innerText = "";
-document.getElementById("passwordModal").classList.add("show");
+const curEl = document.getElementById("currentPassword");
+const nextEl = document.getElementById("newPassword");
+const msgEl = document.getElementById("passwordMsg");
+if(curEl) curEl.value = "";
+if(nextEl) nextEl.value = "";
+if(msgEl) msgEl.innerText = "";
+const modal = document.getElementById("passwordModal");
+if(modal) modal.classList.add("show");
 };
 
 window.closePasswordModal = function(){
-document.getElementById("passwordModal").classList.remove("show");
+const modal = document.getElementById("passwordModal");
+if(modal) modal.classList.remove("show");
 };
 
 window.changePassword = async function(){
-
-const cur = document.getElementById("currentPassword").value;
-const next = document.getElementById("newPassword").value;
+const curEl = document.getElementById("currentPassword");
+const nextEl = document.getElementById("newPassword");
 const msgEl = document.getElementById("passwordMsg");
 
-if(!cur || !next){ msgEl.innerText = "Both fields are required."; return; }
-if(next.length < 6){ msgEl.innerText = "New password must be at least 6 characters."; return; }
+const cur = curEl ? curEl.value : "";
+const next = nextEl ? nextEl.value : "";
+
+if(!cur || !next){ if(msgEl) msgEl.innerText = "Both fields are required."; return; }
+if(next.length < 6){ if(msgEl) msgEl.innerText = "New password must be at least 6 characters."; return; }
 
 try{
 const credential = EmailAuthProvider.credential(currentUser.email, cur);
 await reauthenticateWithCredential(currentUser, credential);
 await updatePassword(currentUser, next);
-msgEl.style.color = "var(--success)";
-msgEl.innerText = "Password updated successfully.";
+if(msgEl){
+  msgEl.style.color = "var(--success)";
+  msgEl.innerText = "Password updated successfully.";
+}
 setTimeout(closePasswordModal, 1200);
 }catch(error){
-msgEl.style.color = "var(--danger)";
-msgEl.innerText = error.message;
+if(msgEl){
+  msgEl.style.color = "var(--danger)";
+  msgEl.innerText = error.message;
 }
-
+}
 };
 
 window.logout = async function(){
@@ -1315,16 +1387,35 @@ try{
 currentUser = user;
 
 const userData = await ensureUserDoc(user);
+
+if(userData.disabled === true || userData.deleted === true){
+  await signOut(auth);
+  window.location.href = "index.html";
+  return;
+}
+
 currentRole = userData.role || "Viewer";
 currentName = userData.name || user.email;
 
-roleBadge.textContent = `${currentName} · ${currentRole}`;
+const userNameLabel = document.getElementById("userNameLabel");
+const userRoleBadge = document.getElementById("userRoleBadge");
+const userAvatar = document.getElementById("userAvatar");
+const sidebarAdminLink = document.getElementById("sidebarAdminLink");
+const adminCardsEl = document.getElementById("adminCards");
+const adminAnalyticsEl = document.getElementById("adminAnalytics");
+const teamReportPanelEl = document.getElementById("teamReportPanel");
+const myPanelEl = document.getElementById("myPanel");
+const totalUsersContainer = document.getElementById("totalUsersCardContainer");
+const totalAdminsContainer = document.getElementById("totalAdminsCardContainer");
 
-if(currentRole === "Admin"){
-adminBtn.style.display = "inline-block";
+if(userNameLabel) userNameLabel.textContent = currentName;
+if(userRoleBadge) userRoleBadge.textContent = currentRole;
+if(userAvatar) userAvatar.textContent = (currentName || "U").charAt(0).toUpperCase();
+
+if(currentRole === "Admin" && sidebarAdminLink){
+sidebarAdminLink.style.display = "flex";
 }
 
-// Load users first so admin analytics + report can use names
 await new Promise((resolve, reject)=>{
 onSnapshot(collection(db,"users"), (snapshot)=>{
 allUsersMap = {};
@@ -1339,33 +1430,43 @@ if(currentRole === "Admin" && requestedViewUid && allUsersMap[requestedViewUid])
 viewUid = requestedViewUid;
 viewUserData = allUsersMap[viewUid];
 
-document.getElementById("viewAsBanner").classList.add("show");
-document.getElementById("viewAsName").innerText = viewUserData.name || viewUserData.email;
-document.getElementById("myPanelTitle").innerText = `${viewUserData.name || viewUserData.email}'s Projects`;
-document.getElementById("tableTitle").innerText = `${viewUserData.name || viewUserData.email}'s Projects`;
+const bannerEl = document.getElementById("viewAsBanner");
+const viewAsNameEl = document.getElementById("viewAsName");
+const myPanelTitleEl = document.getElementById("myPanelTitle");
+const tableTitleEl = document.getElementById("tableTitle");
 
-myPanel.style.display = "block";
-toggleFormBtn.style.display = "none";
+if(bannerEl) bannerEl.classList.add("show");
+if(viewAsNameEl) viewAsNameEl.innerText = viewUserData.name || viewUserData.email;
+if(myPanelTitleEl) myPanelTitleEl.innerText = `${viewUserData.name || viewUserData.email}'s Projects`;
+if(tableTitleEl) tableTitleEl.innerText = `${viewUserData.name || viewUserData.email}'s Projects`;
+
+if(myPanelEl) myPanelEl.style.display = "block";
 
 await logActivity("Admin Viewed Account", `Admin opened ${viewUserData.name || viewUserData.email}'s dashboard`);
 await notifyUser(viewUid, "Account Viewed", `Admin (${currentName}) viewed your dashboard on ${new Date().toLocaleString()}.`);
 
-}else if(currentRole === "Admin"){
-
-adminCards.style.display = "grid";
-adminAnalytics.style.display = "block";
-myPanel.style.display = "none";
-tableTitle.innerText = "Recent Projects (All Users)";
-refreshAggregateStats();
-setInterval(refreshAggregateStats, 30000);
-
 }else{
 
-myPanel.style.display = "block";
+// Show Cards & Overall Analytics for all logged in users (formatted gracefully)
+if(adminCardsEl) adminCardsEl.style.display = "grid";
+if(adminAnalyticsEl) adminAnalyticsEl.style.display = "block";
 
-if(currentRole === "Viewer"){
-toggleFormBtn.style.display = "none";
+if(currentRole === "Admin"){
+  if(teamReportPanelEl) teamReportPanelEl.style.display = "block";
+  if(totalUsersContainer) totalUsersContainer.style.display = "block";
+  if(totalAdminsContainer) totalAdminsContainer.style.display = "block";
+  const tableTitleEl = document.getElementById("tableTitle");
+  if(tableTitleEl) tableTitleEl.innerText = "Recent Projects (All Users)";
+}else{
+  if(teamReportPanelEl) teamReportPanelEl.style.display = "none";
+  if(totalUsersContainer) totalUsersContainer.style.display = "none";
+  if(totalAdminsContainer) totalAdminsContainer.style.display = "none";
+  const tableTitleEl = document.getElementById("tableTitle");
+  if(tableTitleEl) tableTitleEl.innerText = "My Projects";
 }
+
+refreshAggregateStats();
+setInterval(refreshAggregateStats, 30000);
 
 }
 
@@ -1376,9 +1477,11 @@ startNotificationsLoop();
 }catch(error){
 
 console.error("Dashboard init error:", error);
-const msg = `Dashboard failed to load (${escapeHtml(error.code || error.message)}). Screenshot this exact message and send it to get it fixed.`;
-if(document.getElementById("projectTable")) projectTable.innerHTML = `<tr><td colspan='9'>${msg}</td></tr>`;
-if(document.getElementById("notifList")) notifList.innerHTML = msg;
+const msg = `Dashboard failed to load (${escapeHtml(error.code || error.message)}).`;
+const projectTableEl = document.getElementById("projectTable");
+const notifListEl = document.getElementById("notifList");
+if(projectTableEl) projectTableEl.innerHTML = `<tr><td colspan='9' style='color:var(--danger);padding:16px;'>${msg}</td></tr>`;
+if(notifListEl) notifListEl.innerHTML = msg;
 
 }
 

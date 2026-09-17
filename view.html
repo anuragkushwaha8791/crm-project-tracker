@@ -3,103 +3,169 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Project View (Shared)</title>
+<title>Project View (Shared) - Mooving CRM</title>
 
 <style>
+:root{
+  --bg:#f8fafc;
+  --card-bg:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --navy:#1f4e79;
+  --danger:#dc2626;
+  --badge-pending-bg:#fef3c7;
+  --badge-pending-txt:#92400e;
+  --badge-progress-bg:#dbeafe;
+  --badge-progress-txt:#1e40af;
+  --badge-complete-bg:#dcfce7;
+  --badge-complete-txt:#166534;
+}
+
+[data-theme="dark"]{
+  --bg:#0f172a;
+  --card-bg:#1e293b;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:#334155;
+  --navy:#38bdf8;
+  --badge-pending-bg:#451a03;
+  --badge-pending-txt:#fde68a;
+  --badge-progress-bg:#172554;
+  --badge-progress-txt:#bfdbfe;
+  --badge-complete-bg:#052e16;
+  --badge-complete-txt:#86efac;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+}
 
 body{
-font-family:Segoe UI,sans-serif;
-background:#f4f7fb;
-margin:0;
-padding:20px;
+  background:var(--bg);
+  color:var(--text);
+  margin:0;
+  padding:24px;
 }
 
 h1{
-color:#1f4e79;
+  color:var(--navy);
+  font-size:24px;
+  font-weight:800;
+  margin-bottom:16px;
 }
 
 .badge{
-display:inline-block;
-background:#e8eef7;
-color:#1f4e79;
-padding:4px 10px;
-border-radius:20px;
-font-size:12px;
-margin-bottom:15px;
+  display:inline-block;
+  background:#dbeafe;
+  color:#1e40af;
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:20px;
 }
 
 .card{
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,.1);
-max-width:600px;
+  background:var(--card-bg);
+  padding:28px;
+  border-radius:14px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  border:1px solid var(--border);
+  max-width:640px;
 }
 
 .row{
-display:flex;
-justify-content:space-between;
-border-bottom:1px solid #eee;
-padding:8px 0;
-font-size:14px;
+  display:flex;
+  justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  padding:10px 0;
+  font-size:14px;
 }
 
 .row .label{
-color:#777;
+  color:var(--muted);
+  font-weight:600;
 }
 
 .row .value{
-font-weight:bold;
-color:#1f4e79;
-text-align:right;
+  font-weight:700;
+  color:var(--navy);
+  text-align:right;
+}
+
+.table-wrapper{
+  overflow-x:auto;
+  border-radius:10px;
+  border:1px solid var(--border);
 }
 
 table{
-width:100%;
-border-collapse:collapse;
-background:white;
-margin-top:10px;
+  width:100%;
+  border-collapse:collapse;
+  background:var(--card-bg);
+  white-space:nowrap;
 }
 
-th,td{
-border:1px solid #ddd;
-padding:8px;
-font-size:12px;
-text-align:left;
+th, td{
+  border-bottom:1px solid var(--border);
+  padding:10px 12px;
+  font-size:12px;
+  text-align:left;
 }
 
 th{
-background:#1f4e79;
-color:white;
+  background:var(--navy);
+  color:white;
+  font-weight:700;
+  text-transform:uppercase;
 }
 
 tr.overdue{
-background:#fdecea;
+  background:#fef2f2;
 }
 
 .search-section{
-margin-bottom:15px;
+  margin-bottom:16px;
 }
 
 .search-section input{
-width:100%;
-max-width:400px;
-padding:10px;
-box-sizing:border-box;
+  width:100%;
+  max-width:400px;
+  padding:10px 14px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--card-bg);
+  color:var(--text);
+  outline:none;
 }
 
+.badge-status{
+  display:inline-block;
+  padding:3px 8px;
+  border-radius:10px;
+  font-weight:700;
+  font-size:11px;
+}
+.badge-pending{ background:var(--badge-pending-bg); color:var(--badge-pending-txt); }
+.badge-progress{ background:var(--badge-progress-bg); color:var(--badge-progress-txt); }
+.badge-complete{ background:var(--badge-complete-bg); color:var(--badge-complete-txt); }
+
 .note{
-font-size:11px;
-color:#888;
-margin-top:10px;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:12px;
 }
 
 #msg{
-color:#c0392b;
+  color:var(--danger);
+  font-weight:600;
 }
 
 </style>
-
 </head>
 
 <body>
@@ -148,28 +214,37 @@ return String(value)
 .replaceAll('"',"&quot;");
 }
 
+function parseLocalDate(dateStr){
+if(!dateStr) return null;
+const parts = dateStr.split("-");
+if(parts.length !== 3) return null;
+return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+}
+
 function ageing(d){
-if(!d.taskStartDate || !d.taskEndDate) return "-";
-const start = new Date(d.taskStartDate);
-const end = new Date(d.taskEndDate);
-const diff = Math.floor((end-start)/86400000);
-return (diff>=0?diff:0) + " Days";
+const start = parseLocalDate(d.taskStartDate);
+const end = parseLocalDate(d.taskEndDate);
+if(!start || !end) return "-";
+const diff = Math.round((end - start)/86400000);
+return (diff >= 0 ? diff : 0) + " Days";
 }
 
 function isOverdue(d){
 if(!d.taskEndDate || d.taskStatus === "Complete") return false;
 const today = new Date(); today.setHours(0,0,0,0);
-return new Date(d.taskEndDate) < today;
+const end = parseLocalDate(d.taskEndDate);
+return end ? end < today : false;
 }
 
 async function renderSingle(id){
+const contentEl = document.getElementById("content");
+if(!contentEl) return;
 
 try{
-
 const snap = await getDoc(doc(db,"crmprojects",id));
 
 if(!snap.exists()){
-content.innerHTML = "<h1>Project Not Found</h1><p id='msg'>This link may be invalid or the project was deleted.</p>";
+contentEl.innerHTML = "<h1>Project Not Found</h1><p id='msg'>This link may be invalid or the project was deleted.</p>";
 return;
 }
 
@@ -200,24 +275,22 @@ let rows = fields.map(([label,value])=>`
 </div>
 `).join("");
 
-content.innerHTML = `
+contentEl.innerHTML = `
 <h1>${escapeHtml(d.projectName) || "Project"}</h1>
 <div class="card">${rows}</div>
 `;
 
 }catch(error){
-
 console.error(error);
-content.innerHTML = "<h1>Unable to load project</h1><p id='msg'>Check your connection, or the Firestore read rules may need to allow public access for shared links to work.</p>";
-
+contentEl.innerHTML = "<h1>Unable to load project</h1><p id='msg'>Check your connection or permissions.</p>";
 }
-
 }
 
 async function renderAll(){
+const contentEl = document.getElementById("content");
+if(!contentEl) return;
 
 try{
-
 const q = query(collection(db,"crmprojects"), orderBy("createdAt","desc"), limit(VIEW_LIMIT));
 const snapshot = await getDocs(q);
 
@@ -227,8 +300,9 @@ snapshot.forEach(docSnap=>allProjects.push(docSnap.data()));
 let html = `
 <h1>All Projects</h1>
 <div class="search-section">
-<input id="searchBox" placeholder="Search Project" onkeyup="window.filterProjects()">
+<input id="searchBox" placeholder="🔍 Search Projects..." onkeyup="window.filterProjects()">
 </div>
+<div class="table-wrapper">
 <table>
 <thead>
 <tr>
@@ -246,53 +320,55 @@ let html = `
 </thead>
 <tbody id="tableBody"></tbody>
 </table>
-<div class="note">Showing the ${allProjects.length} most recent record(s) for performance. Ask an Admin for a project-specific link to view any single record.</div>
+</div>
+<div class="note">Showing the ${allProjects.length} most recent record(s).</div>
 `;
 
-content.innerHTML = html;
+contentEl.innerHTML = html;
 
 window.allProjects = allProjects;
 window.filterProjects();
 
 }catch(error){
-
 console.error(error);
-content.innerHTML = "<h1>Unable to load projects</h1><p id='msg'>Check your connection, or the Firestore read rules may need to allow public access for shared links to work.</p>";
-
+contentEl.innerHTML = "<h1>Unable to load projects</h1><p id='msg'>Check your connection or permissions.</p>";
 }
-
 }
 
 window.filterProjects = function(){
+const searchEl = document.getElementById("searchBox");
+const search = searchEl ? searchEl.value.toLowerCase().trim() : "";
+const tbody = document.getElementById("tableBody");
+if(!tbody) return;
 
-const search = (document.getElementById("searchBox").value || "").toLowerCase();
 let html = "";
 let sr = 1;
 
 (window.allProjects || []).forEach((d)=>{
-
 const txt = JSON.stringify(d).toLowerCase();
 if(search && !txt.includes(search)) return;
+
+let badgeClass = "badge-pending";
+if(d.taskStatus === "In Progress") badgeClass = "badge-progress";
+if(d.taskStatus === "Complete") badgeClass = "badge-complete";
 
 html += `
 <tr class="${isOverdue(d) ? 'overdue' : ''}">
 <td>${sr++}</td>
-<td>${escapeHtml(d.projectName)}</td>
+<td><b>${escapeHtml(d.projectName)}</b></td>
 <td>${escapeHtml(d.business)}</td>
 <td>${escapeHtml(d.ownerName || d.projectOwner)}</td>
 <td>${escapeHtml(d.runningTask)}</td>
 <td>${escapeHtml(d.taskStartDate)}</td>
 <td>${escapeHtml(d.taskEndDate)}</td>
-<td>${escapeHtml(d.taskStatus)}</td>
+<td><span class="badge-status ${badgeClass}">${escapeHtml(d.taskStatus)}</span></td>
 <td>${escapeHtml(d.taskPriority)}</td>
 <td>${ageing(d)}</td>
 </tr>
 `;
-
 });
 
-document.getElementById("tableBody").innerHTML = html || "<tr><td colspan='10'>No projects found.</td></tr>";
-
+tbody.innerHTML = html || "<tr><td colspan='10' style='text-align:center;padding:16px;color:var(--muted);'>No projects found.</td></tr>";
 };
 
 const params = new URLSearchParams(window.location.search);
