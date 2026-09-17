@@ -503,6 +503,30 @@ tr.overdue{ background:#fef2f2; }
 
 .scale-note{ font-size:12px; color:var(--muted); margin-bottom:12px; }
 
+.modalOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(3px);
+  z-index:200;
+  justify-content:center;
+  align-items:center;
+}
+.modalOverlay.show{ display:flex; }
+
+.modalBox{
+  background:var(--card-bg);
+  padding:28px;
+  border-radius:14px;
+  width:90%;
+  max-width:440px;
+  border:1px solid var(--border);
+  box-shadow:0 20px 40px rgba(0,0,0,0.2);
+}
+.modalBox h2{ color:var(--navy); margin-bottom:16px; font-size:18px; font-weight:800; }
+.modalBox .closeBtn{ background:#64748b; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; margin-top:12px; font-weight:700; }
+
 @media (max-width:768px){
   .app-sidebar{ transform:translateX(-100%); }
   .app-sidebar.sidebar-open{ transform:translateX(0); }
@@ -542,6 +566,11 @@ tr.overdue{ background:#fef2f2; }
       <span class="icon">👁️</span>
       <span>Public View</span>
     </a>
+
+    <button class="nav-item" onclick="openPasswordModal()">
+      <span class="icon">🔑</span>
+      <span>Change Password</span>
+    </button>
 
     <button class="nav-item" onclick="logout()" style="color:#fca5a5;">
       <span class="icon">🚪</span>
@@ -750,6 +779,26 @@ tr.overdue{ background:#fef2f2; }
     </div>
 
   </main>
+</div>
+
+<!-- Password Change Modal -->
+<div class="modalOverlay" id="passwordModal">
+  <div class="modalBox">
+    <h2>Change Password</h2>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;">Current Password</label>
+      <input type="password" id="currentPassword" placeholder="Current Password">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;">New Password (min 6 chars)</label>
+      <input type="password" id="newPassword" placeholder="New Password">
+    </div>
+    <div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:6px;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">Update Password</button>
+      <button class="closeBtn" onclick="closePasswordModal()" style="margin:0;">Cancel</button>
+    </div>
+  </div>
 </div>
 
 
@@ -1409,6 +1458,50 @@ const wb = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb, ws, "Projects");
 XLSX.writeFile(wb, "ProjectTracker.xlsx");
 
+};
+
+window.openPasswordModal = function(){
+const curEl = document.getElementById("currentPassword");
+const nextEl = document.getElementById("newPassword");
+const msgEl = document.getElementById("passwordMsg");
+if(curEl) curEl.value = "";
+if(nextEl) nextEl.value = "";
+if(msgEl) msgEl.innerText = "";
+const modal = document.getElementById("passwordModal");
+if(modal) modal.classList.add("show");
+};
+
+window.closePasswordModal = function(){
+const modal = document.getElementById("passwordModal");
+if(modal) modal.classList.remove("show");
+};
+
+window.changePassword = async function(){
+const curEl = document.getElementById("currentPassword");
+const nextEl = document.getElementById("newPassword");
+const msgEl = document.getElementById("passwordMsg");
+
+const cur = curEl ? curEl.value : "";
+const next = nextEl ? nextEl.value : "";
+
+if(!cur || !next){ if(msgEl) msgEl.innerText = "Both fields are required."; return; }
+if(next.length < 6){ if(msgEl) msgEl.innerText = "New password must be at least 6 characters."; return; }
+
+try{
+const credential = EmailAuthProvider.credential(currentUser.email, cur);
+await reauthenticateWithCredential(currentUser, credential);
+await updatePassword(currentUser, next);
+if(msgEl){
+  msgEl.style.color = "var(--success)";
+  msgEl.innerText = "Password updated successfully.";
+}
+setTimeout(closePasswordModal, 1200);
+}catch(error){
+if(msgEl){
+  msgEl.style.color = "var(--danger)";
+  msgEl.innerText = error.message;
+}
+}
 };
 
 
