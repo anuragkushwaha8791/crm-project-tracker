@@ -4,30 +4,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mooving CRM Login</title>
+<title>Mooving CRM — Login</title>
 
 <style>
 :root{
-  --bg:#f4f7fb;
+  --bg:#f8fafc;
   --card-bg:#ffffff;
-  --text:#1c1c1c;
+  --text:#0f172a;
   --muted:#64748b;
   --border:#cbd5e1;
   --navy:#1f4e79;
   --navy-dark:#163a5c;
+  --navy-light:#38bdf8;
   --red:#e2131f;
   --red-dark:#b80f1a;
-  --ring:#38bdf8;
+  --card-shadow:0 20px 40px rgba(0,0,0,0.08);
 }
 
 [data-theme="dark"]{
-  --bg:#0f172a;
+  --bg:#090d16;
   --card-bg:#1e293b;
   --text:#f8fafc;
   --muted:#94a3b8;
   --border:#334155;
   --navy:#38bdf8;
   --navy-dark:#0284c7;
+  --card-shadow:0 20px 50px rgba(0,0,0,0.4);
 }
 
 *{
@@ -39,41 +41,42 @@
 
 body{
   background:var(--bg);
-  display:flex;
-  justify-content:center;
-  align-items:center;
   height:100vh;
   overflow:hidden;
   color:var(--text);
   transition:background .3s ease,color .3s ease;
 }
 
-/* ---------- Theme toggle ---------- */
+/* ---------- Floating Theme Toggle ---------- */
 #themeToggle{
   position:fixed;
-  top:20px;
-  right:20px;
+  top:24px;
+  right:28px;
   z-index:1001;
   background:var(--card-bg);
   border:1px solid var(--border);
   color:var(--text);
   border-radius:30px;
-  padding:8px 16px;
+  padding:8px 18px;
   cursor:pointer;
   font-size:13px;
-  font-weight:600;
-  box-shadow:0 4px 12px rgba(0,0,0,0.06);
+  font-weight:700;
+  box-shadow:0 4px 14px rgba(0,0,0,0.08);
   transition:all .2s ease;
+  display:flex;
+  align-items:center;
+  gap:6px;
 }
 #themeToggle:hover{
-  transform:translateY(-1px);
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(0,0,0,0.12);
 }
 
-/* ---------- Welcome Splash ---------- */
+/* ---------- Splash Screen ---------- */
 #splash{
   position:fixed;
   inset:0;
-  background:linear-gradient(135deg,#0f172a 0%, #1f4e79 100%);
+  background:linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1f4e79 100%);
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -81,24 +84,26 @@ body{
   z-index:999;
   color:white;
   text-align:center;
-  transition:opacity .6s ease;
-  padding:20px;
+  transition:opacity .6s ease, visibility .6s ease;
+  padding:24px;
 }
 
 #splash.hide{
   opacity:0;
+  visibility:hidden;
   pointer-events:none;
 }
 
-.company-name{
-  font-size:22px;
-  font-weight:800;
-  letter-spacing:1px;
-  margin-bottom:6px;
+.splash-logo{
+  font-size:44px;
+  font-weight:900;
+  letter-spacing:2px;
+  margin-bottom:8px;
 }
+.splash-logo span{ color:var(--red); }
 
 .crm-shimmer{
-  background:linear-gradient(90deg,#ffffff,#ffe08a,#ffffff);
+  background:linear-gradient(90deg, #38bdf8, #ffe08a, #38bdf8);
   background-size:200% auto;
   -webkit-background-clip:text;
   background-clip:text;
@@ -112,51 +117,18 @@ body{
   100%{ background-position:200% center; }
 }
 
-.company-sub{
-  font-size:13px;
-  opacity:.85;
-  margin-bottom:24px;
-}
-
-.robot-wrap{
-  width:160px;
-  height:180px;
-  margin-bottom:12px;
-}
-
-.r-arm-left{
-  transform-origin:70px 100px;
-  animation:armLeft 2.4s ease-in-out infinite;
-}
-
-.r-arm-right{
-  transform-origin:130px 100px;
-  animation:armRight 2.4s ease-in-out infinite;
-}
-
-@keyframes armLeft{
-  0%,100%{transform:rotate(0deg);}
-  45%,65%{transform:rotate(35deg);}
-}
-
-@keyframes armRight{
-  0%,100%{transform:rotate(0deg);}
-  45%,65%{transform:rotate(-35deg);}
-}
-
-.r-eye{ animation:blink 3s infinite; }
-
-@keyframes blink{
-  0%,92%,100%{opacity:1;}
-  95%{opacity:0.1;}
+.splash-sub{
+  font-size:14px;
+  color:#94a3b8;
+  margin-bottom:32px;
+  letter-spacing:0.5px;
 }
 
 .welcome-text{
-  font-size:24px;
-  font-weight:700;
+  font-size:26px;
+  font-weight:800;
   opacity:0;
-  animation:fadeUp 1s ease forwards;
-  animation-delay:.6s;
+  animation:fadeUp .8s ease forwards .3s;
 }
 
 @keyframes fadeUp{
@@ -165,90 +137,152 @@ body{
 }
 
 #enterBtn{
-  margin-top:24px;
-  background:white;
-  color:#1f4e79;
+  margin-top:28px;
+  background:linear-gradient(135deg, #e2131f 0%, #b80f1a 100%);
+  color:white;
   border:none;
-  padding:12px 28px;
+  padding:12px 32px;
   border-radius:30px;
   font-size:14px;
   font-weight:700;
   cursor:pointer;
   opacity:0;
-  animation:fadeUp 1s ease forwards;
-  animation-delay:1.2s;
-  box-shadow:0 4px 15px rgba(0,0,0,0.15);
+  animation:fadeUp .8s ease forwards .7s;
+  box-shadow:0 4px 20px rgba(226,19,31,0.4);
   transition:all .2s ease;
 }
 
 #enterBtn:hover{
-  background:#f8fafc;
-  transform:scale(1.03);
+  transform:translateY(-2px);
+  box-shadow:0 6px 25px rgba(226,19,31,0.5);
 }
 
-/* ---------- Split Login Layout ---------- */
+/* ---------- Main Split Layout ---------- */
 .wrap{
   display:flex;
-  width:100%;
-  height:100%;
+  width:100vw;
+  height:100vh;
 }
 
 .leftPanel{
-  flex:1.3;
-  background:linear-gradient(150deg, #0f172a 0%, #1e3a8a 50%, #1f4e79 100%);
+  flex:1.2;
+  background:linear-gradient(135deg, #090d16 0%, #0f172a 40%, #1f4e79 100%);
   display:flex;
   flex-direction:column;
   justify-content:center;
-  align-items:flex-start;
-  padding:80px;
+  padding:60px 80px;
   color:white;
   position:relative;
   overflow:hidden;
 }
 
+.leftPanel::before{
+  content:'';
+  position:absolute;
+  top:-100px;
+  left:-100px;
+  width:350px;
+  height:350px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(56,189,248,0.15) 0%, rgba(0,0,0,0) 70%);
+  pointer-events:none;
+}
+.leftPanel::after{
+  content:'';
+  position:absolute;
+  bottom:-80px;
+  right:-80px;
+  width:400px;
+  height:400px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(226,19,31,0.12) 0%, rgba(0,0,0,0) 70%);
+  pointer-events:none;
+}
+
+.left-content{
+  margin:auto 0;
+  position:relative;
+  z-index:2;
+}
+
+.brand-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  color:#38bdf8;
+  margin-bottom:24px;
+  backdrop-filter:blur(6px);
+}
+
 .leftPanel .brand{
-  font-size:42px;
+  font-size:48px;
   font-weight:900;
   letter-spacing:1px;
-  margin-bottom:12px;
+  margin-bottom:14px;
+  line-height:1.1;
 }
 
 .leftPanel .brand span{ color:var(--red); }
 
 .leftPanel .tagline{
-  font-size:15px;
-  opacity:.9;
-  max-width:380px;
+  font-size:16px;
+  color:#94a3b8;
+  max-width:440px;
   line-height:1.6;
-  margin-bottom:30px;
+  margin-bottom:40px;
 }
 
-.leftPanel .mini-robot{
-  position:absolute;
-  right:50px;
-  bottom:40px;
-  width:140px;
-  opacity:.85;
+/* Feature Chips Grid */
+.features-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  max-width:500px;
 }
 
+.feature-card{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  padding:16px;
+  border-radius:14px;
+  backdrop-filter:blur(8px);
+  transition:all .2s ease;
+}
+.feature-card:hover{
+  background:rgba(255,255,255,0.08);
+  border-color:rgba(56,189,248,0.3);
+  transform:translateY(-2px);
+}
+.feature-card .f-icon{ font-size:20px; margin-bottom:8px; }
+.feature-card .f-title{ font-size:13px; font-weight:700; color:white; margin-bottom:4px; }
+.feature-card .f-desc{ font-size:11px; color:#94a3b8; line-height:1.4; }
+
+/* Right Panel */
 .rightPanel{
   flex:1;
   display:flex;
   justify-content:center;
   align-items:center;
   background:var(--bg);
-  padding:20px;
+  padding:40px 24px;
 }
 
 .login-box{
   background:var(--card-bg);
   width:100%;
-  max-width:400px;
-  padding:40px;
-  border-radius:18px;
-  box-shadow:0 20px 40px rgba(0,0,0,0.08);
+  max-width:420px;
+  padding:40px 36px;
+  border-radius:20px;
+  box-shadow:var(--card-shadow);
   border:1px solid var(--border);
   position:relative;
+  overflow:hidden;
 }
 
 .login-box::before{
@@ -258,113 +292,154 @@ body{
   left:0;
   right:0;
   height:4px;
-  background:linear-gradient(90deg, var(--navy), var(--red));
-  border-radius:18px 18px 0 0;
+  background:linear-gradient(90deg, #1f4e79, var(--red));
 }
 
-h1{
+.login-header{
   text-align:center;
-  margin-bottom:6px;
-  color:var(--navy);
+  margin-bottom:28px;
+}
+
+.login-header h1{
   font-size:24px;
-  font-weight:800;
+  font-weight:900;
+  color:var(--text);
+  margin-bottom:6px;
 }
 
 .subtitle{
-  text-align:center;
   color:var(--muted);
   font-size:13px;
-  margin-bottom:24px;
+  font-weight:500;
 }
 
 .input-group{
-  margin-bottom:16px;
+  margin-bottom:18px;
 }
 
 .input-group label{
   display:block;
   font-size:12px;
-  font-weight:600;
+  font-weight:700;
   color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
   margin-bottom:6px;
+}
+
+.input-wrapper{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+
+.input-icon{
+  position:absolute;
+  left:14px;
+  color:var(--muted);
+  font-size:15px;
+  pointer-events:none;
 }
 
 input{
   width:100%;
-  padding:12px 14px;
+  padding:12px 14px 12px 40px;
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:10px;
   background:var(--card-bg);
   color:var(--text);
   font-size:14px;
   outline:none;
-  transition:border-color .2s, box-shadow .2s;
+  transition:all .2s ease;
 }
 
 input:focus{
   border-color:var(--navy);
-  box-shadow:0 0 0 3px rgba(31,78,121,0.15);
+  box-shadow:0 0 0 3px rgba(56,189,248,0.18);
 }
+
+.toggle-pwd{
+  position:absolute;
+  right:12px;
+  background:none;
+  border:none;
+  color:var(--muted);
+  cursor:pointer;
+  font-size:14px;
+  padding:4px;
+}
+.toggle-pwd:hover{ color:var(--text); }
 
 button.submitBtn{
   width:100%;
   padding:13px;
   margin-top:10px;
-  background:var(--red);
+  background:linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
   color:white;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   cursor:pointer;
-  font-size:15px;
+  font-size:14px;
   font-weight:700;
-  transition:background .2s, transform .1s;
-  box-shadow:0 4px 12px rgba(226,19,31,0.25);
+  transition:all .2s ease;
+  box-shadow:0 4px 14px rgba(226,19,31,0.3);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
 }
 
-button.submitBtn:hover{ background:var(--red-dark); }
+button.submitBtn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 6px 20px rgba(226,19,31,0.4);
+}
+
 button.submitBtn:active{ transform:scale(0.99); }
 
 button:disabled{
   background:#94a3b8 !important;
   cursor:not-allowed;
   box-shadow:none !important;
+  transform:none !important;
 }
 
 .forgot{
   text-align:center;
-  margin-top:16px;
+  margin-top:18px;
   font-size:13px;
-  color:var(--muted);
+  color:var(--navy);
   cursor:pointer;
-  font-weight:500;
+  font-weight:600;
   transition:color .2s;
 }
 
 .forgot:hover{
-  color:var(--navy);
   text-decoration:underline;
 }
 
 .self-note{
   text-align:center;
-  margin-top:20px;
-  padding-top:16px;
-  border-top:1px solid var(--border);
+  margin-top:22px;
+  padding:12px;
+  background:rgba(0,0,0,0.02);
+  border-radius:10px;
+  border:1px solid var(--border);
   font-size:11px;
   color:var(--muted);
-  line-height:1.4;
+  line-height:1.5;
 }
+[data-theme="dark"] .self-note{ background:rgba(255,255,255,0.03); }
 
 .error{
   color:#dc2626;
   background:#fef2f2;
   border:1px solid #fecaca;
-  padding:10px;
-  border-radius:6px;
-  margin-top:14px;
+  padding:10px 14px;
+  border-radius:8px;
+  margin-top:16px;
   text-align:center;
   font-size:13px;
-  font-weight:500;
+  font-weight:600;
 }
 
 [data-theme="dark"] .error{
@@ -377,12 +452,12 @@ button:disabled{
   color:#16a34a;
   background:#f0fdf4;
   border:1px solid #bbf7d0;
-  padding:10px;
-  border-radius:6px;
-  margin-top:14px;
+  padding:10px 14px;
+  border-radius:8px;
+  margin-top:16px;
   text-align:center;
   font-size:13px;
-  font-weight:500;
+  font-weight:600;
 }
 
 [data-theme="dark"] .success{
@@ -391,8 +466,9 @@ button:disabled{
   color:#86efac;
 }
 
-@media (max-width:840px){
+@media (max-width:900px){
   .leftPanel{ display:none; }
+  .rightPanel{ width:100%; }
 }
 </style>
 
@@ -403,77 +479,88 @@ button:disabled{
 <button id="themeToggle" onclick="toggleTheme()">🌙 Dark</button>
 
 <div id="splash">
-
-<div class="company-name">MOOVING SMART MOBILITY &amp; ENERGY SOLUTIONS PVT. LTD.</div>
-<div class="company-sub">Project &amp; Task <span class="crm-shimmer">CRM</span></div>
-
-<div class="robot-wrap">
-<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-<circle cx="100" cy="55" r="34" fill="#ffffff"/>
-<circle class="r-eye" cx="88" cy="52" r="5" fill="#1f4e79"/>
-<circle class="r-eye" cx="112" cy="52" r="5" fill="#1f4e79"/>
-<path d="M85 68 Q100 78 115 68" stroke="#1f4e79" stroke-width="3" fill="none" stroke-linecap="round"/>
-<rect x="70" y="6" width="60" height="10" rx="5" fill="#ffffff"/>
-<rect x="60" y="90" width="80" height="85" rx="22" fill="#ffffff"/>
-<g class="r-arm-left"><rect x="35" y="95" width="16" height="58" rx="8" fill="#ffffff"/></g>
-<g class="r-arm-right"><rect x="149" y="95" width="16" height="58" rx="8" fill="#ffffff"/></g>
-</svg>
-</div>
-
-<div class="welcome-text">🙏 Welcome to Mooving</div>
-
-<button id="enterBtn" onclick="document.getElementById('splash').classList.add('hide')">Continue to Login</button>
-
+  <div class="splash-logo">MO<span>O</span>VING</div>
+  <div class="splash-sub">Project &amp; Task Management <span class="crm-shimmer">CRM</span></div>
+  <div class="welcome-text">🙏 Welcome to Mooving CRM</div>
+  <button id="enterBtn" onclick="document.getElementById('splash').classList.add('hide')">Continue to Login</button>
 </div>
 
 <div class="wrap">
 
-<div class="leftPanel">
-<div class="brand">MO<span>O</span>VING</div>
-<div class="tagline">India's Fastest Growing Battery Swapping Network — internal Project &amp; Task CRM for the Mooving team.</div>
+  <!-- Left Hero Section -->
+  <div class="leftPanel">
+    <div class="left-content">
+      <div class="brand-badge">⚡ Smart Mobility &amp; Energy Solutions</div>
+      <div class="brand">MO<span>O</span>VING</div>
+      <div class="tagline">India's Fastest Growing Battery Swapping Network — internal Project &amp; Task CRM for the Mooving team.</div>
 
-<svg class="mini-robot" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-<circle cx="100" cy="55" r="34" fill="#ffffff"/>
-<circle cx="88" cy="52" r="5" fill="#1f4e79"/>
-<circle cx="112" cy="52" r="5" fill="#1f4e79"/>
-<path d="M85 68 Q100 78 115 68" stroke="#1f4e79" stroke-width="3" fill="none" stroke-linecap="round"/>
-<rect x="60" y="90" width="80" height="85" rx="22" fill="#ffffff"/>
-<g class="r-arm-left"><rect x="35" y="95" width="16" height="58" rx="8" fill="#ffffff"/></g>
-<g class="r-arm-right"><rect x="149" y="95" width="16" height="58" rx="8" fill="#ffffff"/></g>
-</svg>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="f-icon">⚡</div>
+          <div class="f-title">Asset Tracker</div>
+          <div class="f-desc">Monitor Smart Docks, BSS &amp; Hardware rollouts.</div>
+        </div>
+        <div class="feature-card">
+          <div class="f-icon">📊</div>
+          <div class="f-title">Live Analytics</div>
+          <div class="f-desc">Real-time task completion &amp; team performance.</div>
+        </div>
+        <div class="feature-card">
+          <div class="f-icon">🎯</div>
+          <div class="f-title">Milestone CRM</div>
+          <div class="f-desc">Track SPOC owners, deadlines &amp; ageing.</div>
+        </div>
+        <div class="feature-card">
+          <div class="f-icon">🔒</div>
+          <div class="f-title">Role-Based Access</div>
+          <div class="f-desc">Secure RBAC portal for Admin, Owner &amp; Viewers.</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-</div>
+  <!-- Right Login Section -->
+  <div class="rightPanel">
 
-<div class="rightPanel">
+    <div class="login-box">
+      <div class="login-header">
+        <h1>CRM Login</h1>
+        <div class="subtitle">Access your Mooving project dashboard</div>
+      </div>
 
-<div class="login-box">
+      <form onsubmit="event.preventDefault(); submitForm();">
+        <div class="input-group">
+          <label for="email">Work Email</label>
+          <div class="input-wrapper">
+            <span class="input-icon">✉️</span>
+            <input type="email" id="email" placeholder="name@mooving.com" required autocomplete="username">
+          </div>
+        </div>
 
-<h1>CRM Login</h1>
-<div class="subtitle">Access your Mooving project dashboard</div>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="toggle-pwd" onclick="togglePasswordVisibility()" title="Toggle password visibility">👁️</button>
+          </div>
+        </div>
 
-<form onsubmit="event.preventDefault(); submitForm();">
-<div class="input-group">
-  <label for="email">Work Email</label>
-  <input type="email" id="email" placeholder="name@mooving.com" required autocomplete="username">
-</div>
+        <button id="submitBtn" type="submit" class="submitBtn">
+          <span>Sign In</span> ➔
+        </button>
+      </form>
 
-<div class="input-group">
-  <label for="password">Password</label>
-  <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
-</div>
+      <div class="forgot" id="forgotLink" onclick="forgotPassword()">Forgot password?</div>
 
-<button id="submitBtn" type="submit" class="submitBtn">Sign In</button>
-</form>
+      <div class="self-note">
+        🔒 New accounts are provisioned exclusively by your Administrator from the Admin Panel.
+      </div>
 
-<div class="forgot" id="forgotLink" onclick="forgotPassword()">Forgot password?</div>
+      <div id="msg"></div>
+    </div>
 
-<div class="self-note">New accounts are created only by your Administrator from the Admin Panel.</div>
-
-<div id="msg"></div>
-
-</div>
-
-</div>
+  </div>
 
 </div>
 
@@ -494,6 +581,13 @@ function toggleTheme(){
   localStorage.setItem("crm-theme", next);
   const btn = document.getElementById("themeToggle");
   if(btn) btn.textContent = next === "dark" ? "☀️ Light" : "🌙 Dark";
+}
+
+function togglePasswordVisibility(){
+  const pwd = document.getElementById("password");
+  if(pwd){
+    pwd.type = pwd.type === "password" ? "text" : "password";
+  }
 }
 </script>
 
