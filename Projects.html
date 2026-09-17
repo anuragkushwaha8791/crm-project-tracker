@@ -439,6 +439,41 @@ th{
   z-index:10;
 }
 
+.sticky-actions{
+  position:sticky;
+  right:0;
+  background:var(--card-bg);
+  z-index:5;
+  box-shadow:-4px 0 10px rgba(0,0,0,0.06);
+  text-align:center;
+}
+th.sticky-actions{
+  background:var(--navy);
+  color:white;
+  z-index:15;
+}
+tr.overdue .sticky-actions{ background:#fef2f2; }
+[data-theme="dark"] tr.overdue .sticky-actions{ background:#451a1a; }
+
+.action-btn-group{ display:flex; align-items:center; justify-content:center; gap:6px; }
+.icon-action-btn{
+  background:var(--navy);
+  color:white;
+  border:none;
+  width:32px;
+  height:32px;
+  border-radius:6px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  transition:all .2s;
+  padding:0;
+}
+.icon-action-btn:hover{ transform:translateY(-1px); filter:brightness(1.15); box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+.icon-action-btn.delete-icon{ background:var(--danger); }
+
 tr:hover{ background:rgba(0,0,0,0.02); }
 [data-theme="dark"] tr:hover{ background:rgba(255,255,255,0.02); }
 tr.overdue{ background:#fef2f2; }
@@ -703,12 +738,10 @@ tr.overdue{ background:#fef2f2; }
             <th>Progress 2</th>
             <th>Remarks</th>
             <th>Ageing</th>
-            <th>Share</th>
-            <th>Edit</th>
-            <th>Delete</th>
+            <th class="sticky-actions">Actions</th>
           </tr>
         </thead>
-        <tbody id="tableBody"><tr><td colspan="19">Loading your projects...</td></tr></tbody>
+        <tbody id="tableBody"><tr><td colspan="17">Loading your projects...</td></tr></tbody>
       </table>
     </div>
 
@@ -1084,16 +1117,19 @@ html += `
 <td class="cell-truncate">${escapeHtml(d.remarks)}</td>
 <td style="white-space:nowrap;">${calculateAgeing(d)}</td>
 
-<td><button class="share" onclick="shareProject('${id}')">🔗 Share</button></td>
-<td>${allowed ? `<button class="actionBtn editBtn" onclick="editProject('${id}')">✏️ Edit</button>` : "-"}</td>
-<td>${canDelete() ? `<button class="actionBtn deleteBtn" onclick="deleteProject('${id}')">🗑️ Delete</button>` : "-"}</td>
+<td class="sticky-actions">
+  <div class="action-btn-group">
+    ${allowed ? `<button class="icon-action-btn" onclick="editProject('${id}')" title="Edit Project">✏️</button>` : ""}
+    ${canDelete() ? `<button class="icon-action-btn delete-icon" onclick="deleteProject('${id}')" title="Delete Project">🗑️</button>` : ""}
+  </div>
+</td>
 
 </tr>
 `;
 
 });
 
-tableBodyEl.innerHTML = html || "<tr><td colspan='19' style='text-align:center;padding:24px;color:var(--muted);'>No projects found matching filter.</td></tr>";
+tableBodyEl.innerHTML = html || "<tr><td colspan='17' style='text-align:center;padding:24px;color:var(--muted);'>No projects found matching filter.</td></tr>";
 
 if(scaleNoteEl){
 scaleNoteEl.innerText = `Showing ${list.length} project(s). Use "Load More" for older records, or the search bar above to filter.`;
@@ -1153,7 +1189,7 @@ const q = buildProjectsQuery();
 const loadingTimeout = setTimeout(()=>{
 const tableBodyEl = document.getElementById("tableBody");
 if(tableBodyEl && !tableBodyEl.dataset.loaded){
-tableBodyEl.innerHTML = "<tr><td colspan='19' style='text-align:center;padding:20px;color:var(--danger)'>Still loading... If this persists, try a hard refresh (Ctrl+Shift+R).</td></tr>";
+tableBodyEl.innerHTML = "<tr><td colspan='17' style='text-align:center;padding:20px;color:var(--danger)'>Still loading... If this persists, try a hard refresh (Ctrl+Shift+R).</td></tr>";
 }
 }, 10000);
 
@@ -1191,7 +1227,7 @@ filterLoadedProjects();
 const tableBodyEl = document.getElementById("tableBody");
 if(tableBodyEl){
 tableBodyEl.dataset.loaded = "1";
-tableBodyEl.innerHTML = `<tr><td colspan='19' style='color:var(--danger);padding:20px;'>Could not load data (${escapeHtml(fallbackError.code || fallbackError.message)}). Check connection or security rules.</td></tr>`;
+tableBodyEl.innerHTML = `<tr><td colspan='17' style='color:var(--danger);padding:20px;'>Could not load data (${escapeHtml(fallbackError.code || fallbackError.message)}). Check connection or security rules.</td></tr>`;
 }
 });
 
@@ -1428,7 +1464,7 @@ listenProjects();
 console.error("Init error:", error);
 const tableBodyEl = document.getElementById("tableBody");
 if(tableBodyEl){
-tableBodyEl.innerHTML = `<tr><td colspan='19' style='color:var(--danger);padding:20px;'>Page failed to load data (${escapeHtml(error.code || error.message)}).</td></tr>`;
+tableBodyEl.innerHTML = `<tr><td colspan='17' style='color:var(--danger);padding:20px;'>Page failed to load data (${escapeHtml(error.code || error.message)}).</td></tr>`;
 }
 
 }
