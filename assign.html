@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<script>try{var l=JSON.parse(localStorage.getItem("crm-look")||"{}"),h=document.documentElement;["ui","accent","density","font","corners","motion","bg","navtext"].forEach(function(k){if(l[k])h.setAttribute("data-"+k,l[k])})}catch(e){}</script>
+<link rel="stylesheet" href="crm-ui.css">
+<meta charset="UTF-8">
+<meta name="referrer" content="origin">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assign Task - Mooving CRM</title>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js">
+<script defer src="crm-config.js"></script>
+<script defer src="crm-shared.js"></script>
+<script defer src="crm-core.js"></script>
+
+
+<style>
+:root{
+  --bg:#f8fafc;
+  --card-bg:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --sidebar-bg:#0f172a;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#1f4e79;
+  --navy-dark:#163a5c;
+  --red:#e2131f;
+  --danger:#dc2626;
+  --success:#16a34a;
+  --warn:#d97706;
+  --badge-pending-bg:#fef3c7;
+  --badge-pending-txt:#92400e;
+  --badge-progress-bg:#dbeafe;
+  --badge-progress-txt:#1e40af;
+  --badge-complete-bg:#dcfce7;
+  --badge-complete-txt:#166534;
+}
+
+[data-theme="dark"]{
+  --bg:#0f172a;
+  --card-bg:#1e293b;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:#334155;
+  --sidebar-bg:#090d16;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#38bdf8;
+  --navy-dark:#0284c7;
+  --badge-pending-bg:#451a03;
+  --badge-pending-txt:#fde68a;
+  --badge-progress-bg:#172554;
+  --badge-progress-txt:#bfdbfe;
+  --badge-complete-bg:#052e16;
+  --badge-complete-txt:#86efac;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+body{ background:var(--bg); color:var(--text); transition:background .3s,color .3s; display:flex; min-height:100vh; }
+
+/* ---------- Sidebar Navigation ---------- */
+.sidebar-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99; }
+
+.app-sidebar{
+  width:260px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-txt);
+  position:fixed;
+  top:0; bottom:0; left:0;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  transition:transform .3s ease;
+  border-right:1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-header{
+  padding:24px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.brand-title{
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:1px;
+  color:white;
+  text-decoration:none;
+}
+.brand-title span{ color:var(--red); }
+
+.brand-badge{
+  font-size:10px;
+  font-weight:800;
+  background:var(--red);
+  color:white;
+  padding:2px 6px;
+  border-radius:4px;
+  text-transform:uppercase;
+}
+
+.sidebar-nav{
+  padding:20px 12px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  overflow-y:auto;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  color:#94a3b8;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:600;
+  border-radius:8px;
+  transition:all .2s ease;
+  cursor:pointer;
+  border:none;
+  background:none;
+  width:100%;
+  text-align:left;
+}
+
+.nav-item:hover{
+  background:rgba(255,255,255,0.06);
+  color:white;
+}
+
+.nav-item.active{
+  background:linear-gradient(90deg, var(--navy), #2563eb);
+  color:white;
+  box-shadow:0 4px 12px rgba(37,99,235,0.3);
+}
+
+.nav-item .icon{ font-size:18px; width:22px; text-align:center; }
+
+.sidebar-footer{
+  padding:16px;
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.user-profile-chip{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  background:rgba(255,255,255,0.04);
+  border-radius:8px;
+}
+
+.avatar-circle{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:var(--navy);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:14px;
+}
+
+.user-info-text{ display:flex; flex-direction:column; overflow:hidden; }
+.user-info-name{ font-size:13px; font-weight:700; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-info-role{ font-size:11px; color:#94a3b8; }
+
+.theme-toggle-btn{
+  background:rgba(255,255,255,0.08);
+  color:white;
+  border:none;
+  padding:8px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:background .2s;
+}
+.theme-toggle-btn:hover{ background:rgba(255,255,255,0.15); }
+
+/* ---------- Main Content Container ---------- */
+.app-main{
+  flex:1;
+  margin-left:260px;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  transition:margin-left .3s ease;
+}
+
+.top-app-bar{
+  background:var(--card-bg);
+  border-bottom:1px solid var(--border);
+  padding:16px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:90;
+}
+
+.mobile-hamburger{
+  display:none;
+  background:none;
+  border:none;
+  font-size:22px;
+  cursor:pointer;
+  color:var(--text);
+}
+
+.page-header-title{
+  font-size:20px;
+  font-weight:800;
+  color:var(--navy);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.main-content{ padding:28px; flex:1; }
+
+/* ---------- Grouped Form Card ---------- */
+.form-card{
+  background:var(--card-bg);
+  padding:24px;
+  border-radius:16px;
+  margin-bottom:24px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.04);
+  border:1px solid var(--border);
+}
+
+.form-card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+
+.form-card-title{
+  font-size:16px;
+  font-weight:800;
+  color:var(--navy);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.form-sections-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  gap:20px;
+}
+
+.form-group-section{
+  background:var(--bg);
+  padding:16px;
+  border-radius:12px;
+  border:1px solid var(--border);
+}
+
+.form-section-label{
+  font-size:12px;
+  font-weight:800;
+  color:var(--navy);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.form-field{
+  margin-bottom:12px;
+}
+.form-field:last-child{ margin-bottom:0; }
+
+.form-field label{
+  font-size:11px;
+  font-weight:700;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  display:block;
+  margin-bottom:4px;
+}
+
+input, select{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--card-bg);
+  color:var(--text);
+  font-size:13px;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+input:focus, select:focus{
+  border-color:var(--navy);
+  box-shadow:0 0 0 3px rgba(56,189,248,0.15);
+}
+
+.form-actions{
+  margin-top:20px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+button{
+  background:var(--navy);
+  color:white;
+  border:none;
+  padding:10px 20px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:700;
+  transition:all .2s;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+button:hover{ background:var(--navy-dark); transform:translateY(-1px); }
+button.secondary{ background:#64748b; }
+button.secondary:hover{ background:#475569; }
+button.share{ background:#16a34a; padding:6px 12px; font-size:12px; }
+button.share:hover{ background:#15803d; }
+button.actionBtn{ padding:6px 12px; font-size:12px; border-radius:6px; font-weight:700; }
+button.editBtn{ background:var(--navy); }
+button.deleteBtn{ background:var(--danger); }
+
+/* ---------- Filter Bar ---------- */
+.filter-bar{
+  background:var(--card-bg);
+  padding:16px 20px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  margin-bottom:20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:14px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.03);
+}
+
+.search-box-wrap{
+  flex:1;
+  min-width:280px;
+  position:relative;
+}
+
+.search-box-wrap input{
+  padding-left:36px;
+  margin:0;
+}
+
+.search-icon-inside{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+  font-size:14px;
+  pointer-events:none;
+}
+
+.filter-chips{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.chip-btn{
+  background:var(--bg);
+  color:var(--muted);
+  border:1px solid var(--border);
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .2s;
+}
+
+.chip-btn:hover, .chip-btn.active{
+  background:var(--navy);
+  color:white;
+  border-color:var(--navy);
+}
+
+#formStatus{
+  font-size:13px;
+  font-weight:700;
+  color:var(--danger);
+  min-height:18px;
+}
+
+.table-wrapper{
+  overflow-x:auto;
+  border-radius:14px;
+  border:1px solid var(--border);
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  background:var(--card-bg);
+}
+
+table{ width:100%; border-collapse:collapse; background:var(--card-bg); white-space:nowrap; }
+th, td{ border-bottom:1px solid var(--border); padding:12px 16px; font-size:12px; text-align:left; vertical-align:top; }
+.cell-name{ max-width:200px; min-width:140px; white-space:normal; word-break:break-word; line-height:1.4; }
+.cell-truncate{ max-width:180px; min-width:130px; white-space:normal; word-break:break-word; line-height:1.4; }
+th{
+  background:var(--navy);
+  color:white;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+.sticky-actions{
+  position:sticky;
+  right:0;
+  background:var(--card-bg);
+  z-index:5;
+  box-shadow:-4px 0 10px rgba(0,0,0,0.06);
+  text-align:center;
+}
+th.sticky-actions{
+  background:var(--navy);
+  color:white;
+  z-index:15;
+}
+tr.overdue .sticky-actions{ background:#fef2f2; }
+[data-theme="dark"] tr.overdue .sticky-actions{ background:#451a1a; }
+
+.action-btn-group{ display:flex; align-items:center; justify-content:center; gap:6px; }
+.icon-action-btn{
+  background:var(--navy);
+  color:white;
+  border:none;
+  width:32px;
+  height:32px;
+  border-radius:6px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  transition:all .2s;
+  padding:0;
+}
+.icon-action-btn:hover{ transform:translateY(-1px); filter:brightness(1.15); box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+.icon-action-btn.delete-icon{ background:var(--danger); }
+
+tr:hover{ background:rgba(0,0,0,0.02); }
+[data-theme="dark"] tr:hover{ background:rgba(255,255,255,0.02); }
+tr.overdue{ background:#fef2f2; }
+[data-theme="dark"] tr.overdue{ background:#451a1a; }
+
+.badge-status{ display:inline-block; padding:4px 10px; border-radius:12px; font-weight:700; font-size:11px; }
+.badge-pending{ background:var(--badge-pending-bg); color:var(--badge-pending-txt); }
+.badge-progress{ background:var(--badge-progress-bg); color:var(--badge-progress-txt); }
+.badge-complete{ background:var(--badge-complete-bg); color:var(--badge-complete-txt); }
+
+.badge-priority{ display:inline-block; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; }
+.priority-High{ background:#fee2e2; color:#991b1b; }
+.priority-Medium{ background:#fef3c7; color:#92400e; }
+.priority-Low{ background:#e0f2fe; color:#075985; }
+
+.loadMoreBtn{
+  background:#64748b;
+  color:white;
+  border:none;
+  padding:10px 24px;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:20px;
+  font-size:13px;
+  font-weight:700;
+}
+
+.scale-note{ font-size:12px; color:var(--muted); margin-bottom:12px; }
+
+.modalOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(3px);
+  z-index:200;
+  justify-content:center;
+  align-items:center;
+}
+.modalOverlay.show{ display:flex; }
+
+.modalBox{
+  background:var(--card-bg);
+  padding:28px;
+  border-radius:14px;
+  width:90%;
+  max-width:440px;
+  border:1px solid var(--border);
+  box-shadow:0 20px 40px rgba(0,0,0,0.2);
+}
+.modalBox h2{ color:var(--navy); margin-bottom:16px; font-size:18px; font-weight:800; }
+.modalBox .closeBtn{ background:#64748b; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; margin-top:12px; font-weight:700; }
+
+@media (max-width:768px){
+  .app-sidebar{ transform:translateX(-100%); }
+  .app-sidebar.sidebar-open{ transform:translateX(0); }
+  .sidebar-overlay.sidebar-open{ display:block; }
+  .app-main{ margin-left:0; }
+  .mobile-hamburger{ display:block; }
+}
+
+.asg-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:18px}
+.asg-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:16px}
+.asg-card h3{font-size:12px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.asg-card h2{font-size:28px;color:var(--navy)}
+.asg-card.good h2{color:#16a34a}.asg-card.warn h2{color:#dc2626}
+.asg-panel{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:22px}
+.asg-panel h2{font-size:16px;color:var(--navy);margin-bottom:12px}
+.tl-row{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px}
+.tl-row small{display:block;color:var(--muted);margin-top:2px}
+.asg-bar{height:8px;border-radius:6px;background:var(--border);overflow:hidden;min-width:80px}
+.asg-bar i{display:block;height:100%;background:#16a34a}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
+<!-- Left Sidebar Navigation -->
+<aside class="app-sidebar" id="appSidebar">
+  <div class="sidebar-header">
+    <a href="dashboard.html" class="brand-title">MO<span>O</span>VING</a>
+    <span class="brand-badge">CRM</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-item">
+      <span class="icon">📊</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="Projects.html" class="nav-item" id="sidebarPmLink">
+      <span class="icon">📋</span>
+      <span>Project Manager</span>
+    </a>
+    <a href="Projects.html?scope=mine" class="nav-item" id="sidebarMineLink" style="display:none">
+      <span class="icon">🙋</span>
+      <span>My Projects</span>
+    </a>
+    <a href="admin.html" class="nav-item" id="sidebarAdminLink" style="display:none">
+      <span class="icon">⚙️</span>
+      <span>Admin Panel</span>
+    </a>
+    <a href="assign.html" class="nav-item active" id="sidebarAssignLink">
+      <span class="icon">📝</span>
+      <span>Assign Task</span>
+    </a>
+
+    <a href="requests.html" class="nav-item" id="sidebarRequestsLink" style="display:none">
+      <span class="icon">🛠</span>
+      <span>AI Change Requests</span>
+    </a>
+    <a href="assigned.html" class="nav-item" id="sidebarAssignedLink">
+      <span class="icon">📬</span>
+      <span>Assigned Tasks</span>
+    </a>
+    <a href="ai-studio.html" class="nav-item" id="sidebarCodeLink" style="display:none">
+      <span class="icon">🧪</span>
+      <span>AI Code Studio</span>
+    </a>
+    <a href="activity.html" class="nav-item" id="sidebarActivityLink">
+      <span class="icon">🔔</span>
+      <span>Notifications &amp; Recent</span>
+    </a>
+    <a href="profile.html" class="nav-item" id="sidebarProfileLink">
+      <span class="icon">👤</span>
+      <span>Profile Settings</span>
+    </a>
+
+    <button class="nav-item" onclick="logout()" style="color:#fca5a5;">
+      <span class="icon">🚪</span>
+      <span>Logout</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-profile-chip">
+      <div class="avatar-circle" id="userAvatar">U</div>
+      <div class="user-info-text">
+        <span class="user-info-name" id="userNameLabel">Loading...</span>
+        <span class="user-info-role" id="userRoleBadge">User</span>
+      </div>
+    </div>
+
+    <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">
+      <span>🌙</span> <span id="themeToggleText">Dark Theme</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Main Content Area -->
+<div class="app-main">
+
+  <header class="top-app-bar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="mobile-hamburger" onclick="toggleMobileSidebar()">☰</button>
+      <h1 class="page-header-title">📝 Assign Task</h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span id="lastRefreshed" class="crm-last-refreshed"></span><button id="refreshBtn" class="crm-refresh-btn" type="button" onclick="manualRefresh()">🔄 Refresh</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <div class="asg-panel">
+      <h2>📊 Assigned Tasks Dashboard (tasks assigned by me)</h2>
+      <div class="asg-cards">
+        <div class="asg-card"><h3>Total Assigned</h3><h2 id="asgT">-</h2></div>
+        <div class="asg-card"><h3>Users</h3><h2 id="asgU">-</h2></div>
+        <div class="asg-card"><h3>Pending</h3><h2 id="asgP">-</h2></div>
+        <div class="asg-card"><h3>In Progress</h3><h2 id="asgI">-</h2></div>
+        <div class="asg-card good"><h3>Completed</h3><h2 id="asgC">-</h2></div>
+        <div class="asg-card warn"><h3>Overdue</h3><h2 id="asgO">-</h2></div>
+        <div class="asg-card good"><h3>Completion %</h3><h2 id="asgPct">-</h2></div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;"><th style="padding:8px">User</th><th>Assigned</th><th>Pending</th><th>In Progress</th><th>Completed</th><th>Overdue</th><th>Progress</th></tr></thead>
+          <tbody id="asgBody"><tr><td colspan="7" style="padding:14px;color:var(--muted)">Loading...</td></tr></tbody>
+        </table>
+      </div>
+      <div style="text-align:center;margin-top:12px;"><button id="asgMore" type="button" onclick="asgLoadMore()" style="display:none;background:#64748b;color:#fff;border:none;padding:9px 20px;border-radius:8px;cursor:pointer;font-weight:700;">Load More</button></div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-header">
+        <span class="form-card-title">📝 Assign a Task to a User</span>
+        <button onclick="resetAssignForm()" class="secondary" type="button" style="padding:6px 12px;font-size:12px;">Clear Form</button>
+      </div>
+
+      <div class="form-sections-grid">
+        <!-- Section 0: Assign To -->
+        <div class="form-group-section">
+          <div class="form-section-label">👥 Assign To</div>
+          <div class="form-field">
+            <label for="assignee">Select User *</label>
+            <select id="assignee"><option value="">Loading users...</option></select>
+          </div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5;">
+            The task will appear in this user's Project Manager and they will get a notification.
+          </div>
+        </div>
+
+        
+        <!-- Section 1: Basic Info -->
+        <div class="form-group-section">
+          <div class="form-section-label">📌 Basic Details</div>
+          
+          <div class="form-field">
+            <label for="projectName">Project Name *</label>
+            <input id="projectName" placeholder="e.g. Battery Swapping Hub Gurgaon">
+          </div>
+
+          <div class="form-field">
+            <label for="business">Type Of Business</label>
+            <select id="business"></select>
+          </div>
+
+          <div class="form-field">
+            <label for="assetType">Type Of Asset</label>
+            <select id="assetType"></select>
+          </div>
+
+          <div class="form-field">
+            <label for="assetModel">Asset Model</label>
+            <select id="assetModel"></select>
+          </div>
+        </div>
+
+        <!-- Section 2: Ownership & SPOC -->
+        <div class="form-group-section">
+          <div class="form-section-label">👤 Ownership &amp; SPOC</div>
+          
+          <div class="form-field">
+            <label for="projectOwner">Project Owner</label>
+            <input id="projectOwner" placeholder="Lead owner name">
+          </div>
+
+          <div class="form-field">
+            <label for="projectSpoc">Project SPOC</label>
+            <input id="projectSpoc" placeholder="SPOC contact person">
+          </div>
+
+          <div class="form-field">
+            <label for="runningTask">Running Task</label>
+            <input id="runningTask" placeholder="Current milestone / task">
+          </div>
+        </div>
+
+        <!-- Section 3: Timeline & Priority -->
+        <div class="form-group-section">
+          <div class="form-section-label">📅 Schedule &amp; Priority</div>
+          
+          <div class="form-field">
+            <label for="taskStartDate">Task Start Date</label>
+            <input type="date" id="taskStartDate">
+          </div>
+
+          <div class="form-field">
+            <label for="taskEndDate">Task End Date</label>
+            <input type="date" id="taskEndDate">
+          </div>
+
+          <div class="form-field">
+            <label for="taskPriority">Priority</label>
+            <select id="taskPriority">
+              <option>Low</option>
+              <option>Medium</option>
+              <option>High</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="taskStatus">Status</label>
+            <select id="taskStatus">
+              <option>Pending</option>
+              <option>In Progress</option>
+              <option>Complete</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Section 4: Progress & Remarks -->
+        <div class="form-group-section">
+          <div class="form-section-label">📝 Progress &amp; Notes</div>
+          
+          <div class="form-field">
+            <label for="progress1">Progress Update 1</label>
+            <input id="progress1" placeholder="Updates / status check 1">
+          </div>
+
+          <div class="form-field">
+            <label for="progress2">Progress Update 2</label>
+            <input id="progress2" placeholder="Updates / status check 2">
+          </div>
+
+          <div class="form-field">
+            <label for="remarks">Remarks</label>
+            <input id="remarks" placeholder="Additional notes / comments">
+          </div>
+        </div>
+
+      </div>
+
+      <div id="formStatus"></div>
+
+      <div class="form-actions">
+        <button id="assignBtn" type="button">✅ Assign Task</button>
+      </div>
+    </div>
+
+    <div class="asg-panel" id="asgListPanel">
+      <h2>📋 Tasks I assigned <button id="asgDownload" type="button" class="crm-mini" style="display:none;float:right" onclick="asgDownloadCsv()">⬇ Download</button></h2>
+      <div id="asgList">Loading...</div>
+      <div style="text-align:center"><button id="asgListMore" type="button" class="crm-mini" style="display:none;margin-top:12px" onclick="asgListShowMore()">Show more</button></div>
+    </div>
+  </main>
+</div>
+
+<!-- Password Change Modal -->
+<div class="modalOverlay" id="passwordModal">
+  <div class="modalBox">
+    <h2>Change Password</h2>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;">Current Password</label>
+      <input type="password" id="currentPassword" placeholder="Current Password">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;">New Password (min 6 chars)</label>
+      <input type="password" id="newPassword" placeholder="New Password">
+    </div>
+    <div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:6px;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">Update Password</button>
+      <button class="closeBtn" onclick="closePasswordModal()" style="margin:0;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+(function(){
+  const saved = localStorage.getItem("crm-theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const btnText = document.getElementById("themeToggleText");
+    if(btnText) btnText.textContent = saved === "dark" ? "Light Theme" : "Dark Theme";
+  });
+})();
+
+function toggleTheme(){
+  const current = document.documentElement.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("crm-theme", next);
+  const btnText = document.getElementById("themeToggleText");
+  if(btnText) btnText.textContent = next === "dark" ? "Light Theme" : "Dark Theme";
+}
+
+function toggleMobileSidebar(){
+  const sidebar = document.getElementById("appSidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  if(sidebar) sidebar.classList.toggle("sidebar-open");
+  if(overlay) overlay.classList.toggle("sidebar-open");
+}
+
+function toggleFormCard(){
+  const formCard = document.getElementById("projectFormCard");
+  if(formCard){
+    const isHidden = formCard.style.display === "none" || !formCard.style.display;
+    formCard.style.display = isHidden ? "block" : "none";
+    if(isHidden){
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+  }
+}
+</script>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+
+import {
+getAuth, onAuthStateChanged, signOut,
+reauthenticateWithCredential, EmailAuthProvider, updatePassword
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+
+import {
+getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, serverTimestamp, query, where, limit, onSnapshot
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+const firebaseConfig = window.CRM_FIREBASE();
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+CRM.initAssetDropdowns("business","assetType","assetModel");
+
+let currentUser = null;
+let currentName = "";
+let usersMap = {};
+
+function escapeHtml(value){
+if(value === undefined || value === null) return "";
+return String(value).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+}
+
+function parseLocalDate(dateStr){
+if(!dateStr) return null;
+const parts = dateStr.split("-");
+if(parts.length !== 3) return null;
+return new Date(parseInt(parts[0],10), parseInt(parts[1],10)-1, parseInt(parts[2],10));
+}
+
+function setStatus(msg, ok){
+const el = document.getElementById("formStatus");
+if(!el) return;
+el.textContent = msg || "";
+el.style.color = ok ? "var(--success)" : "var(--danger)";
+}
+
+async function logActivity(action, details){
+try{
+await addDoc(collection(db,"activityLogs"), {
+action, details: details || "",
+userEmail: currentUser ? currentUser.email : "",
+userName: currentName,
+timestamp: serverTimestamp(),
+expireAt: CRM.expireAt()
+});
+CRM.bump(action);
+}catch(e){ console.error(e); }
+}
+
+async function notifyUser(targetUid, title, message){
+if(!targetUid) return;
+try{
+await addDoc(collection(db,"notifications"), {
+targetUid, title, message, read: false, createdAt: serverTimestamp(), expireAt: CRM.expireAt()
+});
+CRM.bump("Notification");
+}catch(e){ console.error(e); }
+}
+
+async function loadUsers(){
+const snap = await getDocs(collection(db,"users"));
+usersMap = {};
+snap.forEach(d=>{
+const u = d.data();
+if(u.disabled === true || u.deleted === true) return;
+usersMap[d.id] = u;
+});
+
+const sel = document.getElementById("assignee");
+if(!sel) return;
+const keep = sel.value;
+const ids = Object.keys(usersMap).sort((a,b)=>{
+const an = (usersMap[a].name || usersMap[a].email || "").toLowerCase();
+const bn = (usersMap[b].name || usersMap[b].email || "").toLowerCase();
+return an.localeCompare(bn);
+});
+sel.innerHTML = '<option value="">-- Select User --</option>' + ids.map(id=>{
+const u = usersMap[id];
+return `<option value="${escapeHtml(id)}">${escapeHtml(u.name || u.email)} (${escapeHtml(u.email)}) — ${escapeHtml(u.role || "User")}</option>`;
+}).join("");
+if(keep && usersMap[keep]) sel.value = keep;
+}
+
+let asgRows = [], asgVisible = 10;
+let asgItems = [], asgShown = 5, asgForce = true;
+async function loadAssignStats(){
+const ck = "asg.items";
+let items = !asgForce ? CRM.cache.get(ck, 180000) : null;
+if(!items){
+const snap = await getDocs(query(collection(db,"crmprojects"), where("assignedByUid","==",currentUser.uid), limit(1000)));
+items = [];
+snap.forEach(ds=>{ const d = ds.data(); items.push({ id: ds.id, d: { projectName: d.projectName, runningTask: d.runningTask, ownerUid: d.ownerUid, ownerName: d.ownerName, ownerEmail: d.ownerEmail, taskStatus: d.taskStatus, taskPriority: d.taskPriority, taskStartDate: d.taskStartDate, taskEndDate: d.taskEndDate, createdAt: d.createdAt } }); });
+items.sort((a,b)=>((b.d.createdAt && b.d.createdAt.toMillis ? b.d.createdAt.toMillis() : 0) - (a.d.createdAt && a.d.createdAt.toMillis ? a.d.createdAt.toMillis() : 0)));
+CRM.cache.set(ck, items);
+}
+asgItems = items; asgShown = 5;
+const today = new Date().toISOString().slice(0,10);
+const per = {}, tot = {t:0,p:0,i:0,c:0,o:0};
+items.forEach(({d})=>{
+const uid = d.ownerUid || "?";
+const r = per[uid] || (per[uid] = {name: d.ownerName || d.ownerEmail || uid, t:0,p:0,i:0,c:0,o:0});
+r.t++; tot.t++;
+if(d.taskStatus === "Complete"){ r.c++; tot.c++; }
+else{
+if(d.taskStatus === "In Progress"){ r.i++; tot.i++; } else { r.p++; tot.p++; }
+if(d.taskEndDate && d.taskEndDate < today){ r.o++; tot.o++; }
+}
+});
+asgRows = Object.values(per).sort((a,b)=>b.t-a.t);
+asgVisible = 10;
+const set = (id,v)=>{ const el = document.getElementById(id); if(el) el.textContent = v; };
+set("asgT", tot.t); set("asgU", asgRows.length); set("asgP", tot.p); set("asgI", tot.i); set("asgC", tot.c); set("asgO", tot.o);
+set("asgPct", tot.t ? Math.round(tot.c*100/tot.t) + "%" : "0%");
+drawAssignTable();
+drawAssignedList();
+}
+function drawAssignedList(){
+const el = document.getElementById("asgList"), more = document.getElementById("asgListMore"), dl = document.getElementById("asgDownload");
+if(!el) return;
+const show = asgItems.slice(0, asgShown);
+el.innerHTML = show.length ? show.map(({d})=>`<div class="tl-row"><div><b>${escapeHtml(d.projectName)}</b><small>To ${escapeHtml(d.ownerName || d.ownerEmail || "")}${d.runningTask ? " · " + escapeHtml(d.runningTask) : ""}</small></div><div style="text-align:right;white-space:nowrap">${escapeHtml(d.taskStatus || "")}<small>${escapeHtml(d.taskPriority || "")}${d.taskEndDate ? " · due " + escapeHtml(d.taskEndDate) : ""}</small></div></div>`).join("") : "<div style='color:var(--muted)'>No tasks assigned yet.</div>";
+if(more){ const left = asgItems.length - asgShown; more.style.display = left > 0 ? "inline-block" : "none"; more.textContent = "Show more (" + left + ")"; }
+if(dl) dl.style.display = CRM.can("export") ? "inline-block" : "none";
+}
+window.asgListShowMore = function(){ asgShown += 5; drawAssignedList(); };
+window.asgDownloadCsv = function(){
+if(!CRM.can("export")){ alert("Downloading data is not enabled for your account."); return; }
+const q = (v)=>'"' + String(v === undefined || v === null ? "" : v).replace(/"/g, '""') + '"';
+const csv = ["Project,Assigned to,Status,Priority,Start,End"].concat(asgItems.map(({d})=>[d.projectName, d.ownerName || d.ownerEmail, d.taskStatus, d.taskPriority, d.taskStartDate, d.taskEndDate].map(q).join(","))).join("\n");
+const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "assigned-tasks.csv"; a.click(); URL.revokeObjectURL(a.href);
+};
+function drawAssignTable(){
+const body = document.getElementById("asgBody");
+if(!body) return;
+body.innerHTML = asgRows.length ? asgRows.slice(0, asgVisible).map(r=>{
+const pct = r.t ? Math.round(r.c*100/r.t) : 0;
+return `<tr style="border-top:1px solid var(--border);"><td style="padding:9px 8px;font-weight:700;">${escapeHtml(r.name)}</td><td>${r.t}</td><td>${r.p}</td><td>${r.i}</td><td style="color:#16a34a;font-weight:700;">${r.c}</td><td style="color:${r.o ? "#dc2626" : "inherit"}">${r.o}</td><td><div class="asg-bar"><i style="width:${pct}%"></i></div>${pct}%</td></tr>`;
+}).join("") : "<tr><td colspan='7' style='padding:14px;color:var(--muted)'>No tasks assigned yet.</td></tr>";
+const more = document.getElementById("asgMore");
+if(more) more.style.display = asgRows.length > asgVisible ? "inline-block" : "none";
+}
+window.asgLoadMore = function(){ asgVisible += 10; drawAssignTable(); };
+
+async function doRefresh(force){
+asgForce = force !== false;
+await loadUsers();
+try{ await loadAssignStats(); }catch(e){ console.error(e); }
+}
+const refreshAll = CRM.makeRefresher(doRefresh);
+window.manualRefresh = refreshAll;
+
+function defaultDates(){ const e = document.getElementById("taskStartDate"); if(e) e.value = CRM.todayStr(); }
+window.resetAssignForm = function(){
+["projectName","projectOwner","projectSpoc","runningTask","taskStartDate","taskEndDate","progress1","progress2","remarks"].forEach(id=>{
+const el = document.getElementById(id);
+if(el) el.value = "";
+});
+CRM.setAssetValues("business","assetType","assetModel","","","");
+document.getElementById("taskPriority").selectedIndex = 0;
+document.getElementById("taskStatus").selectedIndex = 0;
+document.getElementById("assignee").value = "";
+setStatus("");
+};
+
+async function assignTask(){
+const val = (id)=>{ const el = document.getElementById(id); return el ? el.value.trim() : ""; };
+const btn = document.getElementById("assignBtn");
+
+const assigneeUid = val("assignee");
+const projName = val("projectName");
+
+if(!assigneeUid || !usersMap[assigneeUid]){ setStatus("Please select the user to assign this task to."); return; }
+if(!projName){ setStatus("Project Name is required."); return; }
+
+const startDateVal = val("taskStartDate");
+const endDateVal = val("taskEndDate");
+if(startDateVal && endDateVal){
+const sD = parseLocalDate(startDateVal), eD = parseLocalDate(endDateVal);
+if(sD && eD && eD < sD){ setStatus("Task End Date cannot be earlier than Task Start Date."); return; }
+}
+
+const assignee = usersMap[assigneeUid];
+const assigneeName = assignee.name || assignee.email;
+const status = val("taskStatus") || "Pending";
+
+const data = {
+projectName: projName,
+business: val("business"),
+assetType: val("assetType"),
+projectOwner: val("projectOwner") || assigneeName,
+assetModel: val("assetModel"),
+runningTask: val("runningTask"),
+projectSpoc: val("projectSpoc"),
+taskStartDate: startDateVal,
+taskEndDate: endDateVal,
+taskPriority: val("taskPriority") || "Low",
+taskStatus: status,
+progress1: val("progress1"),
+progress2: val("progress2"),
+remarks: val("remarks"),
+ownerUid: assigneeUid,
+ownerEmail: assignee.email || "",
+ownerName: assigneeName,
+assignedByUid: currentUser.uid,
+assignedByName: currentName,
+lastModifiedByUid: currentUser.uid,
+lastModifiedByName: currentName,
+createdAt: serverTimestamp()
+};
+if(status === "Complete") data.completedAt = serverTimestamp();
+
+if(btn) btn.disabled = true;
+setStatus("");
+
+try{
+await addDoc(collection(db,"crmprojects"), data);
+await logActivity("Task Assigned", `"${projName}" assigned to ${assigneeName}`);
+if(assigneeUid !== currentUser.uid){
+await notifyUser(assigneeUid, "New Task Assigned", `${currentName} assigned you the project "${projName}".`);
+}
+const keepUser = assigneeUid;
+window.resetAssignForm();
+defaultDates();
+document.getElementById("assignee").value = keepUser;   // handy when assigning several tasks in a row
+setStatus(`✅ "${projName}" assigned to ${assigneeName}.`, true);
+try{ await loadAssignStats(); }catch(e){ console.error(e); }
+}catch(error){
+console.error(error);
+if(error.code === "permission-denied"){
+let outdated = false;
+try{ await setDoc(doc(db,"meta","live"), { ts: serverTimestamp(), by: currentUser.uid }); }catch(e2){ outdated = e2.code === "permission-denied"; }
+setStatus(outdated
+? "Permission denied: the Firestore rules in your Firebase project are outdated. Open Firebase Console > Firestore Database > Rules, paste the latest firestore.rules file and click Publish. Then try again."
+: "Permission denied: this account does not have the Admin role in the database (users/<your id>.role must be exactly Admin).");
+}else{
+setStatus("Could not assign the task. " + (error.code || error.message));
+}
+}finally{
+if(btn) btn.disabled = false;
+}
+}
+
+document.getElementById("assignBtn").onclick = assignTask;
+defaultDates();
+
+window.openPasswordModal = function(){
+["currentPassword","newPassword"].forEach(id=>{ const el = document.getElementById(id); if(el) el.value = ""; });
+const msgEl = document.getElementById("passwordMsg");
+if(msgEl) msgEl.innerText = "";
+document.getElementById("passwordModal").classList.add("show");
+};
+window.closePasswordModal = function(){ document.getElementById("passwordModal").classList.remove("show"); };
+
+window.changePassword = async function(){
+const cur = document.getElementById("currentPassword").value;
+const next = document.getElementById("newPassword").value;
+const msgEl = document.getElementById("passwordMsg");
+if(!cur || !next){ msgEl.innerText = "Both fields are required."; return; }
+if(next.length < 6){ msgEl.innerText = "New password must be at least 6 characters."; return; }
+try{
+const credential = EmailAuthProvider.credential(currentUser.email, cur);
+await reauthenticateWithCredential(currentUser, credential);
+await updatePassword(currentUser, next);
+msgEl.style.color = "var(--success)";
+msgEl.innerText = "Password updated successfully.";
+setTimeout(closePasswordModal, 1200);
+}catch(error){
+msgEl.style.color = "var(--danger)";
+msgEl.innerText = error.message;
+}
+};
+
+window.logout = async function(){
+CRM.clearUserCache();
+await logActivity("Logout", "");
+signOut(auth).then(()=>{ window.location.href = "index.html"; });
+};
+
+onAuthStateChanged(auth, async (user)=>{
+
+if(!user){ window.location.href = "index.html"; return; }
+
+try{
+currentUser = user;
+const snap = await getDoc(doc(db,"users",user.uid));
+const userData = snap.exists() ? snap.data() : {};
+
+if(userData.disabled === true || userData.deleted === true){ window.location.href = "index.html"; return; }
+currentName = userData.name || user.email;
+CRM.setUser(currentName, userData.role, userData.gender);
+await CRM.loadAccess();
+if(!CRM.can("assign")){
+alert("You do not have permission to assign tasks. Ask an Admin to enable it for you.");
+window.location.href = "dashboard.html";
+return;
+}
+
+document.getElementById("userNameLabel").textContent = currentName;
+document.getElementById("userRoleBadge").textContent = userData.role;
+document.getElementById("userAvatar").textContent = (currentName || "A").charAt(0).toUpperCase();
+
+CRM.setUser(currentName, userData.role, userData.gender);
+CRM.initColumns({
+isAdmin: CRM.can("columns"),
+load: async ()=>{ const sn = await getDoc(doc(db,"settings","columns")); return sn.exists() ? (sn.data().labels || {}) : {}; },
+save: async (map)=>{ await setDoc(doc(db,"settings","columns"), { labels: map, updatedBy: currentUser.uid, updatedAt: serverTimestamp() }); }
+});
+CRM.setContextProvider(()=>"Page: Assign Task (admin assigns a project/task to a user).\nUsers:\n" + Object.keys(usersMap).map(id=>`- ${usersMap[id].name || "-"} | ${usersMap[id].email || "-"} | ${usersMap[id].role || "-"}`).join("\n"));
+
+await refreshAll("init");
+CRM.startAutoRefresh(refreshAll);
+CRM.setBump(()=>setDoc(doc(db,"meta","live"), { ts: serverTimestamp(), by: currentUser.uid }));
+CRM.startLive((cb)=>onSnapshot(doc(db,"meta","live"), (s)=>cb(s.exists() ? (s.data().by || null) : null), ()=>{}), refreshAll, currentUser.uid);
+
+}catch(error){
+console.error("Init error:", error);
+setStatus("Page failed to load (" + (error.code || error.message) + ").");
+}
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<script>try{var l=JSON.parse(localStorage.getItem("crm-look")||"{}"),h=document.documentElement;["ui","accent","density","font","corners","motion","bg","navtext"].forEach(function(k){if(l[k])h.setAttribute("data-"+k,l[k])})}catch(e){}</script>
+<link rel="stylesheet" href="crm-ui.css">
+<meta charset="UTF-8">
+<meta name="referrer" content="origin">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Change Requests - Mooving CRM</title>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js">
+<script defer src="crm-config.js"></script>
+<script defer src="crm-shared.js"></script>
+<script defer src="crm-core.js"></script>
+
+
+<style>
+:root{
+  --bg:#f8fafc;
+  --card-bg:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --sidebar-bg:#0f172a;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#1f4e79;
+  --navy-dark:#163a5c;
+  --red:#e2131f;
+  --danger:#dc2626;
+  --success:#16a34a;
+  --warn:#d97706;
+  --badge-pending-bg:#fef3c7;
+  --badge-pending-txt:#92400e;
+  --badge-progress-bg:#dbeafe;
+  --badge-progress-txt:#1e40af;
+  --badge-complete-bg:#dcfce7;
+  --badge-complete-txt:#166534;
+}
+
+[data-theme="dark"]{
+  --bg:#0f172a;
+  --card-bg:#1e293b;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:#334155;
+  --sidebar-bg:#090d16;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#38bdf8;
+  --navy-dark:#0284c7;
+  --badge-pending-bg:#451a03;
+  --badge-pending-txt:#fde68a;
+  --badge-progress-bg:#172554;
+  --badge-progress-txt:#bfdbfe;
+  --badge-complete-bg:#052e16;
+  --badge-complete-txt:#86efac;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+body{ background:var(--bg); color:var(--text); transition:background .3s,color .3s; display:flex; min-height:100vh; }
+
+/* ---------- Sidebar Navigation ---------- */
+.sidebar-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99; }
+
+.app-sidebar{
+  width:260px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-txt);
+  position:fixed;
+  top:0; bottom:0; left:0;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  transition:transform .3s ease;
+  border-right:1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-header{
+  padding:24px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.brand-title{
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:1px;
+  color:white;
+  text-decoration:none;
+}
+.brand-title span{ color:var(--red); }
+
+.brand-badge{
+  font-size:10px;
+  font-weight:800;
+  background:var(--red);
+  color:white;
+  padding:2px 6px;
+  border-radius:4px;
+  text-transform:uppercase;
+}
+
+.sidebar-nav{
+  padding:20px 12px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  overflow-y:auto;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  color:#94a3b8;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:600;
+  border-radius:8px;
+  transition:all .2s ease;
+  cursor:pointer;
+  border:none;
+  background:none;
+  width:100%;
+  text-align:left;
+}
+
+.nav-item:hover{
+  background:rgba(255,255,255,0.06);
+  color:white;
+}
+
+.nav-item.active{
+  background:linear-gradient(90deg, var(--navy), #2563eb);
+  color:white;
+  box-shadow:0 4px 12px rgba(37,99,235,0.3);
+}
+
+.nav-item .icon{ font-size:18px; width:22px; text-align:center; }
+
+.sidebar-footer{
+  padding:16px;
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.user-profile-chip{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  background:rgba(255,255,255,0.04);
+  border-radius:8px;
+}
+
+.avatar-circle{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:var(--navy);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:14px;
+}
+
+.user-info-text{ display:flex; flex-direction:column; overflow:hidden; }
+.user-info-name{ font-size:13px; font-weight:700; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-info-role{ font-size:11px; color:#94a3b8; }
+
+.theme-toggle-btn{
+  background:rgba(255,255,255,0.08);
+  color:white;
+  border:none;
+  padding:8px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:background .2s;
+}
+.theme-toggle-btn:hover{ background:rgba(255,255,255,0.15); }
+
+/* ---------- Main Content Container ---------- */
+.app-main{
+  flex:1;
+  margin-left:260px;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  transition:margin-left .3s ease;
+}
+
+.top-app-bar{
+  background:var(--card-bg);
+  border-bottom:1px solid var(--border);
+  padding:16px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:90;
+}
+
+.mobile-hamburger{
+  display:none;
+  background:none;
+  border:none;
+  font-size:22px;
+  cursor:pointer;
+  color:var(--text);
+}
+
+.page-header-title{
+  font-size:20px;
+  font-weight:800;
+  color:var(--navy);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.main-content{ padding:28px; flex:1; }
+
+/* ---------- Grouped Form Card ---------- */
+.form-card{
+  background:var(--card-bg);
+  padding:24px;
+  border-radius:16px;
+  margin-bottom:24px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.04);
+  border:1px solid var(--border);
+}
+
+.form-card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+
+.form-card-title{
+  font-size:16px;
+  font-weight:800;
+  color:var(--navy);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.form-sections-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  gap:20px;
+}
+
+.form-group-section{
+  background:var(--bg);
+  padding:16px;
+  border-radius:12px;
+  border:1px solid var(--border);
+}
+
+.form-section-label{
+  font-size:12px;
+  font-weight:800;
+  color:var(--navy);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.form-field{
+  margin-bottom:12px;
+}
+.form-field:last-child{ margin-bottom:0; }
+
+.form-field label{
+  font-size:11px;
+  font-weight:700;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  display:block;
+  margin-bottom:4px;
+}
+
+input, select{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--card-bg);
+  color:var(--text);
+  font-size:13px;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+input:focus, select:focus{
+  border-color:var(--navy);
+  box-shadow:0 0 0 3px rgba(56,189,248,0.15);
+}
+
+.form-actions{
+  margin-top:20px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+button{
+  background:var(--navy);
+  color:white;
+  border:none;
+  padding:10px 20px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:700;
+  transition:all .2s;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+button:hover{ background:var(--navy-dark); transform:translateY(-1px); }
+button.secondary{ background:#64748b; }
+button.secondary:hover{ background:#475569; }
+button.share{ background:#16a34a; padding:6px 12px; font-size:12px; }
+button.share:hover{ background:#15803d; }
+button.actionBtn{ padding:6px 12px; font-size:12px; border-radius:6px; font-weight:700; }
+button.editBtn{ background:var(--navy); }
+button.deleteBtn{ background:var(--danger); }
+
+/* ---------- Filter Bar ---------- */
+.filter-bar{
+  background:var(--card-bg);
+  padding:16px 20px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  margin-bottom:20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:14px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.03);
+}
+
+.search-box-wrap{
+  flex:1;
+  min-width:280px;
+  position:relative;
+}
+
+.search-box-wrap input{
+  padding-left:36px;
+  margin:0;
+}
+
+.search-icon-inside{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+  font-size:14px;
+  pointer-events:none;
+}
+
+.filter-chips{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.chip-btn{
+  background:var(--bg);
+  color:var(--muted);
+  border:1px solid var(--border);
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .2s;
+}
+
+.chip-btn:hover, .chip-btn.active{
+  background:var(--navy);
+  color:white;
+  border-color:var(--navy);
+}
+
+#formStatus{
+  font-size:13px;
+  font-weight:700;
+  color:var(--danger);
+  min-height:18px;
+}
+
+.table-wrapper{
+  overflow-x:auto;
+  border-radius:14px;
+  border:1px solid var(--border);
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  background:var(--card-bg);
+}
+
+table{ width:100%; border-collapse:collapse; background:var(--card-bg); white-space:nowrap; }
+th, td{ border-bottom:1px solid var(--border); padding:12px 16px; font-size:12px; text-align:left; vertical-align:top; }
+.cell-name{ max-width:200px; min-width:140px; white-space:normal; word-break:break-word; line-height:1.4; }
+.cell-truncate{ max-width:180px; min-width:130px; white-space:normal; word-break:break-word; line-height:1.4; }
+th{
+  background:var(--navy);
+  color:white;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+.sticky-actions{
+  position:sticky;
+  right:0;
+  background:var(--card-bg);
+  z-index:5;
+  box-shadow:-4px 0 10px rgba(0,0,0,0.06);
+  text-align:center;
+}
+th.sticky-actions{
+  background:var(--navy);
+  color:white;
+  z-index:15;
+}
+tr.overdue .sticky-actions{ background:#fef2f2; }
+[data-theme="dark"] tr.overdue .sticky-actions{ background:#451a1a; }
+
+.action-btn-group{ display:flex; align-items:center; justify-content:center; gap:6px; }
+.icon-action-btn{
+  background:var(--navy);
+  color:white;
+  border:none;
+  width:32px;
+  height:32px;
+  border-radius:6px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  transition:all .2s;
+  padding:0;
+}
+.icon-action-btn:hover{ transform:translateY(-1px); filter:brightness(1.15); box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+.icon-action-btn.delete-icon{ background:var(--danger); }
+
+tr:hover{ background:rgba(0,0,0,0.02); }
+[data-theme="dark"] tr:hover{ background:rgba(255,255,255,0.02); }
+tr.overdue{ background:#fef2f2; }
+[data-theme="dark"] tr.overdue{ background:#451a1a; }
+
+.badge-status{ display:inline-block; padding:4px 10px; border-radius:12px; font-weight:700; font-size:11px; }
+.badge-pending{ background:var(--badge-pending-bg); color:var(--badge-pending-txt); }
+.badge-progress{ background:var(--badge-progress-bg); color:var(--badge-progress-txt); }
+.badge-complete{ background:var(--badge-complete-bg); color:var(--badge-complete-txt); }
+
+.badge-priority{ display:inline-block; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; }
+.priority-High{ background:#fee2e2; color:#991b1b; }
+.priority-Medium{ background:#fef3c7; color:#92400e; }
+.priority-Low{ background:#e0f2fe; color:#075985; }
+
+.loadMoreBtn{
+  background:#64748b;
+  color:white;
+  border:none;
+  padding:10px 24px;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:20px;
+  font-size:13px;
+  font-weight:700;
+}
+
+.scale-note{ font-size:12px; color:var(--muted); margin-bottom:12px; }
+
+.modalOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(3px);
+  z-index:200;
+  justify-content:center;
+  align-items:center;
+}
+.modalOverlay.show{ display:flex; }
+
+.modalBox{
+  background:var(--card-bg);
+  padding:28px;
+  border-radius:14px;
+  width:90%;
+  max-width:440px;
+  border:1px solid var(--border);
+  box-shadow:0 20px 40px rgba(0,0,0,0.2);
+}
+.modalBox h2{ color:var(--navy); margin-bottom:16px; font-size:18px; font-weight:800; }
+.modalBox .closeBtn{ background:#64748b; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; margin-top:12px; font-weight:700; }
+
+@media (max-width:768px){
+  .app-sidebar{ transform:translateX(-100%); }
+  .app-sidebar.sidebar-open{ transform:translateX(0); }
+  .sidebar-overlay.sidebar-open{ display:block; }
+  .app-main{ margin-left:0; }
+  .mobile-hamburger{ display:block; }
+}
+
+.pinned-row td{background:rgba(250,204,21,.10)}
+.rq-top{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:18px}
+.rq-top h2{font-size:15px;color:var(--navy);margin-bottom:6px}
+.rq-top p{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.rq-top input,.rq-top textarea,.rq-top select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;margin-bottom:8px}
+.rq-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.rq-tab{background:var(--card-bg);color:var(--text);border:1px solid var(--border);padding:8px 14px;border-radius:20px;cursor:pointer;font-weight:700;font-size:12px}
+.rq-tab.on{background:#2563eb;color:#fff;border-color:#2563eb}
+.rq-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.rq-card h3{font-size:14px;color:var(--navy);margin-bottom:4px}
+.rq-meta{font-size:11px;color:var(--muted);margin-bottom:8px}
+.rq-text{font-size:13px;white-space:pre-wrap;word-break:break-word;margin-bottom:8px}
+.rq-plan{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;margin:8px 0;font-family:ui-monospace,Consolas,monospace}
+.rq-card textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;margin:6px 0}
+.rq-btns{display:flex;gap:8px;flex-wrap:wrap}
+.rq-btns button,.rq-top button.rq-b{padding:8px 14px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px;color:#fff;background:#2563eb}
+.rq-btns .ok{background:#16a34a}.rq-btns .no{background:#dc2626}.rq-btns .sec{background:#64748b}
+.rq-badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;background:var(--border)}
+.rq-more{display:none;margin:14px auto 0;background:#64748b;color:#fff;border:none;padding:10px 22px;border-radius:8px;cursor:pointer;font-weight:700}
+.rq-safe{background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.35);border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:16px;line-height:1.6}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
+<!-- Left Sidebar Navigation -->
+<aside class="app-sidebar" id="appSidebar">
+  <div class="sidebar-header">
+    <a href="dashboard.html" class="brand-title">MO<span>O</span>VING</a>
+    <span class="brand-badge">CRM</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-item">
+      <span class="icon">📊</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="Projects.html" class="nav-item" id="sidebarPmLink">
+      <span class="icon">📋</span>
+      <span>Project Manager</span>
+    </a>
+    <a href="Projects.html?scope=mine" class="nav-item" id="sidebarMineLink" style="display:none">
+      <span class="icon">🙋</span>
+      <span>My Projects</span>
+    </a>
+    <a href="admin.html" class="nav-item" id="sidebarAdminLink" style="display:none">
+      <span class="icon">⚙️</span>
+      <span>Admin Panel</span>
+    </a>
+    <a href="assign.html" class="nav-item" id="sidebarAssignLink" style="display:none">
+      <span class="icon">📝</span>
+      <span>Assign Task</span>
+    </a>
+
+    <a href="requests.html" class="nav-item active" id="sidebarRequestsLink" style="display:none">
+      <span class="icon">🛠</span>
+      <span>AI Change Requests</span>
+    </a>
+    <a href="assigned.html" class="nav-item" id="sidebarAssignedLink">
+      <span class="icon">📬</span>
+      <span>Assigned Tasks</span>
+    </a>
+    <a href="ai-studio.html" class="nav-item" id="sidebarCodeLink" style="display:none">
+      <span class="icon">🧪</span>
+      <span>AI Code Studio</span>
+    </a>
+    <a href="activity.html" class="nav-item" id="sidebarActivityLink">
+      <span class="icon">🔔</span>
+      <span>Notifications &amp; Recent</span>
+    </a>
+    <a href="profile.html" class="nav-item" id="sidebarProfileLink">
+      <span class="icon">👤</span>
+      <span>Profile Settings</span>
+    </a>
+
+    <button class="nav-item" onclick="logout()" style="color:#fca5a5;">
+      <span class="icon">🚪</span>
+      <span>Logout</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-profile-chip">
+      <div class="avatar-circle" id="userAvatar">U</div>
+      <div class="user-info-text">
+        <span class="user-info-name" id="userNameLabel">Loading...</span>
+        <span class="user-info-role" id="userRoleBadge">User</span>
+      </div>
+    </div>
+
+    <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">
+      <span>🌙</span> <span id="themeToggleText">Dark Theme</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Main Content Area -->
+<div class="app-main">
+
+  <header class="top-app-bar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="mobile-hamburger" onclick="toggleMobileSidebar()">☰</button>
+      <h1 class="page-header-title">🛠 AI Change Requests</h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span id="lastRefreshed" class="crm-last-refreshed"></span><button id="refreshBtn" class="crm-refresh-btn" type="button" onclick="manualRefresh()">🔄 Refresh</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="rq-safe">🛡 <b>How this works:</b> the AI (or any user) can only <b>propose</b> a fix or a new feature. Nothing is executed or published automatically. An Admin reviews each request here, approves or rejects it, and approved changes are applied to the code only after a human review.</div>
+    <div class="rq-top">
+      <h2>➕ New change request</h2>
+      <p>Describe a bug or a new feature. The AI can then draft a plan and a proposed patch for you to review.</p>
+      <select id="rqType"><option value="feature">New feature / change</option><option value="issue">Something is wrong</option></select>
+      <input id="rqTitle" maxlength="200" placeholder="Short title">
+      <textarea id="rqDetails" rows="3" maxlength="4000" placeholder="Details"></textarea>
+      <button id="rqCreate" class="rq-b" type="button">Create request</button>
+      <button id="rqSuggest" class="rq-b" type="button" style="background:#7c3aed">🤖 Let the AI look for issues and ideas</button>
+      <span id="rqMsg" style="font-size:12px"></span>
+    </div>
+    <div class="rq-tabs" id="rqTabs"></div>
+    <div id="rqList">Loading...</div>
+    <div style="text-align:center"><button id="rqMore" class="rq-more" type="button">Load More</button></div>
+    <div style="margin-top:18px"><button id="rqExport" class="rq-b" type="button" style="padding:9px 16px;border:none;border-radius:8px;font-weight:700;cursor:pointer;color:#fff;background:#2563eb">⬇ Download approved changes (.md)</button></div>
+  </main>
+</div>
+
+<!-- Password Change Modal -->
+<div class="modalOverlay" id="passwordModal">
+  <div class="modalBox">
+    <h2>Change Password</h2>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;">Current Password</label>
+      <input type="password" id="currentPassword" placeholder="Current Password">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;">New Password (min 6 chars)</label>
+      <input type="password" id="newPassword" placeholder="New Password">
+    </div>
+    <div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:6px;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">Update Password</button>
+      <button class="closeBtn" onclick="closePasswordModal()" style="margin:0;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+(function(){
+  const saved = localStorage.getItem("crm-theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const btnText = document.getElementById("themeToggleText");
+    if(btnText) btnText.textContent = saved === "dark" ? "Light Theme" : "Dark Theme";
+  });
+})();
+
+function toggleTheme(){
+  const current = document.documentElement.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("crm-theme", next);
+  const btnText = document.getElementById("themeToggleText");
+  if(btnText) btnText.textContent = next === "dark" ? "Light Theme" : "Dark Theme";
+}
+
+function toggleMobileSidebar(){
+  const sidebar = document.getElementById("appSidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  if(sidebar) sidebar.classList.toggle("sidebar-open");
+  if(overlay) overlay.classList.toggle("sidebar-open");
+}
+
+function toggleFormCard(){
+  const formCard = document.getElementById("projectFormCard");
+  if(formCard){
+    const isHidden = formCard.style.display === "none" || !formCard.style.display;
+    formCard.style.display = isHidden ? "block" : "none";
+    if(isHidden){
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+  }
+}
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut, updatePassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, query, where, orderBy, limit, startAfter, serverTimestamp, onSnapshot, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+const firebaseConfig = window.CRM_FIREBASE();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const $ = (id)=>document.getElementById(id);
+let currentUser = null, currentName = "", currentRole = "", userDoc = {};
+
+function escapeHtml(v){ if(v === undefined || v === null) return ""; return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;"); }
+function fmtTs(t){ try{ const d = t && t.toDate ? t.toDate() : null; return d ? d.toLocaleString([], {day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit"}) : "-"; }catch(e){ return "-"; } }
+async function logActivity(action, details){
+try{ await addDoc(collection(db,"activityLogs"), { action, details: details || "", userEmail: currentUser ? currentUser.email : "", userName: currentName, timestamp: serverTimestamp(), expireAt: CRM.expireAt() }); CRM.bump(action); }catch(e){ console.error(e); }
+}
+window.logout = async function(){
+CRM.clearUserCache();
+await logActivity("Logout", "");
+signOut(auth).then(()=>{ window.location.href = "index.html"; });
+};
+
+const POOL = 50, SHOW = 10, STATUSES = ["Pending","Approved","Rejected","Applied"];
+let rows = [], last = null, more = false, filter = "Pending", visible = SHOW;
+
+async function fetchPool(reset){
+if(reset){ rows = []; last = null; more = false; visible = SHOW; }
+const cons = [orderBy("createdAt","desc")];
+if(last) cons.push(startAfter(last));
+cons.push(limit(POOL));
+const snap = await getDocs(query(collection(db,"changeRequests"), ...cons));
+snap.forEach(d=>rows.push({ id: d.id, d: d.data() }));
+if(snap.docs.length) last = snap.docs[snap.docs.length-1];
+more = snap.docs.length === POOL;
+}
+
+function counts(){ const c = {}; STATUSES.forEach(s=>c[s] = rows.filter(r=>r.d.status === s).length); return c; }
+
+function draw(){
+const c = counts();
+$("rqTabs").innerHTML = STATUSES.map(s=>`<button class="rq-tab ${s === filter ? "on" : ""}" data-s="${s}" type="button">${s} (${c[s]}${more ? "+" : ""})</button>`).join("");
+const list = rows.filter(r=>r.d.status === filter);
+const shown = list.slice(0, visible);
+$("rqList").innerHTML = shown.length ? shown.map(r=>{
+const d = r.d;
+const plan = d.aiPlan ? `<div class="rq-meta">AI plan / proposed patch (text only, never executed):</div><div class="rq-plan">${escapeHtml(d.aiPlan)}</div>` : "";
+const note = d.adminNote ? `<div class="rq-meta">Admin note: ${escapeHtml(d.adminNote)}</div>` : "";
+const acts = [];
+acts.push(`<button class="sec" data-act="analyze" data-id="${escapeHtml(r.id)}" type="button">🤖 ${d.aiPlan ? "Re-analyze" : "Analyze with AI"}</button>`);
+if(d.status === "Pending"){
+acts.push(`<button class="ok" data-act="Approved" data-id="${escapeHtml(r.id)}" type="button">✅ Approve</button>`);
+acts.push(`<button class="no" data-act="Rejected" data-id="${escapeHtml(r.id)}" type="button">✖ Reject</button>`);
+}
+if(d.status === "Approved") acts.push(`<button class="ok" data-act="Applied" data-id="${escapeHtml(r.id)}" type="button">🏁 Mark as applied</button>`);
+if(d.aiPlan) acts.push(`<button class="sec" data-act="copy" data-id="${escapeHtml(r.id)}" type="button">📋 Copy plan</button>`);
+const noteBox = (d.status === "Pending" || d.status === "Approved") ? `<textarea id="note_${escapeHtml(r.id)}" rows="2" maxlength="500" placeholder="Optional note for this decision"></textarea>` : "";
+return `<div class="rq-card"><h3>${escapeHtml(d.title)} <span class="rq-badge">${escapeHtml(d.type)}</span></h3>
+<div class="rq-meta">${escapeHtml(d.source)} · ${escapeHtml(d.page)} · by ${escapeHtml(d.createdByName || d.createdBy)} · ${fmtTs(d.createdAt)}</div>
+<div class="rq-text">${escapeHtml(d.details)}</div>${plan}${note}${noteBox}<div class="rq-btns">${acts.join("")}</div></div>`;
+}).join("") : `<div style="color:var(--muted);padding:12px 0">No ${filter.toLowerCase()} requests.</div>`;
+$("rqMore").style.display = (list.length > visible || more) ? "block" : "none";
+}
+
+function flash(t, ok){ const e = $("rqMsg"); e.textContent = t; e.style.color = ok ? "var(--success)" : "var(--danger)"; }
+
+async function decide(id, status){
+const r = rows.find(x=>x.id === id); if(!r) return;
+const noteEl = $("note_" + id);
+const note = noteEl ? noteEl.value.trim().slice(0, 500) : "";
+await updateDoc(doc(db,"changeRequests",id), { status, adminNote: note, reviewedBy: currentUser.uid, reviewedAt: serverTimestamp() });
+if(status !== "Applied" && r.d.createdBy && r.d.createdBy !== currentUser.uid){
+await addDoc(collection(db,"notifications"), { targetUid: r.d.createdBy, title: "Request " + status.toLowerCase(), message: String(r.d.title).slice(0,200), read: false, createdAt: serverTimestamp(), expireAt: CRM.expireAt() });
+}
+await logActivity("Change Request " + status, String(r.d.title).slice(0,200));
+await fetchPool(true); draw();
+}
+
+async function analyze(id){
+const r = rows.find(x=>x.id === id); if(!r) return;
+flash("Asking the AI… this can take up to a minute.", true);
+const file = /^[\w.-]+\.(html|js)$/.test(r.d.page || "") ? r.d.page : "crm-shared.js";
+let src = "";
+try{ const res = await fetch(file, { cache: "no-store" }); src = (await res.text()).slice(0, 60000); }catch(e){}
+const system = "You are a senior web engineer maintaining a Firebase + vanilla JavaScript CRM. Never weaken security (Firestore rules, authentication, output escaping) and never output secrets. Reply with: 1) Root cause or design, 2) Risks, 3) A minimal patch as a unified diff against the provided file, 4) How to test it. Plain text only.";
+const prompt = `Request type: ${r.d.type}\nTitle: ${r.d.title}\nDetails:\n${r.d.details}\n\nFile: ${file}\n\n${src}`;
+const out = await CRM.askAI(prompt, system);
+if(out.error){ flash("AI error: " + out.error); return; }
+await updateDoc(doc(db,"changeRequests",id), { aiPlan: out.text.slice(0, 20000), analyzedAt: serverTimestamp() });
+flash("✅ AI plan saved. Review it below.", true);
+await fetchPool(true); draw();
+}
+
+$("rqList").addEventListener("click", async (e)=>{
+const b = e.target.closest("button[data-act]"); if(!b) return;
+const id = b.dataset.id, act = b.dataset.act;
+try{
+if(act === "analyze") await analyze(id);
+else if(act === "copy"){ const r = rows.find(x=>x.id === id); await navigator.clipboard.writeText((r.d.title + "\n\n" + (r.d.aiPlan || ""))); flash("Copied.", true); }
+else await decide(id, act);
+}catch(err){ console.error(err); flash("Failed: " + (err.code || err.message)); }
+});
+$("rqTabs").addEventListener("click", (e)=>{ const b = e.target.closest("button[data-s]"); if(!b) return; filter = b.dataset.s; visible = SHOW; draw(); });
+$("rqMore").addEventListener("click", async ()=>{
+visible += SHOW;
+const n = rows.filter(r=>r.d.status === filter).length;
+if(visible > n && more){ try{ await fetchPool(false); }catch(e){ console.error(e); } }
+draw();
+});
+$("rqCreate").addEventListener("click", async ()=>{
+const t = $("rqTitle").value.trim(), d = $("rqDetails").value.trim();
+if(t.length < 5){ flash("Please enter a short title."); return; }
+try{ await CRM.submitRequest($("rqType").value, t, d, "admin", "crm-shared.js"); $("rqTitle").value = ""; $("rqDetails").value = ""; flash("✅ Request created.", true); await fetchPool(true); draw(); }
+catch(err){ console.error(err); flash("Could not create: " + (err.code || err.message)); }
+});
+$("rqSuggest").addEventListener("click", async ()=>{
+const btn = $("rqSuggest"); btn.disabled = true; flash("The AI is reviewing your CRM data…", true);
+try{
+const cnt = async (...c)=> (await getCountFromServer(query(collection(db,"crmprojects"), ...c))).data().count;
+const today = CRM.todayStr();
+const [total, pending, progress, done, high, overdue, unowned] = await Promise.all([
+cnt(), cnt(where("taskStatus","==","Pending")), cnt(where("taskStatus","==","In Progress")), cnt(where("taskStatus","==","Complete")),
+cnt(where("taskPriority","==","High")), cnt(where("taskStatus","==","Pending"), where("taskEndDate","<",today)), cnt(where("projectSpoc","==",""))
+]);
+const open = await getDocs(query(collection(db,"crmprojects"), where("taskStatus","==","Pending"), limit(25)));
+const sample = []; open.forEach(d=>{ const x = d.data(); sample.push(`${x.projectName} | owner ${x.ownerName || x.projectOwner || "-"} | due ${x.taskEndDate || "-"} | priority ${x.taskPriority || "-"}`); });
+const prompt = `CRM snapshot (${today}): total ${total}, pending ${pending}, in progress ${progress}, completed ${done}, high priority ${high}, pending and overdue ${overdue}, projects without a SPOC ${unowned}.\nSome pending projects:\n${sample.join("\n")}\n\nAs a CRM analyst, list up to 5 concrete findings. Return ONLY a JSON array, no markdown. Each item: {"type":"issue" or "feature","title":"max 90 chars","details":"2-4 sentences: what you noticed and what to do"}. Mix data issues (overdue work, missing owners, imbalances) and useful CRM improvements.`;
+const out = await CRM.askAI(prompt, "You are a careful operations analyst for a battery-swapping company CRM. Be specific and practical. Output valid JSON only.");
+if(out.error){ flash("AI error: " + out.error); btn.disabled = false; return; }
+let list = [];
+try{ list = JSON.parse(out.text.replace(/```json|```/g, "").trim()); }catch(e){ flash("The AI answer could not be read. Please try again."); btn.disabled = false; return; }
+let made = 0;
+for(const it of (Array.isArray(list) ? list : []).slice(0, 5)){
+if(!it || typeof it.title !== "string" || typeof it.details !== "string") continue;
+try{ await CRM.submitRequest(it.type === "feature" ? "feature" : "issue", it.title, it.details, "ai", "dashboard.html", true); made++; }catch(e){ console.error(e); }
+}
+if(made){ await addDoc(collection(db,"notifications"), { targetUid: "admins", title: "AI suggestions ready", message: made + " new finding(s) from the AI are waiting for review.", read: false, createdAt: serverTimestamp(), expireAt: CRM.expireAt() }); }
+flash(made ? "✅ " + made + " suggestion(s) added to Pending." : "The AI found nothing new.", !!made);
+await fetchPool(true); draw();
+}catch(e){ console.error(e); flash(e.code === "permission-denied" ? "Permission denied - publish the latest firestore.rules." : ("Failed: " + (e.code || e.message))); }
+btn.disabled = false;
+});
+$("rqExport").addEventListener("click", ()=>{
+const items = rows.filter(r=>r.d.status === "Approved");
+if(!items.length){ flash("There are no approved requests to export."); return; }
+const md = "# Approved changes\n\n" + items.map(r=>`## ${r.d.title}\n- Type: ${r.d.type}\n- Page: ${r.d.page}\n- Admin note: ${r.d.adminNote || "-"}\n\n${r.d.details}\n\n### AI plan\n\n${r.d.aiPlan || "(not analysed yet)"}\n`).join("\n---\n\n");
+const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" })); a.download = "approved-changes.md"; a.click(); URL.revokeObjectURL(a.href);
+});
+
+const refreshAll = CRM.makeRefresher(async ()=>{ await fetchPool(true); draw(); });
+window.manualRefresh = refreshAll;
+
+onAuthStateChanged(auth, async (user)=>{
+if(!user){ window.location.href = "index.html"; return; }
+try{
+currentUser = user;
+const snap = await getDoc(doc(db,"users",user.uid));
+userDoc = snap.exists() ? snap.data() : {};
+if(userDoc.disabled === true || userDoc.deleted === true){ window.location.href = "index.html"; return; }
+currentRole = userDoc.role || "User";
+currentName = userDoc.name || user.email;
+$("userNameLabel").textContent = currentName;
+$("userRoleBadge").textContent = currentRole;
+$("userAvatar").textContent = (currentName || "U").charAt(0).toUpperCase();
+CRM.setUser(currentName, currentRole, userDoc.gender);
+await CRM.loadAccess();
+CRM.initColumns({
+isAdmin: CRM.can("columns"),
+load: async ()=>{ const sn = await getDoc(doc(db,"settings","columns")); return sn.exists() ? (sn.data().labels || {}) : {}; },
+save: async (map)=>{ await setDoc(doc(db,"settings","columns"), { labels: map, updatedBy: currentUser.uid, updatedAt: serverTimestamp() }); }
+});
+if(!CRM.can("requests")){ window.location.href = "dashboard.html"; return; }
+CRM.setContextProvider(()=>"AI Change Requests page. Requests loaded: " + rows.map(r=>r.d.status + ": " + r.d.title).join("; "));
+await fetchPool(true); draw();
+CRM.markRefreshed();
+CRM.startAutoRefresh(refreshAll);
+CRM.setBump(()=>setDoc(doc(db,"meta","live"), { ts: serverTimestamp(), by: currentUser.uid }));
+CRM.startLive((cb)=>onSnapshot(doc(db,"meta","live"), (s)=>cb(s.exists() ? (s.data().by || null) : null), ()=>{}), refreshAll, currentUser.uid);
+}catch(error){ console.error("Init error:", error); }
+});
+</script>
+
+</body>
+</html>

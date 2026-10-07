@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>try{var l=JSON.parse(localStorage.getItem("crm-look")||"{}"),h=document.documentElement;["ui","accent","density","font","corners","motion","bg","navtext"].forEach(function(k){if(l[k])h.setAttribute("data-"+k,l[k])})}catch(e){}</script>
+<link rel="stylesheet" href="crm-ui.css">
+<meta charset="UTF-8">
+<meta name="referrer" content="origin">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Dashboard - Mooving</title>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js">
+<script defer src="crm-config.js"></script>
+<script defer src="crm-shared.js"></script>
+<script defer src="crm-core.js"></script>
+
+
+<style>
+:root{
+  --bg:#f8fafc;
+  --card-bg:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --sidebar-bg:#0f172a;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#1f4e79;
+  --navy-dark:#163a5c;
+  --red:#e2131f;
+  --danger:#dc2626;
+  --danger-bg:#fef2f2;
+  --success:#16a34a;
+  --success-bg:#f0fdf4;
+  --warn:#d97706;
+  --warn-bg:#fffbeb;
+  --badge-pending-bg:#fef3c7;
+  --badge-pending-txt:#92400e;
+  --badge-progress-bg:#dbeafe;
+  --badge-progress-txt:#1e40af;
+  --badge-complete-bg:#dcfce7;
+  --badge-complete-txt:#166534;
+}
+
+[data-theme="dark"]{
+  --bg:#0f172a;
+  --card-bg:#1e293b;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:#334155;
+  --sidebar-bg:#090d16;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#38bdf8;
+  --navy-dark:#0284c7;
+  --danger-bg:#451a1a;
+  --success-bg:#14532d;
+  --warn-bg:#451a03;
+  --badge-pending-bg:#451a03;
+  --badge-pending-txt:#fde68a;
+  --badge-progress-bg:#172554;
+  --badge-progress-txt:#bfdbfe;
+  --badge-complete-bg:#052e16;
+  --badge-complete-txt:#86efac;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+body{ background:var(--bg); color:var(--text); transition:background .3s,color .3s; display:flex; min-height:100vh; }
+
+/* ---------- Sidebar Navigation ---------- */
+.sidebar-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99; }
+
+.app-sidebar{
+  width:260px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-txt);
+  position:fixed;
+  top:0; bottom:0; left:0;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  transition:transform .3s ease;
+  border-right:1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-header{
+  padding:24px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.brand-title{
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:1px;
+  color:white;
+  text-decoration:none;
+}
+.brand-title span{ color:var(--red); }
+
+.brand-badge{
+  font-size:10px;
+  font-weight:800;
+  background:var(--red);
+  color:white;
+  padding:2px 6px;
+  border-radius:4px;
+  text-transform:uppercase;
+}
+
+.sidebar-nav{
+  padding:20px 12px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  overflow-y:auto;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  color:#94a3b8;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:600;
+  border-radius:8px;
+  transition:all .2s ease;
+  cursor:pointer;
+  border:none;
+  background:none;
+  width:100%;
+  text-align:left;
+}
+
+.nav-item:hover{
+  background:rgba(255,255,255,0.06);
+  color:white;
+}
+
+.nav-item.active{
+  background:linear-gradient(90deg, var(--navy), #2563eb);
+  color:white;
+  box-shadow:0 4px 12px rgba(37,99,235,0.3);
+}
+
+.nav-item .icon{ font-size:18px; width:22px; text-align:center; }
+
+.sidebar-footer{
+  padding:16px;
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.user-profile-chip{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  background:rgba(255,255,255,0.04);
+  border-radius:8px;
+}
+
+.avatar-circle{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:var(--navy);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:14px;
+}
+
+.user-info-text{ display:flex; flex-direction:column; overflow:hidden; }
+.user-info-name{ font-size:13px; font-weight:700; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-info-role{ font-size:11px; color:#94a3b8; }
+
+.theme-toggle-btn{
+  background:rgba(255,255,255,0.08);
+  color:white;
+  border:none;
+  padding:8px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:background .2s;
+}
+.theme-toggle-btn:hover{ background:rgba(255,255,255,0.15); }
+
+/* ---------- Main Content Container ---------- */
+.app-main{
+  flex:1;
+  margin-left:260px;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  transition:margin-left .3s ease;
+}
+
+.top-app-bar{
+  background:var(--card-bg);
+  border-bottom:1px solid var(--border);
+  padding:16px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:90;
+}
+
+.mobile-hamburger{
+  display:none;
+  background:none;
+  border:none;
+  font-size:22px;
+  cursor:pointer;
+  color:var(--text);
+}
+
+.page-header-title{
+  font-size:20px;
+  font-weight:800;
+  color:var(--navy);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.main-content{ padding:28px; flex:1; }
+
+.crmStrip{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+.crmChip{
+  background:var(--card-bg);
+  border:1px solid var(--border);
+  color:var(--navy);
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.tl-item{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:flex-start}
+.tl-item b{color:var(--text)}.tl-item small{display:block;color:var(--muted);margin-top:2px}.tl-item .od{color:var(--danger);font-weight:700}
+.tl-more{background:#64748b;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:700;margin-top:12px}
+.tl-empty{color:var(--muted);font-size:13px;padding:6px 0}
+.userFilterBar{display:flex;align-items:center;gap:12px;margin:0 0 16px;flex-wrap:wrap}
+.userFilterBar label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.userFilterBar select{min-width:260px;max-width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--card-bg);color:var(--text);font-size:14px;font-weight:600;cursor:pointer}
+.viewAsBanner{
+  display:none;
+  background:#fef3c7;
+  color:#92400e;
+  padding:12px 18px;
+  border-radius:10px;
+  margin-bottom:20px;
+  font-size:13px;
+  font-weight:600;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  border:1px solid #fde68a;
+}
+.viewAsBanner.show{ display:flex; }
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px;
+  margin-bottom:24px;
+}
+
+.card{
+  background:var(--card-bg);
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  border:1px solid var(--border);
+  transition:transform .2s;
+}
+.card:hover{ transform:translateY(-2px); }
+.card h3{ font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+.card h2{ color:var(--navy); margin-top:8px; font-size:24px; font-weight:800; }
+.card.warn h2{ color:var(--danger); }
+.card.good h2{ color:var(--success); }
+
+.panel{
+  background:var(--card-bg);
+  padding:24px;
+  border-radius:14px;
+  margin-bottom:24px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  border:1px solid var(--border);
+}
+
+.panel h2{ color:var(--navy); font-size:16px; font-weight:800; margin-bottom:14px; }
+
+.charts-row{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+@media (max-width:900px){ .charts-row{ grid-template-columns:1fr; } }
+
+.chart-box{
+  position:relative;
+  height:260px;
+  background:var(--card-bg);
+  padding:16px;
+  border-radius:10px;
+  border:1px solid var(--border);
+}
+
+.notif-header-wrap{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.notif-header-badge{
+  font-size:11px;
+  font-weight:800;
+  background:var(--navy);
+  color:white;
+  padding:2px 8px;
+  border-radius:12px;
+  margin-left:8px;
+  vertical-align:middle;
+}
+
+.notif-item{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:12px 16px;
+  border-left:4px solid var(--warn);
+  background:var(--warn-bg);
+  margin-bottom:10px;
+  font-size:13px;
+  border-radius:10px;
+  line-height:1.4;
+  box-shadow:0 2px 8px rgba(0,0,0,0.02);
+  transition:all .2s ease;
+}
+.notif-item:hover{ transform:translateX(3px); }
+.notif-icon{ font-size:16px; flex-shrink:0; margin-top:1px; }
+.notif-content{ flex:1; word-break:break-word; }
+.notif-item.overdue{ border-left-color:var(--danger); background:var(--danger-bg); }
+.notif-item.info{ border-left-color:var(--navy); background:var(--card-bg); border:1px solid var(--border); border-left:4px solid var(--navy); }
+.notif-item .who{ color:var(--navy); font-weight:700; }
+
+.notif-toggle-btn{
+  background:var(--card-bg);
+  color:var(--navy);
+  border:1px solid var(--border);
+  padding:8px 18px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .2s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.04);
+}
+.notif-toggle-btn:hover{
+  background:var(--navy);
+  color:white;
+  border-color:var(--navy);
+  transform:translateY(-1px);
+}
+
+.addBtn{
+  background:var(--navy);
+  color:white;
+  border:none;
+  padding:12px 20px;
+  border-radius:8px;
+  cursor:pointer;
+  margin-bottom:20px;
+  font-weight:700;
+  box-shadow:0 4px 12px rgba(31,78,121,0.2);
+}
+.addBtn:hover{ background:var(--navy-dark); }
+
+input, select{
+  width:100%;
+  padding:10px 12px;
+  margin-top:6px;
+  margin-bottom:12px;
+  box-sizing:border-box;
+  background:var(--card-bg);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-size:13px;
+  outline:none;
+}
+input:focus, select:focus{ border-color:var(--navy); }
+
+.table-wrapper{ overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
+table{ width:100%; border-collapse:collapse; background:var(--card-bg); white-space:nowrap; }
+th, td{ border-bottom:1px solid var(--border); padding:10px 12px; font-size:12px; text-align:left; }
+th{ background:var(--navy); color:white; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+tr.overdue{ background:var(--danger-bg); }
+tr.userRow{ cursor:pointer; }
+tr.userRow:hover{ background:rgba(0,0,0,0.03); }
+
+.badge-status{ display:inline-block; padding:3px 8px; border-radius:10px; font-weight:700; font-size:11px; }
+.badge-pending{ background:var(--badge-pending-bg); color:var(--badge-pending-txt); }
+.badge-progress{ background:var(--badge-progress-bg); color:var(--badge-progress-txt); }
+.badge-complete{ background:var(--badge-complete-bg); color:var(--badge-complete-txt); }
+
+.searchRow{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.searchRow input{ margin:0; flex:1; min-width:220px; }
+
+.loadMoreBtn{
+  background:#64748b;
+  color:white;
+  border:none;
+  padding:10px 20px;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:16px;
+  font-size:13px;
+  font-weight:700;
+}
+
+.modalOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(3px);
+  z-index:200;
+  justify-content:center;
+  align-items:center;
+}
+.modalOverlay.show{ display:flex; }
+
+.modalBox{
+  background:var(--card-bg);
+  padding:28px;
+  border-radius:14px;
+  width:90%;
+  max-width:480px;
+  border:1px solid var(--border);
+  box-shadow:0 20px 40px rgba(0,0,0,0.2);
+}
+.modalBox h2{ color:var(--navy); margin-bottom:16px; font-size:18px; font-weight:800; }
+.modalBox .closeBtn{ background:#64748b; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; margin-top:12px; font-weight:700; }
+
+.stale-note{ font-size:11px; color:var(--muted); margin-top:8px; }
+
+@media (max-width:768px){
+  .app-sidebar{ transform:translateX(-100%); }
+  .app-sidebar.sidebar-open{ transform:translateX(0); }
+  .sidebar-overlay.sidebar-open{ display:block; }
+  .app-main{ margin-left:0; }
+  .mobile-hamburger{ display:block; }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
+<!-- Left Sidebar Navigation -->
+<aside class="app-sidebar" id="appSidebar">
+  <div class="sidebar-header">
+    <a href="dashboard.html" class="brand-title">MO<span>O</span>VING</a>
+    <span class="brand-badge">CRM</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-item active">
+      <span class="icon">📊</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="Projects.html" class="nav-item" id="sidebarPmLink">
+      <span class="icon">📋</span>
+      <span>Project Manager</span>
+    </a>
+    <a href="Projects.html?scope=mine" class="nav-item" id="sidebarMineLink" style="display:none">
+      <span class="icon">🙋</span>
+      <span>My Projects</span>
+    </a>
+    <a href="admin.html" class="nav-item" id="sidebarAdminLink" style="display:none">
+      <span class="icon">⚙️</span>
+      <span>Admin Panel</span>
+    </a>
+    <a href="assign.html" class="nav-item" id="sidebarAssignLink" style="display:none">
+      <span class="icon">📝</span>
+      <span>Assign Task</span>
+    </a>
+
+    <a href="requests.html" class="nav-item" id="sidebarRequestsLink" style="display:none">
+      <span class="icon">🛠</span>
+      <span>AI Change Requests</span>
+    </a>
+    <a href="assigned.html" class="nav-item" id="sidebarAssignedLink">
+      <span class="icon">📬</span>
+      <span>Assigned Tasks</span>
+    </a>
+    <a href="ai-studio.html" class="nav-item" id="sidebarCodeLink" style="display:none">
+      <span class="icon">🧪</span>
+      <span>AI Code Studio</span>
+    </a>
+    <a href="activity.html" class="nav-item" id="sidebarActivityLink">
+      <span class="icon">🔔</span>
+      <span>Notifications &amp; Recent</span>
+    </a>
+    <a href="profile.html" class="nav-item" id="sidebarProfileLink">
+      <span class="icon">👤</span>
+      <span>Profile Settings</span>
+    </a>
+
+    <button class="nav-item" onclick="logout()" style="color:#fca5a5;">
+      <span class="icon">🚪</span>
+      <span>Logout</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-profile-chip">
+      <div class="avatar-circle" id="userAvatar">U</div>
+      <div class="user-info-text">
+        <span class="user-info-name" id="userNameLabel">Loading...</span>
+        <span class="user-info-role" id="userRoleBadge">User</span>
+      </div>
+    </div>
+
+    <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">
+      <span>🌙</span> <span id="themeToggleText">Dark Theme</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Main App Wrapper -->
+<div class="app-main">
+  
+  <header class="top-app-bar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="mobile-hamburger" onclick="toggleMobileSidebar()">☰</button>
+      <h1 class="page-header-title">📊 CRM Dashboard</h1>
+    </div>
+    
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span id="lastRefreshed" class="crm-last-refreshed"></span><button id="refreshBtn" class="crm-refresh-btn" type="button" onclick="manualRefresh()">🔄 Refresh</button>
+      <button onclick="window.location.href='Projects.html'" class="addBtn" style="margin:0;padding:8px 14px;font-size:12px;">+ Add Project</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <div class="crmStrip">
+      <div class="crmChip">🗂️ <span>Project Data</span></div>
+      <div class="crmChip">⚙️ <span>Task Automation</span></div>
+      <div class="crmChip">👥 <span>Team Reporting</span></div>
+      <div class="crmChip">📊 <span>Live Analytics</span></div>
+      <div class="crmChip">🔔 <span>Smart Alerts</span></div>
+    </div>
+
+    <div class="userFilterBar" id="userFilterBar" style="display:none">
+      <label for="userFilter">Filter by person:</label>
+      <select id="userFilter" onchange="window.applyUserFilter(this.value)"><option value="">All (everyone)</option></select>
+    </div>
+
+    <div class="viewAsBanner" id="viewAsBanner">
+      <span>👁 Viewing <b id="viewAsName"></b>'s dashboard (read-only preview).</span>
+      <button onclick="window.location.href='dashboard.html'" style="background:#78350f;color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:700;">Back to My Dashboard</button>
+    </div>
+
+    <!-- Overview Metrics Cards (Visible to all, formatted based on role) -->
+    <div id="adminCards" class="cards">
+      <div class="card"><h3>Total Projects</h3><h2 id="totalProjects">-</h2></div>
+      <div class="card"><h3>Pending</h3><h2 id="pendingProjects">-</h2></div>
+      <div class="card"><h3>In Progress</h3><h2 id="progressProjects">-</h2></div>
+      <div class="card good"><h3>Completed</h3><h2 id="completedProjects">-</h2></div>
+      <div class="card warn"><h3>High Priority</h3><h2 id="highPriorityProjects">-</h2></div>
+      <div class="card warn"><h3>Overdue</h3><h2 id="overdueProjects">-</h2></div>
+      <div class="card good"><h3>Completion %</h3><h2 id="completionPct">-</h2></div>
+      <div class="card" id="totalUsersCardContainer"><h3>Total Users</h3><h2 id="totalUsersCard">-</h2></div>
+      <div class="card" id="totalAdminsCardContainer"><h3>Total Admins</h3><h2 id="totalAdminsCard">-</h2></div>
+    </div>
+
+
+
+    <div class="crm-chartgrid" id="analyticsRow">
+      <div class="crm-chartcard" id="chStatus"></div>
+      <div class="crm-chartcard" id="chPriority"></div>
+      <div class="crm-chartcard" id="chUsers" style="display:none"></div>
+    </div>
+
+    <!-- Per-User Team Report (Visible to Admins) -->
+    <div id="adminMineStats" style="display:none">
+      <h3 style="margin:6px 0 10px;color:var(--navy);">📝 Tasks I Assigned (to other users)</h3>
+      <div class="cards">
+        <div class="card"><h3>Total Assigned</h3><h2 id="asgTotal">-</h2></div>
+        <div class="card"><h3>Pending</h3><h2 id="asgPending">-</h2></div>
+        <div class="card"><h3>In Progress</h3><h2 id="asgProgress">-</h2></div>
+        <div class="card good"><h3>Completed</h3><h2 id="asgDone">-</h2></div>
+      </div>
+      <h3 style="margin:18px 0 10px;color:var(--navy);">🙋 My Own Projects</h3>
+      <div class="cards">
+        <div class="card"><h3>Total Mine</h3><h2 id="mineTotal">-</h2></div>
+        <div class="card"><h3>Pending</h3><h2 id="minePending">-</h2></div>
+        <div class="card"><h3>In Progress</h3><h2 id="mineProgress">-</h2></div>
+        <div class="card good"><h3>Completed</h3><h2 id="mineDone">-</h2></div>
+      </div>
+    </div>
+
+    <div class="panel" id="pinPanel" style="display:none">
+      <h2>📌 Pinned Tasks</h2>
+      <div id="pinList"></div>
+      <div style="text-align:center"><button id="pinMore" class="tl-more" style="display:none" onclick="morePinned()">Show more</button></div>
+    </div>
+
+    <div class="panel" id="teamReportPanel" style="display:none">
+      <h2>👥 Per-User Team Report</h2>
+      <div class="searchRow">
+        <input id="userSearch" placeholder="Search user by name or email..." onkeyup="filterUserReportInPlace()">
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th><th>Email</th><th>Role</th><th>Total</th><th>Pending</th><th>In Progress</th><th>Completed</th><th>Efficiency</th>
+            </tr>
+          </thead>
+          <tbody id="userReportBody"><tr><td colspan="8">Loading user metrics...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Personal Overview Panel (For regular users or Admin view-as) -->
+    <div class="panel" id="myPanel" style="display:none">
+      <h2 id="myPanelTitle">My Projects Overview</h2>
+      <div class="cards">
+        <div class="card"><h3>Total</h3><h2 id="myTotal">-</h2></div>
+        <div class="card"><h3>Pending</h3><h2 id="myPending">-</h2></div>
+        <div class="card"><h3>In Progress</h3><h2 id="myInProgress">-</h2></div>
+        <div class="card good"><h3>Completed</h3><h2 id="myCompleted">-</h2></div>
+        <div class="card good"><h3>Efficiency</h3><h2 id="myEfficiency">-</h2></div>
+      </div>
+      <div class="charts-row">
+        <div class="crm-chartcard" id="myPie"></div>
+      </div>
+    </div>
+
+    <div id="userTaskLists" style="display:none">
+      <div class="panel"><h2>⏳ Pending tasks</h2><div id="tlPending"></div></div>
+      <div class="panel"><h2>🚧 In-progress tasks</h2><div id="tlProgress"></div></div>
+    </div>
+
+
+  </main>
+</div>
+
+<!-- Password Change Modal -->
+<div class="modalOverlay" id="passwordModal">
+  <div class="modalBox">
+    <h2>Change Password</h2>
+    <input type="password" id="currentPassword" placeholder="Current Password">
+    <input type="password" id="newPassword" placeholder="New Password (min 6 chars)">
+    <div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:6px;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">Update Password</button>
+      <button class="closeBtn" onclick="closePasswordModal()" style="margin:0;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const saved = localStorage.getItem("crm-theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const btnText = document.getElementById("themeToggleText");
+    if(btnText) btnText.textContent = saved === "dark" ? "Light Theme" : "Dark Theme";
+  });
+})();
+
+function toggleTheme(){
+  const current = document.documentElement.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("crm-theme", next);
+  const btnText = document.getElementById("themeToggleText");
+  if(btnText) btnText.textContent = next === "dark" ? "Light Theme" : "Dark Theme";
+}
+
+function toggleMobileSidebar(){
+  const sidebar = document.getElementById("appSidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  if(sidebar) sidebar.classList.toggle("sidebar-open");
+  if(overlay) overlay.classList.toggle("sidebar-open");
+}
+</script>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+
+import {
+getAuth,
+onAuthStateChanged,
+signOut,
+reauthenticateWithCredential,
+EmailAuthProvider,
+updatePassword
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+getDocs,
+addDoc,
+doc,
+getDoc,
+setDoc,
+onSnapshot,
+query,
+where,
+orderBy,
+limit,
+startAfter,
+serverTimestamp,
+getCountFromServer,
+writeBatch
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+const firebaseConfig = window.CRM_FIREBASE();
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let currentRole = "Viewer";
+let currentName = "";
+let allUsersMap = {};
+let userStatsCache = {};
+
+let viewUid = null;
+let viewUserData = null;
+
+const PAGE_SIZE = 200;          // records fetched from server per request (pool)
+const STEP = 10;                // rows / notifications shown at a time
+let visibleProjects = STEP;
+let notifVisible = STEP;
+let notifItemsAll = [];
+let hasMoreServer = false;
+let fallbackMode = false;
+let usersFresh = false;   // true right after init already loaded the users list
+let lastVisible = null;
+let pagedProjects = [];
+
+let statusChart, userBarChart, myPieChart, priorityChart, monthlyChart, completionChart;
+let lastStats = null;
+let lastUserEfficiency = [];
+
+let forceFresh = false;               // false = this load may use the short cache, true = manual / live / timer refresh
+const params = new URLSearchParams(window.location.search);
+const requestedViewUid = params.get("viewUid");
+
+function escapeHtml(value){
+if(value === undefined || value === null) return "";
+return String(value)
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;");
+}
+
+function parseLocalDate(dateStr){
+if(!dateStr) return null;
+const parts = dateStr.split("-");
+if(parts.length !== 3) return null;
+return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+}
+
+function isOverdue(d){
+if(!d.taskEndDate || d.taskStatus === "Complete") return false;
+const today = new Date(); today.setHours(0,0,0,0);
+const end = parseLocalDate(d.taskEndDate);
+return end ? end < today : false;
+}
+
+function isDueSoon(d){
+if(!d.taskEndDate || d.taskStatus === "Complete") return false;
+const today = new Date(); today.setHours(0,0,0,0);
+const end = parseLocalDate(d.taskEndDate);
+if(!end) return false;
+const diff = Math.floor((end - today)/86400000);
+return diff >= 0 && diff <= 3;
+}
+
+function ageing(d){
+const start = parseLocalDate(d.taskStartDate);
+const end = parseLocalDate(d.taskEndDate);
+if(!start || !end) return "-";
+const diff = Math.round((end - start)/86400000);
+return (diff >= 0 ? diff : 0) + " Days";
+}
+
+async function logActivity(action, details){
+try{
+await addDoc(collection(db,"activityLogs"), {
+action: action,
+details: details || "",
+userEmail: currentUser ? currentUser.email : "",
+userName: currentName,
+timestamp: serverTimestamp(),
+expireAt: CRM.expireAt()
+});
+CRM.bump(action);
+}catch(e){ console.error(e); }
+}
+
+async function notifyUser(targetUid, title, message){
+if(!targetUid) return;
+try{
+await addDoc(collection(db,"notifications"), {
+targetUid: targetUid,
+title: title,
+message: message,
+read: false,
+createdAt: serverTimestamp(),
+expireAt: CRM.expireAt()
+});
+CRM.bump("Notification");
+}catch(e){ console.error(e); }
+}
+
+async function ensureUserDoc(user){
+const ref = doc(db,"users",user.uid);
+const snap = await getDoc(ref);
+if(snap.exists()) return snap.data();
+const data = {
+name: user.displayName || user.email,
+email: user.email,
+role: "User",
+createdAt: new Date().toISOString()
+};
+await setDoc(ref, data);
+return data;
+}
+
+async function fetchProjectsPage(reset){
+if(reset){ lastVisible = null; pagedProjects = []; hasMoreServer = false; fallbackMode = false; }
+if(fallbackMode) return;
+
+const targetUid = (currentRole === "Admin" && !viewUid) ? null : (viewUid || (currentUser && currentUser.uid));
+const cons = [];
+if(targetUid) cons.push(where("ownerUid","==",targetUid));
+cons.push(orderBy("createdAt","desc"));
+if(lastVisible) cons.push(startAfter(lastVisible));
+cons.push(limit(PAGE_SIZE));
+
+try{
+const snap = await getDocs(query(collection(db,"crmprojects"), ...cons));
+snap.forEach(docSnap=>pagedProjects.push({id:docSnap.id, data:docSnap.data()}));
+if(snap.docs.length) lastVisible = snap.docs[snap.docs.length-1];
+hasMoreServer = snap.docs.length === PAGE_SIZE;
+}catch(error){
+console.error("Ordered query failed, using fallback:", error);
+const fbCons = targetUid ? [where("ownerUid","==",targetUid), limit(PAGE_SIZE)] : [limit(PAGE_SIZE)];
+const snap = await getDocs(query(collection(db,"crmprojects"), ...fbCons));
+pagedProjects = [];
+snap.forEach(docSnap=>pagedProjects.push({id:docSnap.id, data:docSnap.data()}));
+pagedProjects.sort((a,b)=>{
+const at = a.data.createdAt && a.data.createdAt.toMillis ? a.data.createdAt.toMillis() : 0;
+const bt = b.data.createdAt && b.data.createdAt.toMillis ? b.data.createdAt.toMillis() : 0;
+return bt - at;
+});
+fallbackMode = true;
+hasMoreServer = false;
+}
+}
+
+// Admin only: permanently remove notifications + activity logs older than 30 days
+async function cleanupOldRecords(){
+if(currentRole !== "Admin") return;
+try{ const last = parseInt(localStorage.getItem("crm-cleanup") || "0", 10); if(Date.now() - last < 86400000) return; localStorage.setItem("crm-cleanup", String(Date.now())); }catch(e){}
+const cutoff = CRM.retentionCutoff();
+const targets = [["notifications","createdAt"],["activityLogs","timestamp"]];
+for(const [col, field] of targets){
+try{
+for(let i=0;i<5;i++){
+const snap = await getDocs(query(collection(db,col), where(field,"<",cutoff), limit(200)));
+if(snap.empty) break;
+const batch = writeBatch(db);
+snap.forEach(d=>batch.delete(d.ref));
+await batch.commit();
+if(snap.size < 200) break;
+}
+}catch(e){ console.warn("Cleanup skipped for", col, e.code || e.message); }
+}
+}
+
+async function loadAdminMineStats(){
+const box = document.getElementById("adminMineStats");
+if(!(CRM.can("assign") || currentRole === "Admin") || viewUid || !box) return;
+box.style.display = "block";
+const me = currentUser.uid;
+const set = (id, v)=>{ const el = document.getElementById(id); if(el) el.textContent = (v === null || v === undefined) ? "-" : v; };
+const paint = (d)=>{
+set("asgTotal", d.at); set("asgPending", d.ap); set("asgProgress", d.ai); set("asgDone", d.ad);
+set("mineTotal", d.mt); set("minePending", d.mp); set("mineProgress", d.mi); set("mineDone", d.md);
+};
+if(!forceFresh){ const c = CRM.cache.get("dash.mine", 180000); if(c){ paint(c); return; } }
+const [at, ap, ai, ad, mt, mp, mi, md] = await Promise.all([
+countQ(where("assignedByUid","==",me)),
+countQ(where("assignedByUid","==",me), where("taskStatus","==","Pending")),
+countQ(where("assignedByUid","==",me), where("taskStatus","==","In Progress")),
+countQ(where("assignedByUid","==",me), where("taskStatus","==","Complete")),
+countQ(where("ownerUid","==",me)),
+countQ(where("ownerUid","==",me), where("taskStatus","==","Pending")),
+countQ(where("ownerUid","==",me), where("taskStatus","==","In Progress")),
+countQ(where("ownerUid","==",me), where("taskStatus","==","Complete"))
+]);
+const d = { at, ap, ai, ad, mt, mp, mi, md };
+CRM.cache.set("dash.mine", d);
+paint(d);
+}
+
+async function doRefresh(force){
+forceFresh = force !== false;
+visibleProjects = STEP;
+notifVisible = STEP;
+
+if(!usersFresh){ try{ await loadUsers(); }catch(e){ console.error(e); } }
+usersFresh = false;
+
+renderMyPersonalIfNeeded();
+await Promise.all([
+window.refreshAggregateStats().catch((e)=>console.error(e)),        // totals are shown in "view a person" mode too
+loadAdminMineStats().catch((e)=>console.error(e)),
+loadPinned(false).catch((e)=>console.error(e))
+]);
+cleanupOldRecords();          // background, at most once a day (not awaited)
+}
+
+const refreshAll = CRM.makeRefresher(doRefresh);
+window.manualRefresh = refreshAll;
+
+window.loadMore = async function(){
+visibleProjects += STEP;
+if(visibleProjects > pagedProjects.length && hasMoreServer){
+try{ await fetchProjectsPage(false); }
+catch(error){ console.error(error); alert("Error loading more data."); }
+}
+renderTable();
+};
+
+window.renderTable = function(){
+const projectTableEl = document.getElementById("projectTable");
+const searchEl = document.getElementById("tableSearch");
+if(!projectTableEl) return;
+
+let tableHtml = "";
+let sr = 1;
+const term = searchEl ? searchEl.value.trim().toLowerCase() : "";
+
+const filtered = term
+? pagedProjects.filter(item=>{
+const d = item.data;
+const haystack = [d.projectName, d.business, d.assetType, d.ownerName, d.projectOwner, d.taskStatus, d.taskPriority, d.runningTask]
+.map(v=>(v||"").toString().toLowerCase()).join(" ");
+return haystack.includes(term);
+})
+: pagedProjects;
+
+filtered.slice(0, visibleProjects).forEach((item)=>{
+const d = item.data;
+const overdueFlag = isOverdue(d);
+
+let badgeClass = "badge-pending";
+if(d.taskStatus === "In Progress") badgeClass = "badge-progress";
+if(d.taskStatus === "Complete") badgeClass = "badge-complete";
+
+tableHtml += `
+<tr class="${overdueFlag ? 'overdue' : ''}">
+<td>${sr++}</td>
+<td><b>${escapeHtml(d.projectName)}</b></td>
+<td>${escapeHtml(d.business)}</td>
+<td>${escapeHtml(d.assetType)}</td>
+<td>${escapeHtml(d.ownerName || d.projectOwner)}</td>
+<td>${escapeHtml(d.runningTask)}</td>
+<td><span class="badge-status ${badgeClass}">${escapeHtml(d.taskStatus)}</span></td>
+<td>${escapeHtml(d.taskPriority)}</td>
+<td>${ageing(d)}</td>
+</tr>
+`;
+});
+
+projectTableEl.innerHTML = tableHtml || (term ? "<tr><td colspan='9' style='text-align:center;padding:16px;color:var(--muted);'>No projects match search.</td></tr>" : "<tr><td colspan='9' style='text-align:center;padding:16px;color:var(--muted);'>No projects yet.</td></tr>");
+
+const lmBtn = document.getElementById("loadMoreBtn");
+if(lmBtn) lmBtn.style.display = (filtered.length > visibleProjects || hasMoreServer) ? "inline-block" : "none";
+};
+
+async function renderNotifications(){
+const notifListEl = document.getElementById("notifList");
+if(!notifListEl) return;
+
+const items = [];
+
+pagedProjects.forEach((item)=>{
+const d = item.data;
+const who = (currentRole === "Admin" && !viewUid) ? `<span class="who">${escapeHtml(d.ownerName || d.ownerEmail || "Unknown")}:</span> ` : "";
+
+if(isOverdue(d)){
+items.push(`<div class="notif-item overdue"><div class="notif-icon">⛔</div><div class="notif-content">${who}Overdue: <b>${escapeHtml(d.projectName)}</b> — was due ${escapeHtml(d.taskEndDate)}</div></div>`);
+}else if(isDueSoon(d)){
+items.push(`<div class="notif-item"><div class="notif-icon">⏰</div><div class="notif-content">${who}Due soon: <b>${escapeHtml(d.projectName)}</b> — due ${escapeHtml(d.taskEndDate)}</div></div>`);
+}
+});
+
+// stored notifications: only the last 30 days
+try{
+const cutoff = CRM.retentionCutoff();
+let storedQ;
+if(currentRole === "Admin" && !viewUid){
+storedQ = query(collection(db,"notifications"), where("createdAt",">=",cutoff), orderBy("createdAt","desc"), limit(50));
+}else{
+const targetUid = viewUid || currentUser.uid;
+storedQ = query(collection(db,"notifications"), where("targetUid","==",targetUid), where("createdAt",">=",cutoff), orderBy("createdAt","desc"), limit(50));
+}
+
+const snap = await getDocs(storedQ);
+snap.forEach(docSnap=>{
+const n = docSnap.data();
+let who = "";
+if(currentRole === "Admin" && !viewUid && n.targetUid && allUsersMap[n.targetUid]){
+who = `<span class="who">${escapeHtml(allUsersMap[n.targetUid].name || allUsersMap[n.targetUid].email)}:</span> `;
+}
+items.push(`<div class="notif-item info"><div class="notif-icon">🔔</div><div class="notif-content">${who}<b>${escapeHtml(n.title)}</b> — ${escapeHtml(n.message)}</div></div>`);
+});
+}catch(e){ console.error(e); }
+
+notifItemsAll = items;
+drawNotifications();
+}
+
+function drawNotifications(){
+const notifListEl = document.getElementById("notifList");
+const notifBadgeEl = document.getElementById("notifBadge");
+if(!notifListEl) return;
+
+if(notifBadgeEl){
+if(notifItemsAll.length > 0){
+notifBadgeEl.style.display = "inline-block";
+notifBadgeEl.textContent = notifItemsAll.length;
+}else{
+notifBadgeEl.style.display = "none";
+}
+}
+
+if(!notifItemsAll.length){
+notifListEl.innerHTML = "<div style='color:var(--muted);font-size:13px;padding:8px 0;'>No notifications right now.</div>";
+return;
+}
+
+const visibleItems = notifItemsAll.slice(0, notifVisible);
+const remaining = notifItemsAll.length - visibleItems.length;
+
+let html = `<div class="notif-items-wrapper">` + visibleItems.join("") + `</div>`;
+html += `<div style="margin-top:14px;text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">`;
+if(remaining > 0){
+html += `<button class="notif-toggle-btn" onclick="loadMoreNotifs()">🔽 Load More (${remaining} more)</button>`;
+}
+if(notifVisible > STEP){
+html += `<button class="notif-toggle-btn" onclick="showLessNotifs()">🔼 Show Less</button>`;
+}
+html += `</div>`;
+html += `<div class="stale-note" style="text-align:center;">Notifications are auto-deleted after 30 days.</div>`;
+
+notifListEl.innerHTML = html;
+}
+
+window.loadMoreNotifs = function(){ notifVisible += STEP; drawNotifications(); };
+window.showLessNotifs = function(){ notifVisible = STEP; drawNotifications(); };
+
+function renderMyPersonalIfNeeded(){
+if(!CRM.can("viewAll") || viewUid){
+computeMyStats();
+}
+}
+
+async function computeMyStats(){
+const targetUid = viewUid || currentUser.uid;
+const ck = "dash.my:" + targetUid;
+try{
+let d = !forceFresh ? CRM.cache.get(ck, 180000) : null;
+if(!d){
+const mine = (...c)=>getCountFromServer(query(collection(db,"crmprojects"), where("ownerUid","==",targetUid), ...c));
+const [t, p, g, c2] = await Promise.all([
+mine(), mine(where("taskStatus","==","Pending")), mine(where("taskStatus","==","In Progress")), mine(where("taskStatus","==","Complete"))
+]);
+d = { total: t.data().count || 0, pending: p.data().count || 0, progress: g.data().count || 0, completed: c2.data().count || 0 };
+CRM.cache.set(ck, d);
+}
+const put = (id, v)=>{ const el = document.getElementById(id); if(el) el.innerText = v; };
+put("myTotal", d.total); put("myPending", d.pending); put("myInProgress", d.progress); put("myCompleted", d.completed);
+put("myEfficiency", d.total ? Math.round((d.completed/d.total)*100) + "%" : "0%");
+CRM.chart.donut(document.getElementById("myPie"), [
+{ label:"Pending", value:d.pending, color:"#f39c12" },
+{ label:"In Progress", value:d.progress, color:"#2f6fae" },
+{ label:"Completed", value:d.completed, color:"#1e8449" }
+], { title: viewUid ? "Status of this person's projects" : "Status of my projects", center:"Projects" });
+}catch(error){ console.error(error); }
+if(viewUid) loadUserTaskLists();
+}
+
+// ---- admin view: which tasks are pending / in progress for the chosen person (5 at a time) ----
+const taskLists = { "Pending": { rows: [], shown: 5, el: "tlPending" }, "In Progress": { rows: [], shown: 5, el: "tlProgress" } };
+async function loadUserTaskLists(){
+const box = document.getElementById("userTaskLists");
+if(!box || !viewUid || !CRM.can("viewAll")) return;
+box.style.display = "block";
+const ck = "dash.tl:" + viewUid;
+let data = !forceFresh ? CRM.cache.get(ck, 180000) : null;
+if(!data){
+data = {};
+await Promise.all(Object.keys(taskLists).map(async (st)=>{
+try{
+const snap = await getDocs(query(collection(db,"crmprojects"), where("ownerUid","==",viewUid), where("taskStatus","==",st), limit(50)));
+const rows = []; snap.forEach(d=>rows.push({ id: d.id, d: d.data() }));
+rows.sort((a,b)=>((b.d.createdAt && b.d.createdAt.toMillis ? b.d.createdAt.toMillis() : 0) - (a.d.createdAt && a.d.createdAt.toMillis ? a.d.createdAt.toMillis() : 0)));
+data[st] = rows;
+}catch(e){ console.error(e); data[st] = []; }
+}));
+CRM.cache.set(ck, data);
+}
+Object.keys(taskLists).forEach(st=>{ taskLists[st].rows = data[st] || []; taskLists[st].shown = 5; });
+drawTaskLists();
+}
+function drawTaskLists(){
+Object.keys(taskLists).forEach(st=>{
+const t = taskLists[st], el = document.getElementById(t.el);
+if(!el) return;
+const show = t.rows.slice(0, t.shown);
+el.innerHTML = show.length ? show.map(r=>`<div class="tl-item"><div><b>${escapeHtml(r.d.projectName)}</b><small>${escapeHtml(r.d.runningTask || "")}</small></div><div style="text-align:right;white-space:nowrap">${escapeHtml(r.d.taskPriority || "")}<small class="${isOverdue(r.d) ? "od" : ""}">${r.d.taskEndDate ? "Due " + escapeHtml(r.d.taskEndDate) : ""}</small></div></div>`).join("")
++ (t.rows.length > t.shown ? `<div style="text-align:center"><button class="tl-more" onclick="moreTasks('${st}')">Show more (${t.rows.length - t.shown})</button></div>` : "")
+: `<div class="tl-empty">No ${st.toLowerCase()} tasks.</div>`;
+});
+}
+window.moreTasks = function(st){ if(taskLists[st]){ taskLists[st].shown += 5; drawTaskLists(); } };
+
+// ---- pinned tasks (max 20 pinned, 5 shown at a time, each page of 5 reads only those documents) ----
+const pinState = { items: [], cursor: 0, ids: [] };
+async function loadPinned(more){
+const panel = document.getElementById("pinPanel");
+if(!panel) return;
+const ids = CRM.pins();
+if(!ids.length){ panel.style.display = "none"; return; }
+panel.style.display = "block";
+if(!more){ pinState.items = []; pinState.cursor = 0; }
+const next = ids.slice(pinState.cursor, pinState.cursor + 5);
+pinState.cursor += next.length;
+const docs = await Promise.all(next.map(async (id)=>{
+try{ const sn = await getDoc(doc(db,"crmprojects",id)); return sn.exists() ? { id, d: sn.data() } : null; }catch(e){ return null; }
+}));
+pinState.items = pinState.items.concat(docs.filter(Boolean));
+pinState.ids = ids;
+drawPinned();
+}
+function drawPinned(){
+const el = document.getElementById("pinList"), btn = document.getElementById("pinMore");
+if(!el) return;
+el.innerHTML = pinState.items.length ? pinState.items.map(r=>`<div class="tl-item"><div><b>📌 ${escapeHtml(r.d.projectName)}</b><small>${escapeHtml(r.d.runningTask || "")} · ${escapeHtml(r.d.taskStatus || "")}</small></div><div style="text-align:right;white-space:nowrap">${escapeHtml(r.d.taskPriority || "")}<small class="${isOverdue(r.d) ? "od" : ""}">${r.d.taskEndDate ? "Due " + escapeHtml(r.d.taskEndDate) : ""}</small></div></div>`).join("") : '<div class="tl-empty">Pinned tasks could not be loaded.</div>';
+if(btn){ const left = pinState.ids.length - pinState.cursor; btn.style.display = left > 0 ? "inline-block" : "none"; btn.textContent = "Show more (" + left + ")"; }
+}
+window.morePinned = function(){ loadPinned(true); };
+
+async function countQ(...constraints){
+try{
+const scope = CRM.can("viewAll") ? [] : [where("ownerUid","==",currentUser.uid)];
+const q = query(collection(db,"crmprojects"), ...scope, ...constraints);
+const snap = await getCountFromServer(q);
+return snap.data().count;
+}catch(error){ return null; }
+}
+
+function showCard(elId, value){
+const el = document.getElementById(elId);
+if(el) el.innerText = (value === null || value === undefined) ? "—" : value;
+}
+
+function paintAgg(a){
+showCard("totalProjects", a.total);
+showCard("pendingProjects", a.pending);
+showCard("progressProjects", a.progress);
+showCard("completedProjects", a.completed);
+showCard("highPriorityProjects", a.high);
+showCard("overdueProjects", a.overdue);
+const pctEl = document.getElementById("completionPct");
+if(pctEl) pctEl.innerText = a.total ? Math.round((a.completed/a.total)*100) + "%" : "0%";
+showCard("totalUsersCard", Object.keys(allUsersMap).length);
+showCard("totalAdminsCard", Object.values(allUsersMap).filter(u=>u.role === "Admin").length);
+lastStats = a.stats;
+renderCharts();
+}
+
+function renderCharts(){
+if(!lastStats) return;
+CRM.chart.donut(document.getElementById("chStatus"), [
+{ label:"Pending", value:lastStats.pending, color:"#f39c12" },
+{ label:"In Progress", value:lastStats.progress, color:"#2f6fae" },
+{ label:"Completed", value:lastStats.completed, color:"#1e8449" }
+], { title:"Status distribution", center:"Projects" });
+CRM.chart.bars(document.getElementById("chPriority"), [
+{ label:"High", value:lastStats.high, color:"#c0392b" },
+{ label:"Medium", value:lastStats.medium, color:"#f39c12" },
+{ label:"Low", value:lastStats.low, color:"#2f6fae" }
+], { title:"Projects by priority" });
+const uc = document.getElementById("chUsers");
+if(uc){
+if(CRM.can("viewAll") && lastUserEfficiency.length){
+uc.style.display = "block";
+CRM.chart.bars(uc, lastUserEfficiency.map(x=>({ label:x.name, value: x.total ? Math.round((x.completed/x.total)*100) : 0 })).sort((a,b)=>b.value-a.value).slice(0,8), { title:"Efficiency by user", unit:"%", max:100 });
+}else{ uc.style.display = "none"; }
+}
+}
+
+window.refreshAggregateStats = async function(){
+const ck = "dash.agg:" + (CRM.can("viewAll") ? "all" : "me");
+if(!forceFresh){
+const c = CRM.cache.get(ck, 180000);
+if(c){ paintAgg(c); if(CRM.can("viewAll")) await fetchAndBuildUserStats(); return; }
+}
+const todayStr = new Date().toISOString().slice(0,10);
+const P = "Pending", G = "In Progress";
+const r = await Promise.all([
+countQ(), countQ(where("taskStatus","==",P)), countQ(where("taskStatus","==",G)), countQ(where("taskStatus","==","Complete")),
+countQ(where("taskPriority","==","High")), countQ(where("taskPriority","==","Medium")), countQ(where("taskPriority","==","Low")),
+countQ(where("taskStatus","==",P), where("taskEndDate","<",todayStr)), countQ(where("taskStatus","==",G), where("taskEndDate","<",todayStr))
+]);
+const n = (v)=> v || 0;
+const a = {
+total:n(r[0]), pending:n(r[1]), progress:n(r[2]), completed:n(r[3]), high:n(r[4]), medium:n(r[5]), low:n(r[6]), overdue:n(r[7]) + n(r[8]),
+stats:{ pending:n(r[1]), progress:n(r[2]), completed:n(r[3]), high:n(r[4]), medium:n(r[5]), low:n(r[6]) }
+};
+CRM.cache.set(ck, a);
+paintAgg(a);
+if(CRM.can("viewAll")) await fetchAndBuildUserStats();
+};
+
+async function fetchAndBuildUserStats(){
+const uids = Object.keys(allUsersMap);
+const sig = uids.slice().sort().join(",");
+if(!forceFresh){
+const c = CRM.cache.get("dash.users", 180000);
+if(c && c.sig === sig){ userStatsCache = c.stats; lastUserEfficiency = c.eff; renderUserReportFromCache(); renderCharts(); return; }
+}
+userStatsCache = {};
+lastUserEfficiency = [];
+
+const rows = await Promise.all(uids.map(async (uid)=>{
+try{
+const u = allUsersMap[uid];
+const [total, pending, progress, completed] = await Promise.all([
+countQ(where("ownerUid","==",uid)),
+countQ(where("ownerUid","==",uid), where("taskStatus","==","Pending")),
+countQ(where("ownerUid","==",uid), where("taskStatus","==","In Progress")),
+countQ(where("ownerUid","==",uid), where("taskStatus","==","Complete"))
+]);
+return { uid, name: u.name || u.email, email: u.email, role: u.role, total: total||0, pending: pending||0, progress: progress||0, completed: completed||0 };
+}catch(e){ return null; }
+}));
+rows.forEach(r=>{
+if(!r) return;
+userStatsCache[r.uid] = r;
+lastUserEfficiency.push({ uid: r.uid, name: r.name, total: r.total, completed: r.completed });
+});
+CRM.cache.set("dash.users", { sig, stats: userStatsCache, eff: lastUserEfficiency });
+renderUserReportFromCache();
+renderCharts();
+}
+
+function renderUserReportFromCache(){
+const userSearchEl = document.getElementById("userSearch");
+const search = userSearchEl ? userSearchEl.value.toLowerCase().trim() : "";
+const tbody = document.getElementById("userReportBody");
+if(!tbody) return;
+
+let html = "";
+for(const uid of Object.keys(userStatsCache)){
+const u = userStatsCache[uid];
+const txt = ((u.name||"") + " " + (u.email||"")).toLowerCase();
+if(search && !txt.includes(search)) continue;
+
+const efficiency = u.total ? Math.round((u.completed/u.total)*100) : 0;
+html += `
+<tr class="userRow" onclick="window.location.href='dashboard.html?viewUid=${uid}'">
+<td><b>${escapeHtml(u.name)}</b></td>
+<td>${escapeHtml(u.email)}</td>
+<td>${escapeHtml(u.role)}</td>
+<td>${u.total}</td><td>${u.pending}</td><td>${u.progress}</td><td>${u.completed}</td><td><b>${efficiency}%</b></td>
+</tr>
+`;
+}
+
+tbody.innerHTML = html || "<tr><td colspan='8' style='text-align:center;padding:16px;color:var(--muted);'>No matching users.</td></tr>";
+}
+
+let userReportDebounce = null;
+window.filterUserReportInPlace = function(){
+clearTimeout(userReportDebounce);
+userReportDebounce = setTimeout(()=>{
+  renderUserReportFromCache();
+}, 150);
+};
+
+window.applyUserFilter = function(uid){
+window.location.href = uid ? ("dashboard.html?viewUid=" + encodeURIComponent(uid)) : "dashboard.html";
+};
+
+function populateUserFilter(){
+const bar = document.getElementById("userFilterBar"), sel = document.getElementById("userFilter");
+if(!bar || !sel || !CRM.can("viewAll")) return;
+bar.style.display = "flex";
+const ids = Object.keys(allUsersMap).sort((a,b)=>{
+const ra = allUsersMap[a].role === "Admin" ? 0 : 1, rb = allUsersMap[b].role === "Admin" ? 0 : 1;
+if(ra !== rb) return ra - rb;
+return String(allUsersMap[a].name || allUsersMap[a].email).toLowerCase().localeCompare(String(allUsersMap[b].name || allUsersMap[b].email).toLowerCase());
+});
+sel.innerHTML = '<option value="">All (everyone)</option>' + ids.map(id=>{
+const u = allUsersMap[id];
+return `<option value="${escapeHtml(id)}">${escapeHtml(u.name || u.email)} — ${escapeHtml(u.role || "User")}</option>`;
+}).join("");
+sel.value = (viewUid && allUsersMap[viewUid]) ? viewUid : "";
+}
+
+async function loadUsers(){
+if(!forceFresh){ const c = CRM.cache.get("users", 300000); if(c){ allUsersMap = c; showCard("totalUsersCard", Object.keys(allUsersMap).length); showCard("totalAdminsCard", Object.values(allUsersMap).filter(u=>u.role === "Admin").length); populateUserFilter(); return; } }
+if(!CRM.can("viewAll")){
+const me = await getDoc(doc(db,"users",currentUser.uid));
+allUsersMap = {};
+if(me.exists()) allUsersMap[currentUser.uid] = me.data();
+return;
+}
+const snapshot = await getDocs(collection(db,"users"));
+allUsersMap = {};
+snapshot.forEach(docSnap=>{ const u = docSnap.data(); if(u.disabled === true || u.deleted === true) return; allUsersMap[docSnap.id] = u; });
+showCard("totalUsersCard", Object.keys(allUsersMap).length);
+showCard("totalAdminsCard", Object.values(allUsersMap).filter(u=>u.role === "Admin").length);
+CRM.cache.set("users", allUsersMap);
+populateUserFilter();
+}
+
+window.exportExcel = async function(){
+if(!(await CRM.loadXlsx())){ alert("Could not load the Excel library. Check your connection."); return; }
+if(!pagedProjects.length){
+alert("No projects to export.");
+return;
+}
+
+let data = [];
+let sr = 1;
+
+pagedProjects.forEach((item)=>{
+const d = item.data;
+data.push({
+"Sr No": sr++,
+"Project Name": d.projectName || "",
+"Business": d.business || "",
+"Asset": d.assetType || "",
+"Owner": d.ownerName || d.projectOwner || "",
+"Running Task": d.runningTask || "",
+"Start Date": d.taskStartDate || "",
+"End Date": d.taskEndDate || "",
+"Status": d.taskStatus || "",
+"Priority": d.taskPriority || "",
+"Remarks": d.remarks || "",
+"Added By": d.ownerEmail || ""
+});
+});
+
+const ws = XLSX.utils.json_to_sheet(data);
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb, ws, "Projects");
+XLSX.writeFile(wb, "ProjectTracker.xlsx");
+};
+
+window.openPasswordModal = function(){
+const curEl = document.getElementById("currentPassword");
+const nextEl = document.getElementById("newPassword");
+const msgEl = document.getElementById("passwordMsg");
+if(curEl) curEl.value = "";
+if(nextEl) nextEl.value = "";
+if(msgEl) msgEl.innerText = "";
+const modal = document.getElementById("passwordModal");
+if(modal) modal.classList.add("show");
+};
+
+window.closePasswordModal = function(){
+const modal = document.getElementById("passwordModal");
+if(modal) modal.classList.remove("show");
+};
+
+window.changePassword = async function(){
+const curEl = document.getElementById("currentPassword");
+const nextEl = document.getElementById("newPassword");
+const msgEl = document.getElementById("passwordMsg");
+
+const cur = curEl ? curEl.value : "";
+const next = nextEl ? nextEl.value : "";
+
+if(!cur || !next){ if(msgEl) msgEl.innerText = "Both fields are required."; return; }
+if(next.length < 6){ if(msgEl) msgEl.innerText = "New password must be at least 6 characters."; return; }
+
+try{
+const credential = EmailAuthProvider.credential(currentUser.email, cur);
+await reauthenticateWithCredential(currentUser, credential);
+await updatePassword(currentUser, next);
+if(msgEl){
+  msgEl.style.color = "var(--success)";
+  msgEl.innerText = "Password updated successfully.";
+}
+setTimeout(closePasswordModal, 1200);
+}catch(error){
+if(msgEl){
+  msgEl.style.color = "var(--danger)";
+  msgEl.innerText = error.message;
+}
+}
+};
+
+window.logout = async function(){
+CRM.clearUserCache();
+await logActivity("Logout", "");
+signOut(auth).then(()=>{
+window.location.href = "index.html";
+});
+};
+
+onAuthStateChanged(auth, async (user)=>{
+
+if(!user){
+window.location.href = "index.html";
+return;
+}
+
+try{
+
+currentUser = user;
+
+const userData = await ensureUserDoc(user);
+
+if(userData.disabled === true || userData.deleted === true){
+  await signOut(auth);
+  window.location.href = "index.html";
+  return;
+}
+
+currentRole = userData.role || "Viewer";
+currentName = userData.name || user.email;
+
+CRM.setUser(currentName, currentRole, userData.gender);
+await CRM.loadAccess();
+CRM.initColumns({
+isAdmin: currentRole === "Admin",
+load: async ()=>{ const sn = await getDoc(doc(db,"settings","columns")); return sn.exists() ? (sn.data().labels || {}) : {}; },
+save: async (map)=>{ await setDoc(doc(db,"settings","columns"), { labels: map, updatedBy: currentUser.uid, updatedAt: serverTimestamp() }); }
+});
+CRM.setContextProvider(()=>{
+const list = pagedProjects.map(p=>p.data);
+let txt = `Loaded projects: ${list.length}${hasMoreServer ? "+" : ""}\n`;
+if(lastStats) txt += `Overall counts -> Pending:${lastStats.pending}, In Progress:${lastStats.progress}, Completed:${lastStats.completed}, High priority:${lastStats.high}\n`;
+if(currentRole === "Admin"){
+txt += "Users:\n" + Object.values(userStatsCache).map(u=>`- ${u.name} (${u.role}) total:${u.total} pending:${u.pending} in-progress:${u.progress} completed:${u.completed}`).join("\n") + "\n";
+}
+txt += "Projects:\n" + CRM.projectsToContext(list, 40);
+return txt;
+});
+
+const userNameLabel = document.getElementById("userNameLabel");
+const userRoleBadge = document.getElementById("userRoleBadge");
+const userAvatar = document.getElementById("userAvatar");
+const sidebarAdminLink = document.getElementById("sidebarAdminLink");
+const adminCardsEl = document.getElementById("adminCards");
+const adminAnalyticsEl = document.getElementById("adminAnalytics");
+const teamReportPanelEl = document.getElementById("teamReportPanel");
+const myPanelEl = document.getElementById("myPanel");
+const totalUsersContainer = document.getElementById("totalUsersCardContainer");
+const totalAdminsContainer = document.getElementById("totalAdminsCardContainer");
+
+if(userNameLabel) userNameLabel.textContent = currentName;
+if(userRoleBadge) userRoleBadge.textContent = currentRole;
+if(userAvatar) userAvatar.textContent = (currentName || "U").charAt(0).toUpperCase();
+
+if(currentRole === "Admin" && sidebarAdminLink){
+sidebarAdminLink.style.display = "flex";
+const assignLinkEl = document.getElementById("sidebarAssignLink");
+if(assignLinkEl) assignLinkEl.style.display = "flex";
+const mineLinkEl = document.getElementById("sidebarMineLink");
+if(mineLinkEl) mineLinkEl.style.display = "flex";
+const reqLinkEl = document.getElementById("sidebarRequestsLink");
+if(reqLinkEl) reqLinkEl.style.display = "flex";
+}
+
+await loadUsers();
+usersFresh = true;
+
+if(CRM.can("viewAll") && requestedViewUid && allUsersMap[requestedViewUid]){
+
+viewUid = requestedViewUid;
+viewUserData = allUsersMap[viewUid];
+populateUserFilter();          // keep the chosen person selected in the filter
+
+const bannerEl = document.getElementById("viewAsBanner");
+const viewAsNameEl = document.getElementById("viewAsName");
+const myPanelTitleEl = document.getElementById("myPanelTitle");
+const tableTitleEl = document.getElementById("tableTitle");
+
+if(bannerEl) bannerEl.classList.add("show");
+if(viewAsNameEl) viewAsNameEl.innerText = viewUserData.name || viewUserData.email;
+if(myPanelTitleEl) myPanelTitleEl.innerText = `${viewUserData.name || viewUserData.email}'s Projects`;
+if(tableTitleEl) tableTitleEl.innerText = `${viewUserData.name || viewUserData.email}'s Projects`;
+
+if(myPanelEl) myPanelEl.style.display = "block";
+
+try{
+const seenKey = "crm-viewed-" + viewUid;
+if(!sessionStorage.getItem(seenKey)){
+sessionStorage.setItem(seenKey, "1");
+await logActivity("Admin Viewed Account", `Admin opened ${viewUserData.name || viewUserData.email}'s dashboard`);
+await notifyUser(viewUid, "Account Viewed", `Admin (${currentName}) viewed your dashboard on ${new Date().toLocaleString()}.`);
+}
+}catch(e){ console.warn(e); }
+
+}else{
+
+// Show Cards & Overall Analytics for all logged in users (formatted gracefully)
+if(adminCardsEl) adminCardsEl.style.display = "grid";
+if(adminAnalyticsEl) adminAnalyticsEl.style.display = "block";
+
+if(CRM.can("viewAll")){
+  if(teamReportPanelEl) teamReportPanelEl.style.display = "block";
+  if(totalUsersContainer) totalUsersContainer.style.display = "block";
+  if(totalAdminsContainer) totalAdminsContainer.style.display = "block";
+  const tableTitleEl = document.getElementById("tableTitle");
+  if(tableTitleEl) tableTitleEl.innerText = "Recent Projects (All Users)";
+}else{
+  if(teamReportPanelEl) teamReportPanelEl.style.display = "none";
+  if(totalUsersContainer) totalUsersContainer.style.display = "none";
+  if(totalAdminsContainer) totalAdminsContainer.style.display = "none";
+  const tableTitleEl = document.getElementById("tableTitle");
+  if(tableTitleEl) tableTitleEl.innerText = "My Projects";
+}
+
+}
+
+await refreshAll("init");
+CRM.startAutoRefresh(refreshAll);
+CRM.setBump(()=>setDoc(doc(db,"meta","live"), { ts: serverTimestamp(), by: currentUser.uid }));
+CRM.startLive((cb)=>onSnapshot(doc(db,"meta","live"), (s)=>cb(s.exists() ? (s.data().by || null) : null), ()=>{}), refreshAll, currentUser.uid);
+
+}catch(error){
+
+console.error("Dashboard init error:", error);
+const msg = `Dashboard failed to load (${escapeHtml(error.code || error.message)}).`;
+const projectTableEl = document.getElementById("projectTable");
+const notifListEl = document.getElementById("notifList");
+if(projectTableEl) projectTableEl.innerHTML = `<tr><td colspan='9' style='color:var(--danger);padding:16px;'>${msg}</td></tr>`;
+if(notifListEl) notifListEl.innerHTML = msg;
+
+}
+
+});
+
+</script>
+
+</body>
+</html>

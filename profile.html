@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<script>try{var l=JSON.parse(localStorage.getItem("crm-look")||"{}"),h=document.documentElement;["ui","accent","density","font","corners","motion","bg","navtext"].forEach(function(k){if(l[k])h.setAttribute("data-"+k,l[k])})}catch(e){}</script>
+<link rel="stylesheet" href="crm-ui.css">
+<meta charset="UTF-8">
+<meta name="referrer" content="origin">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile Settings - Mooving CRM</title>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js">
+<script defer src="crm-config.js"></script>
+<script defer src="crm-shared.js"></script>
+<script defer src="crm-core.js"></script>
+
+
+<style>
+:root{
+  --bg:#f8fafc;
+  --card-bg:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --sidebar-bg:#0f172a;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#1f4e79;
+  --navy-dark:#163a5c;
+  --red:#e2131f;
+  --danger:#dc2626;
+  --success:#16a34a;
+  --warn:#d97706;
+  --badge-pending-bg:#fef3c7;
+  --badge-pending-txt:#92400e;
+  --badge-progress-bg:#dbeafe;
+  --badge-progress-txt:#1e40af;
+  --badge-complete-bg:#dcfce7;
+  --badge-complete-txt:#166534;
+}
+
+[data-theme="dark"]{
+  --bg:#0f172a;
+  --card-bg:#1e293b;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:#334155;
+  --sidebar-bg:#090d16;
+  --sidebar-txt:#f8fafc;
+  --sidebar-active:#1e293b;
+  --sidebar-accent:#38bdf8;
+  --navy:#38bdf8;
+  --navy-dark:#0284c7;
+  --badge-pending-bg:#451a03;
+  --badge-pending-txt:#fde68a;
+  --badge-progress-bg:#172554;
+  --badge-progress-txt:#bfdbfe;
+  --badge-complete-bg:#052e16;
+  --badge-complete-txt:#86efac;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+body{ background:var(--bg); color:var(--text); transition:background .3s,color .3s; display:flex; min-height:100vh; }
+
+/* ---------- Sidebar Navigation ---------- */
+.sidebar-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99; }
+
+.app-sidebar{
+  width:260px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-txt);
+  position:fixed;
+  top:0; bottom:0; left:0;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  transition:transform .3s ease;
+  border-right:1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-header{
+  padding:24px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.brand-title{
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:1px;
+  color:white;
+  text-decoration:none;
+}
+.brand-title span{ color:var(--red); }
+
+.brand-badge{
+  font-size:10px;
+  font-weight:800;
+  background:var(--red);
+  color:white;
+  padding:2px 6px;
+  border-radius:4px;
+  text-transform:uppercase;
+}
+
+.sidebar-nav{
+  padding:20px 12px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  overflow-y:auto;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  color:#94a3b8;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:600;
+  border-radius:8px;
+  transition:all .2s ease;
+  cursor:pointer;
+  border:none;
+  background:none;
+  width:100%;
+  text-align:left;
+}
+
+.nav-item:hover{
+  background:rgba(255,255,255,0.06);
+  color:white;
+}
+
+.nav-item.active{
+  background:linear-gradient(90deg, var(--navy), #2563eb);
+  color:white;
+  box-shadow:0 4px 12px rgba(37,99,235,0.3);
+}
+
+.nav-item .icon{ font-size:18px; width:22px; text-align:center; }
+
+.sidebar-footer{
+  padding:16px;
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.user-profile-chip{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  background:rgba(255,255,255,0.04);
+  border-radius:8px;
+}
+
+.avatar-circle{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:var(--navy);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:14px;
+}
+
+.user-info-text{ display:flex; flex-direction:column; overflow:hidden; }
+.user-info-name{ font-size:13px; font-weight:700; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-info-role{ font-size:11px; color:#94a3b8; }
+
+.theme-toggle-btn{
+  background:rgba(255,255,255,0.08);
+  color:white;
+  border:none;
+  padding:8px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:background .2s;
+}
+.theme-toggle-btn:hover{ background:rgba(255,255,255,0.15); }
+
+/* ---------- Main Content Container ---------- */
+.app-main{
+  flex:1;
+  margin-left:260px;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  transition:margin-left .3s ease;
+}
+
+.top-app-bar{
+  background:var(--card-bg);
+  border-bottom:1px solid var(--border);
+  padding:16px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:90;
+}
+
+.mobile-hamburger{
+  display:none;
+  background:none;
+  border:none;
+  font-size:22px;
+  cursor:pointer;
+  color:var(--text);
+}
+
+.page-header-title{
+  font-size:20px;
+  font-weight:800;
+  color:var(--navy);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.main-content{ padding:28px; flex:1; }
+
+/* ---------- Grouped Form Card ---------- */
+.form-card{
+  background:var(--card-bg);
+  padding:24px;
+  border-radius:16px;
+  margin-bottom:24px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.04);
+  border:1px solid var(--border);
+}
+
+.form-card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+
+.form-card-title{
+  font-size:16px;
+  font-weight:800;
+  color:var(--navy);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.form-sections-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  gap:20px;
+}
+
+.form-group-section{
+  background:var(--bg);
+  padding:16px;
+  border-radius:12px;
+  border:1px solid var(--border);
+}
+
+.form-section-label{
+  font-size:12px;
+  font-weight:800;
+  color:var(--navy);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.form-field{
+  margin-bottom:12px;
+}
+.form-field:last-child{ margin-bottom:0; }
+
+.form-field label{
+  font-size:11px;
+  font-weight:700;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  display:block;
+  margin-bottom:4px;
+}
+
+input, select{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--card-bg);
+  color:var(--text);
+  font-size:13px;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+input:focus, select:focus{
+  border-color:var(--navy);
+  box-shadow:0 0 0 3px rgba(56,189,248,0.15);
+}
+
+.form-actions{
+  margin-top:20px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+button{
+  background:var(--navy);
+  color:white;
+  border:none;
+  padding:10px 20px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:700;
+  transition:all .2s;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+button:hover{ background:var(--navy-dark); transform:translateY(-1px); }
+button.secondary{ background:#64748b; }
+button.secondary:hover{ background:#475569; }
+button.share{ background:#16a34a; padding:6px 12px; font-size:12px; }
+button.share:hover{ background:#15803d; }
+button.actionBtn{ padding:6px 12px; font-size:12px; border-radius:6px; font-weight:700; }
+button.editBtn{ background:var(--navy); }
+button.deleteBtn{ background:var(--danger); }
+
+/* ---------- Filter Bar ---------- */
+.filter-bar{
+  background:var(--card-bg);
+  padding:16px 20px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  margin-bottom:20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:14px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.03);
+}
+
+.search-box-wrap{
+  flex:1;
+  min-width:280px;
+  position:relative;
+}
+
+.search-box-wrap input{
+  padding-left:36px;
+  margin:0;
+}
+
+.search-icon-inside{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+  font-size:14px;
+  pointer-events:none;
+}
+
+.filter-chips{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.chip-btn{
+  background:var(--bg);
+  color:var(--muted);
+  border:1px solid var(--border);
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .2s;
+}
+
+.chip-btn:hover, .chip-btn.active{
+  background:var(--navy);
+  color:white;
+  border-color:var(--navy);
+}
+
+#formStatus{
+  font-size:13px;
+  font-weight:700;
+  color:var(--danger);
+  min-height:18px;
+}
+
+.table-wrapper{
+  overflow-x:auto;
+  border-radius:14px;
+  border:1px solid var(--border);
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+  background:var(--card-bg);
+}
+
+table{ width:100%; border-collapse:collapse; background:var(--card-bg); white-space:nowrap; }
+th, td{ border-bottom:1px solid var(--border); padding:12px 16px; font-size:12px; text-align:left; vertical-align:top; }
+.cell-name{ max-width:200px; min-width:140px; white-space:normal; word-break:break-word; line-height:1.4; }
+.cell-truncate{ max-width:180px; min-width:130px; white-space:normal; word-break:break-word; line-height:1.4; }
+th{
+  background:var(--navy);
+  color:white;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+.sticky-actions{
+  position:sticky;
+  right:0;
+  background:var(--card-bg);
+  z-index:5;
+  box-shadow:-4px 0 10px rgba(0,0,0,0.06);
+  text-align:center;
+}
+th.sticky-actions{
+  background:var(--navy);
+  color:white;
+  z-index:15;
+}
+tr.overdue .sticky-actions{ background:#fef2f2; }
+[data-theme="dark"] tr.overdue .sticky-actions{ background:#451a1a; }
+
+.action-btn-group{ display:flex; align-items:center; justify-content:center; gap:6px; }
+.icon-action-btn{
+  background:var(--navy);
+  color:white;
+  border:none;
+  width:32px;
+  height:32px;
+  border-radius:6px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  transition:all .2s;
+  padding:0;
+}
+.icon-action-btn:hover{ transform:translateY(-1px); filter:brightness(1.15); box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+.icon-action-btn.delete-icon{ background:var(--danger); }
+
+tr:hover{ background:rgba(0,0,0,0.02); }
+[data-theme="dark"] tr:hover{ background:rgba(255,255,255,0.02); }
+tr.overdue{ background:#fef2f2; }
+[data-theme="dark"] tr.overdue{ background:#451a1a; }
+
+.badge-status{ display:inline-block; padding:4px 10px; border-radius:12px; font-weight:700; font-size:11px; }
+.badge-pending{ background:var(--badge-pending-bg); color:var(--badge-pending-txt); }
+.badge-progress{ background:var(--badge-progress-bg); color:var(--badge-progress-txt); }
+.badge-complete{ background:var(--badge-complete-bg); color:var(--badge-complete-txt); }
+
+.badge-priority{ display:inline-block; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; }
+.priority-High{ background:#fee2e2; color:#991b1b; }
+.priority-Medium{ background:#fef3c7; color:#92400e; }
+.priority-Low{ background:#e0f2fe; color:#075985; }
+
+.loadMoreBtn{
+  background:#64748b;
+  color:white;
+  border:none;
+  padding:10px 24px;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:20px;
+  font-size:13px;
+  font-weight:700;
+}
+
+.scale-note{ font-size:12px; color:var(--muted); margin-bottom:12px; }
+
+.modalOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(3px);
+  z-index:200;
+  justify-content:center;
+  align-items:center;
+}
+.modalOverlay.show{ display:flex; }
+
+.modalBox{
+  background:var(--card-bg);
+  padding:28px;
+  border-radius:14px;
+  width:90%;
+  max-width:440px;
+  border:1px solid var(--border);
+  box-shadow:0 20px 40px rgba(0,0,0,0.2);
+}
+.modalBox h2{ color:var(--navy); margin-bottom:16px; font-size:18px; font-weight:800; }
+.modalBox .closeBtn{ background:#64748b; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; margin-top:12px; font-weight:700; }
+
+@media (max-width:768px){
+  .app-sidebar{ transform:translateX(-100%); }
+  .app-sidebar.sidebar-open{ transform:translateX(0); }
+  .sidebar-overlay.sidebar-open{ display:block; }
+  .app-main{ margin-left:0; }
+  .mobile-hamburger{ display:block; }
+}
+
+.pinned-row td{background:rgba(250,204,21,.10)}
+.pf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+.pf-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px}
+.pf-card h2{font-size:16px;color:var(--navy);margin-bottom:12px}
+.pf-card label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin:12px 0 5px}
+.pf-card input:not([type=checkbox]),.pf-card select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px}
+.pf-card input:disabled{opacity:.7}
+.pf-card label.chk{display:flex;align-items:center;gap:10px;text-transform:none;font-size:14px;color:var(--text);font-weight:600}
+.pf-btn{margin-top:14px;background:linear-gradient(90deg,var(--navy),#2563eb);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:700;cursor:pointer}
+.pf-msg{margin-top:10px;font-size:13px;font-weight:600}
+.pf-card p{font-size:13px;color:var(--muted);line-height:1.5}
+.pf-wide{grid-column:1/-1}
+.pf-link{margin-top:10px;background:none;border:none;color:#38bdf8;cursor:pointer;font-weight:700;text-decoration:underline;display:none;padding:0}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
+<!-- Left Sidebar Navigation -->
+<aside class="app-sidebar" id="appSidebar">
+  <div class="sidebar-header">
+    <a href="dashboard.html" class="brand-title">MO<span>O</span>VING</a>
+    <span class="brand-badge">CRM</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-item">
+      <span class="icon">📊</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="Projects.html" class="nav-item" id="sidebarPmLink">
+      <span class="icon">📋</span>
+      <span>Project Manager</span>
+    </a>
+    <a href="Projects.html?scope=mine" class="nav-item" id="sidebarMineLink" style="display:none">
+      <span class="icon">🙋</span>
+      <span>My Projects</span>
+    </a>
+    <a href="admin.html" class="nav-item" id="sidebarAdminLink" style="display:none">
+      <span class="icon">⚙️</span>
+      <span>Admin Panel</span>
+    </a>
+    <a href="assign.html" class="nav-item" id="sidebarAssignLink" style="display:none">
+      <span class="icon">📝</span>
+      <span>Assign Task</span>
+    </a>
+
+    <a href="requests.html" class="nav-item" id="sidebarRequestsLink" style="display:none">
+      <span class="icon">🛠</span>
+      <span>AI Change Requests</span>
+    </a>
+    <a href="assigned.html" class="nav-item" id="sidebarAssignedLink">
+      <span class="icon">📬</span>
+      <span>Assigned Tasks</span>
+    </a>
+    <a href="ai-studio.html" class="nav-item" id="sidebarCodeLink" style="display:none">
+      <span class="icon">🧪</span>
+      <span>AI Code Studio</span>
+    </a>
+    <a href="activity.html" class="nav-item" id="sidebarActivityLink">
+      <span class="icon">🔔</span>
+      <span>Notifications &amp; Recent</span>
+    </a>
+    <a href="profile.html" class="nav-item active" id="sidebarProfileLink">
+      <span class="icon">👤</span>
+      <span>Profile Settings</span>
+    </a>
+
+    <button class="nav-item" onclick="logout()" style="color:#fca5a5;">
+      <span class="icon">🚪</span>
+      <span>Logout</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-profile-chip">
+      <div class="avatar-circle" id="userAvatar">U</div>
+      <div class="user-info-text">
+        <span class="user-info-name" id="userNameLabel">Loading...</span>
+        <span class="user-info-role" id="userRoleBadge">User</span>
+      </div>
+    </div>
+
+    <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">
+      <span>🌙</span> <span id="themeToggleText">Dark Theme</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Main Content Area -->
+<div class="app-main">
+
+  <header class="top-app-bar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="mobile-hamburger" onclick="toggleMobileSidebar()">☰</button>
+      <h1 class="page-header-title">👤 Profile Settings</h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span id="lastRefreshed" class="crm-last-refreshed"></span><button id="refreshBtn" class="crm-refresh-btn" type="button" onclick="manualRefresh()">🔄 Refresh</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="pf-grid">
+      <section class="pf-card">
+        <h2>👤 Profile</h2>
+        <label for="pfName">Name</label><input id="pfName" maxlength="80">
+        <label for="pfEmail">Email</label><input id="pfEmail" disabled>
+        <label for="pfRole">Role</label><input id="pfRole" disabled>
+        <label for="pfGender">Gender</label>
+        <select id="pfGender"><option value="">-- Select --</option><option value="male">Male</option><option value="female">Female</option></select>
+        <button id="pfSave" class="pf-btn" type="button">Save Profile</button>
+        <div id="pfMsg" class="pf-msg"></div>
+      </section>
+
+      <section class="pf-card">
+        <h2>🔑 Change Password</h2>
+        <p>No need to enter your old password. Type a new password and press Update.</p>
+        <label for="pwNew">New Password (min 6 chars)</label><input type="password" id="pwNew" autocomplete="new-password">
+        <label for="pwNew2">Confirm New Password</label><input type="password" id="pwNew2" autocomplete="new-password">
+        <button id="pwSave" class="pf-btn" type="button">Update Password</button>
+        <button id="pwReset" class="pf-link" type="button">📧 Email me a password reset link</button>
+        <div id="pwMsg" class="pf-msg"></div>
+      </section>
+
+      <section class="pf-card pf-wide" id="lookCard">
+        <h2>🎨 Appearance</h2>
+        <div id="lookBox" class="crm-aiset"></div>
+      </section>
+
+      <section class="pf-card pf-wide" id="ai">
+        <h2>🤖 AI Assistant &amp; Voice</h2>
+        <div id="aiSettingsBox" class="crm-aiset"></div>
+        <div id="aiDefBox" style="display:none;margin-top:16px">
+          <button id="aiDefSave" class="pf-btn" type="button">Make my AI choices the default for everyone</button>
+          <div id="aiDefMsg" class="pf-msg"></div>
+          <p>People who picked their own model, character or filter keep their choice; everybody else follows this default.</p>
+        </div>
+      </section>
+
+      <section class="pf-card pf-wide" id="pfDiagCard" style="display:none">
+        <h2>🩺 Permission check (Admin)</h2>
+        <p>If something says "permission denied", run this. It tells you whether your Firebase rules are up to date.</p>
+        <button id="diagRun" class="pf-btn" type="button">Run check</button>
+        <div id="diagOut" style="margin-top:12px;font-size:13px;line-height:1.8"></div>
+      </section>
+
+      <section class="pf-card pf-wide" id="pfOpsCard" style="display:none">
+        <h2>🛡 AI Operations (Admin only)</h2>
+        <p>The shared AI key is stored in the database, never in the code. Only signed-in users can use it and only Admins can change it.</p>
+        <label for="opsKey">Shared AI key</label>
+        <input type="password" id="opsKey" placeholder="Paste a new key to replace the current one" autocomplete="off">
+        <div id="opsKeyState" class="pf-msg" style="color:var(--muted)"></div>
+        <button id="opsKeySave" class="pf-btn" type="button">Save key</button>
+        <label class="chk" style="margin-top:18px"><input type="checkbox" id="opsAuto"> Detect issues automatically and send them to the Admin for review</label>
+        <p>The AI never changes code by itself. Every issue or idea becomes a request that an Admin approves or rejects on the AI Change Requests page.</p>
+        <div id="opsMsg" class="pf-msg"></div>
+      </section>
+
+      <section class="pf-card" id="pfColsCard" style="display:none">
+        <h2>🏷 Column Names (Admin only)</h2>
+        <p>Rename any column and add an ⓘ popup note. It applies to every page as soon as you save.</p>
+        <button id="pfCols" class="pf-btn" type="button">Edit column names</button>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- Password Change Modal -->
+<div class="modalOverlay" id="passwordModal">
+  <div class="modalBox">
+    <h2>Change Password</h2>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;">Current Password</label>
+      <input type="password" id="currentPassword" placeholder="Current Password">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;">New Password (min 6 chars)</label>
+      <input type="password" id="newPassword" placeholder="New Password">
+    </div>
+    <div id="passwordMsg" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:6px;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="changePassword()" style="background:var(--navy);color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">Update Password</button>
+      <button class="closeBtn" onclick="closePasswordModal()" style="margin:0;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+(function(){
+  const saved = localStorage.getItem("crm-theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const btnText = document.getElementById("themeToggleText");
+    if(btnText) btnText.textContent = saved === "dark" ? "Light Theme" : "Dark Theme";
+  });
+})();
+
+function toggleTheme(){
+  const current = document.documentElement.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("crm-theme", next);
+  const btnText = document.getElementById("themeToggleText");
+  if(btnText) btnText.textContent = next === "dark" ? "Light Theme" : "Dark Theme";
+}
+
+function toggleMobileSidebar(){
+  const sidebar = document.getElementById("appSidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  if(sidebar) sidebar.classList.toggle("sidebar-open");
+  if(overlay) overlay.classList.toggle("sidebar-open");
+}
+
+function toggleFormCard(){
+  const formCard = document.getElementById("projectFormCard");
+  if(formCard){
+    const isHidden = formCard.style.display === "none" || !formCard.style.display;
+    formCard.style.display = isHidden ? "block" : "none";
+    if(isHidden){
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+  }
+}
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut, updatePassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, query, where, orderBy, limit, startAfter, serverTimestamp, onSnapshot, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+const firebaseConfig = window.CRM_FIREBASE();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const $ = (id)=>document.getElementById(id);
+let currentUser = null, currentName = "", currentRole = "", userDoc = {};
+
+function escapeHtml(v){ if(v === undefined || v === null) return ""; return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;"); }
+function fmtTs(t){ try{ const d = t && t.toDate ? t.toDate() : null; return d ? d.toLocaleString([], {day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit"}) : "-"; }catch(e){ return "-"; } }
+async function logActivity(action, details){
+try{ await addDoc(collection(db,"activityLogs"), { action, details: details || "", userEmail: currentUser ? currentUser.email : "", userName: currentName, timestamp: serverTimestamp(), expireAt: CRM.expireAt() }); CRM.bump(action); }catch(e){ console.error(e); }
+}
+window.logout = async function(){
+CRM.clearUserCache();
+await logActivity("Logout", "");
+signOut(auth).then(()=>{ window.location.href = "index.html"; });
+};
+
+const refreshAll = CRM.makeRefresher(async ()=>{
+const snap = await getDoc(doc(db,"users",currentUser.uid));
+userDoc = snap.exists() ? snap.data() : userDoc;
+$("pfName").value = userDoc.name || "";
+$("pfGender").value = userDoc.gender || "";
+});
+window.manualRefresh = refreshAll;
+
+const msg = (id, t, ok)=>{ const e = $(id); e.textContent = t; e.style.color = ok ? "var(--success)" : "var(--danger)"; };
+
+async function saveProfile(){
+const name = $("pfName").value.trim();
+const gender = $("pfGender").value;
+if(!name){ msg("pfMsg","Name cannot be empty."); return; }
+const data = { name };
+if(gender) data.gender = gender;
+try{
+await updateDoc(doc(db,"users",currentUser.uid), data);
+currentName = name; userDoc = Object.assign({}, userDoc, data);
+CRM.saveUserCache(name, currentRole, userDoc.gender);
+CRM.setUser(name, currentRole, userDoc.gender);
+$("userNameLabel").textContent = name; $("userAvatar").textContent = name.charAt(0).toUpperCase();
+await logActivity("Profile Updated", "Name / gender updated");
+msg("pfMsg","✅ Profile saved.", true);
+}catch(e){ console.error(e); msg("pfMsg", explain(e)); }
+}
+
+async function changePassword(){
+const nw = $("pwNew").value, nw2 = $("pwNew2").value;
+$("pwReset").style.display = "none";
+if(!nw){ msg("pwMsg","Please type a new password."); return; }
+if(nw.length < 6){ msg("pwMsg","The new password must be at least 6 characters."); return; }
+if(nw !== nw2){ msg("pwMsg","The new password and the confirmation do not match."); return; }
+try{
+await updatePassword(currentUser, nw);
+await logActivity("Password Changed", "");
+["pwNew","pwNew2"].forEach(id=>{ $(id).value = ""; });
+msg("pwMsg","✅ Password updated.", true);
+}catch(e){
+console.error(e);
+if(e.code === "auth/requires-recent-login"){
+msg("pwMsg","For security, Google does not allow a password change on an old login session. Sign in again and change it right away, or request a reset link by email below.");
+$("pwReset").style.display = "inline-block";
+}else{ msg("pwMsg","Could not update the password: " + (e.code || e.message)); }
+}
+}
+
+function explain(e){
+return e && e.code === "permission-denied" ? "Permission denied. Your Firestore rules are probably outdated: open Firebase Console > Firestore Database > Rules, paste the latest firestore.rules and click Publish." : ("Could not save: " + ((e && (e.code || e.message)) || e));
+}
+async function saveAiDefault(){
+const sv = (m, ok)=>msg("aiDefMsg", m, ok);
+try{
+const ref = doc(db,"settings","aidef");
+const old = await getDoc(ref);
+const base = old.exists() ? old.data() : {};
+await setDoc(ref, Object.assign({}, base, { model: CRM.aiEff("model"), family: CRM.aiEff("family"), avatar: String(CRM.aiEff("avatar")), filter: String(CRM.aiEff("filter")), updatedBy: currentUser.uid, updatedAt: serverTimestamp() }));
+CRM.cache.clear("access");
+await logActivity("AI Default Updated", "");
+sv("✅ Saved. Everyone who did not choose their own will now follow this.", true);
+}catch(e){ console.error(e); sv(explain(e)); }
+}
+async function runDiag(){
+const out = $("diagOut"); out.innerHTML = "Checking…";
+const t = [
+["Read settings", ()=>getDoc(doc(db,"settings","aidef"))],
+["Read your access", ()=>getDoc(doc(db,"permissions",currentUser.uid))],
+["Read your preferences", ()=>getDoc(doc(db,"userPrefs",currentUser.uid))],
+["Live-update signal", ()=>setDoc(doc(db,"meta","live"), { ts: serverTimestamp(), by: currentUser.uid })],
+["Read projects", ()=>getDocs(query(collection(db,"crmprojects"), limit(1)))],
+["Read users", ()=>getDocs(query(collection(db,"users"), limit(1)))]
+];
+const lines = []; let bad = 0;
+for(const [name, fn] of t){
+try{ await fn(); lines.push("✅ " + name); }
+catch(e){ bad++; lines.push("❌ " + name + " — " + (e.code || e.message)); }
+}
+out.innerHTML = lines.join("<br>") + "<br><br><b>" + (bad ? "Some checks failed. Publish the latest firestore.rules (Firebase Console > Firestore Database > Rules), then run this again." : "Everything is working.") + "</b>";
+}
+
+async function loadOps(){
+try{
+const k = await getDoc(doc(db,"settings","ai"));
+$("opsKeyState").textContent = (k.exists() && k.data().key) ? ("A key is saved (ends with …" + String(k.data().key).slice(-4) + ").") : "No key saved yet - the AI assistant cannot answer until you add one.";
+const a = await getDoc(doc(db,"settings","aiops"));
+$("opsAuto").checked = !(a.exists() && a.data().autoReport === false);
+}catch(e){ console.error(e); }
+}
+async function saveKey(){
+const k = $("opsKey").value.trim();
+if(k.length < 20){ msg("opsMsg","That does not look like a valid key."); return; }
+try{
+await setDoc(doc(db,"settings","ai"), { key: k, updatedBy: currentUser.uid, updatedAt: serverTimestamp() });
+$("opsKey").value = ""; CRM.clearSharedKey();
+await logActivity("AI Key Updated", "");
+msg("opsMsg","✅ Key saved securely in the database.", true);
+loadOps();
+}catch(e){ console.error(e); msg("opsMsg", explain(e)); }
+}
+async function saveAuto(on){
+try{ await setDoc(doc(db,"settings","aiops"), { autoReport: !!on, updatedBy: currentUser.uid, updatedAt: serverTimestamp() }); msg("opsMsg", on ? "✅ Automatic issue detection is ON." : "Automatic issue detection is OFF.", true); }
+catch(e){ console.error(e); msg("opsMsg", explain(e)); }
+}
+
+async function sendReset(){
+try{ await sendPasswordResetEmail(auth, currentUser.email); msg("pwMsg","✅ Reset link sent to " + currentUser.email + ".", true); }
+catch(e){ console.error(e); msg("pwMsg","Could not send the email: " + (e.code || e.message)); }
+}
+
+onAuthStateChanged(auth, async (user)=>{
+if(!user){ window.location.href = "index.html"; return; }
+try{
+currentUser = user;
+const snap = await getDoc(doc(db,"users",user.uid));
+userDoc = snap.exists() ? snap.data() : {};
+if(userDoc.disabled === true || userDoc.deleted === true){ window.location.href = "index.html"; return; }
+currentRole = userDoc.role || "User";
+currentName = userDoc.name || user.email;
+$("userNameLabel").textContent = currentName;
+$("userRoleBadge").textContent = currentRole;
+$("userAvatar").textContent = (currentName || "U").charAt(0).toUpperCase();
+CRM.setUser(currentName, currentRole, userDoc.gender);
+await CRM.loadAccess();
+CRM.initColumns({
+isAdmin: CRM.can("columns"),
+load: async ()=>{ const sn = await getDoc(doc(db,"settings","columns")); return sn.exists() ? (sn.data().labels || {}) : {}; },
+save: async (map)=>{ await setDoc(doc(db,"settings","columns"), { labels: map, updatedBy: currentUser.uid, updatedAt: serverTimestamp() }); }
+});
+$("pfName").value = userDoc.name || "";
+$("pfEmail").value = currentUser.email || "";
+$("pfRole").value = currentRole;
+$("pfGender").value = userDoc.gender || "";
+$("pfSave").onclick = saveProfile;
+$("pwSave").onclick = changePassword;
+$("pwReset").onclick = sendReset;
+CRM.renderAiSettings($("aiSettingsBox"));
+if(location.hash === "#ai") setTimeout(()=>$("aiSettingsBox").scrollIntoView({behavior:"smooth"}), 300);
+CRM.renderLookSettings($("lookBox"));
+if(CRM.can("columns")){ $("pfColsCard").style.display = "block"; $("pfCols").onclick = ()=>CRM.openColumnEditor(); }
+if(CRM.can("aiOps")){
+$("pfOpsCard").style.display = "block"; $("opsKeySave").onclick = saveKey; $("opsAuto").onchange = (e)=>saveAuto(e.target.checked); loadOps();
+$("aiDefBox").style.display = "block"; $("aiDefSave").onclick = saveAiDefault;
+}
+if(currentRole === "Admin"){ $("pfDiagCard").style.display = "block"; $("diagRun").onclick = runDiag; }
+CRM.markRefreshed();
+CRM.startAutoRefresh(refreshAll);
+CRM.setBump(()=>setDoc(doc(db,"meta","live"), { ts: serverTimestamp(), by: currentUser.uid }));
+CRM.startLive((cb)=>onSnapshot(doc(db,"meta","live"), (s)=>cb(s.exists() ? (s.data().by || null) : null), ()=>{}), refreshAll, currentUser.uid);
+}catch(error){ console.error("Init error:", error); }
+});
+</script>
+
+</body>
+</html>

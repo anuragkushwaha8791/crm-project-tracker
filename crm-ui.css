@@ -1,0 +1,112 @@
+/* =========================================================================
+   MOOVING CRM - UI STYLES  (crm-ui.css)
+   Chosen in Profile Settings > Appearance. Works on every page (CSS only).
+     ui      : classic (default, unchanged) | glass | pro
+     accent  : blue (default) | purple | teal | orange | rose | emerald
+     density : comfortable (default) | compact
+     font    : small | medium (default) | large
+     corners : round (default) | square
+     motion  : on (default) | off
+     bg      : aurora | sunset | ocean         (Modern Glass only)
+     navtext : full (default) | icons          (Pro top-nav only)
+   ========================================================================= */
+
+/* ---------------------------------------------------------- accent colours */
+html[data-accent="purple"]{--navy:#6d28d9;--navy-dark:#5b21b6;--accent:#7c3aed;--accent2:#a855f7}
+html[data-accent="teal"]{--navy:#0f766e;--navy-dark:#115e59;--accent:#0d9488;--accent2:#14b8a6}
+html[data-accent="orange"]{--navy:#c2410c;--navy-dark:#9a3412;--accent:#ea580c;--accent2:#fb923c}
+html[data-accent="rose"]{--navy:#be123c;--navy-dark:#9f1239;--accent:#e11d48;--accent2:#fb7185}
+html[data-accent="emerald"]{--navy:#047857;--navy-dark:#065f46;--accent:#059669;--accent2:#34d399}
+html[data-accent="purple"][data-theme="dark"]{--navy:#c4b5fd;--navy-dark:#8b5cf6}
+html[data-accent="teal"][data-theme="dark"]{--navy:#5eead4;--navy-dark:#14b8a6}
+html[data-accent="orange"][data-theme="dark"]{--navy:#fdba74;--navy-dark:#f97316}
+html[data-accent="rose"][data-theme="dark"]{--navy:#fda4af;--navy-dark:#f43f5e}
+html[data-accent="emerald"][data-theme="dark"]{--navy:#6ee7b7;--navy-dark:#10b981}
+html[data-accent]:not([data-accent="blue"]) .nav-item.active{background:linear-gradient(90deg,var(--accent),var(--accent2));box-shadow:0 4px 12px rgba(0,0,0,.25)}
+html[data-accent]:not([data-accent="blue"]) :is(.addBtn,.pf-btn,.crm-mini,#saveBtn,#assignBtn,.act-tab.active,.rq-tab.on,.crm-chip.on,.rq-btns button:not(.no):not(.ok):not(.sec),.rq-top button.rq-b){background:linear-gradient(90deg,var(--accent),var(--accent2))!important;border-color:transparent!important;color:#fff!important}
+
+/* ---------------------------------------------------------- density / font / corners / motion */
+html[data-density="compact"] .main-content{padding:16px}
+html[data-density="compact"] :is(.card,.panel,.form-card,.crm-chartcard,.pf-card,.asg-card,.asg-panel,.rq-card){padding:13px 15px}
+html[data-density="compact"] :is(th,td){padding-top:6px!important;padding-bottom:6px!important}
+html[data-density="compact"] .nav-item{padding-top:7px!important;padding-bottom:7px!important}
+html[data-font="small"] body{zoom:.93}
+html[data-font="large"] body{zoom:1.1}
+html[data-corners="square"] :is(.card,.panel,.form-card,.crm-chartcard,.pf-card,.asg-card,.asg-panel,.rq-card,.nav-item,button,input,select,textarea,.table-wrapper,.crm-chip,.act-box){border-radius:4px!important}
+html[data-motion="off"] *{animation:none!important;transition:none!important}
+
+/* ---------------------------------------------------------- MODERN GLASS */
+html[data-ui="glass"] body{background:radial-gradient(900px 520px at 8% -8%,rgba(56,189,248,.30),transparent 60%),radial-gradient(800px 480px at 100% 0%,rgba(168,85,247,.26),transparent 58%),radial-gradient(700px 420px at 50% 110%,rgba(52,211,153,.18),transparent 60%),var(--bg);background-attachment:fixed}
+html[data-ui="glass"][data-bg="sunset"] body{background:radial-gradient(900px 520px at 5% -5%,rgba(251,146,60,.32),transparent 60%),radial-gradient(800px 480px at 100% 10%,rgba(244,63,94,.26),transparent 58%),radial-gradient(700px 420px at 40% 110%,rgba(250,204,21,.18),transparent 60%),var(--bg);background-attachment:fixed}
+html[data-ui="glass"][data-bg="ocean"] body{background:radial-gradient(900px 520px at 0% 0%,rgba(14,165,233,.34),transparent 60%),radial-gradient(800px 480px at 100% 20%,rgba(20,184,166,.28),transparent 58%),radial-gradient(700px 420px at 60% 110%,rgba(59,130,246,.22),transparent 60%),var(--bg);background-attachment:fixed}
+html[data-ui="glass"] :is(.card,.panel,.form-card,.crm-chartcard,.pf-card,.asg-card,.asg-panel,.rq-card,.rq-top,.act-box,.crmChip,.userFilterBar select){background:rgba(255,255,255,.58);-webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);border:1px solid rgba(255,255,255,.55);border-radius:20px;box-shadow:0 10px 30px rgba(15,23,42,.10)}
+html[data-ui="glass"][data-theme="dark"] :is(.card,.panel,.form-card,.crm-chartcard,.pf-card,.asg-card,.asg-panel,.rq-card,.rq-top,.act-box,.crmChip,.userFilterBar select){background:rgba(30,41,59,.52);border:1px solid rgba(255,255,255,.12);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+html[data-ui="glass"] .top-app-bar{background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.4)}
+html[data-ui="glass"][data-theme="dark"] .top-app-bar{background:rgba(15,23,42,.5);border-bottom:1px solid rgba(255,255,255,.1)}
+html[data-ui="glass"] .card:hover{transform:translateY(-3px);transition:transform .2s ease}
+@media (min-width:769px){
+  html[data-ui="glass"] .app-sidebar{left:12px;top:12px;bottom:12px;width:244px;border-radius:24px;background:rgba(15,23,42,.88);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid rgba(255,255,255,.16);box-shadow:0 18px 50px rgba(0,0,0,.28);overflow:hidden}
+  html[data-ui="glass"] .app-main{margin-left:272px}
+  html[data-ui="glass"] .nav-item{border-radius:999px;color:#e2e8f0}
+  html[data-ui="glass"] .nav-item:not(.active):hover{background:rgba(255,255,255,.1)}
+  html[data-ui="glass"] .nav-item.active{box-shadow:0 6px 18px rgba(37,99,235,.45)}
+}
+html[data-ui="glass"] :is(.addBtn,.pf-btn,#saveBtn,#assignBtn){border-radius:999px!important}
+
+/* ---------------------------------------------------------- PRO TOP-NAV (dense, enterprise look) */
+html[data-ui="pro"] body{font-size:13px}
+html[data-ui="pro"] :is(.card,.panel,.form-card,.crm-chartcard,.pf-card,.asg-card,.asg-panel,.rq-card,.rq-top,.act-box){border-radius:6px;box-shadow:none;padding:14px 16px}
+html[data-ui="pro"] .card h2{font-size:24px}
+html[data-ui="pro"] :is(th,td){padding:7px 10px!important;font-size:12px!important}
+html[data-ui="pro"] .page-header-title{font-size:18px}
+html[data-ui="pro"] .main-content{padding:16px 20px}
+html[data-ui="pro"] .cards{gap:12px}
+@media (min-width:769px){
+  html[data-ui="pro"] .app-sidebar{width:auto;right:0;bottom:auto;height:56px;flex-direction:row;align-items:center;border-right:none;border-bottom:1px solid rgba(255,255,255,.1);padding:0 14px}
+  html[data-ui="pro"] .sidebar-header{padding:0 14px 0 0;border:none;gap:10px;flex:none}
+  html[data-ui="pro"] .brand-title{font-size:19px}
+  html[data-ui="pro"] .sidebar-nav{flex-direction:row;padding:0 4px!important;gap:2px!important;overflow-x:auto;overflow-y:hidden;align-items:center;scrollbar-width:none}
+  html[data-ui="pro"] .sidebar-nav::-webkit-scrollbar{display:none}
+  html[data-ui="pro"] .nav-item{width:auto;flex:none;padding:7px 11px!important;font-size:12.5px;gap:6px;white-space:nowrap;border-radius:6px}
+  html[data-ui="pro"] .nav-item .icon{font-size:15px;width:auto}
+  html[data-ui="pro"][data-navtext="icons"] .nav-item span:not(.icon){display:none}
+  html[data-ui="pro"] .sidebar-footer{flex-direction:row;border:none;padding:0 0 0 8px;gap:8px;align-items:center;flex:none}
+  html[data-ui="pro"] .user-profile-chip{padding:4px 8px}
+  html[data-ui="pro"] .theme-toggle-btn{width:auto;padding:6px 10px;font-size:12px}
+  html[data-ui="pro"] .app-main{margin-left:0;margin-top:56px}
+  html[data-ui="pro"] .top-app-bar{top:56px;padding:9px 20px}
+}
+
+/* ---------------------------------------------------------- thin dark scrollbar for the sidebar (all styles) */
+.sidebar-nav{scrollbar-width:thin;scrollbar-color:#334155 transparent}
+.sidebar-nav::-webkit-scrollbar{width:6px}
+.sidebar-nav::-webkit-scrollbar-thumb{background:#334155;border-radius:6px}
+.sidebar-nav::-webkit-scrollbar-track{background:transparent}
+
+/* ---------------------------------------------------------- Appearance settings (Profile Settings) */
+.look-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:6px 0 4px}
+.look-tile{display:block!important;width:100%;height:auto!important;background:var(--bg)!important;border:2px solid var(--border)!important;border-radius:14px!important;padding:10px!important;margin:0!important;cursor:pointer;text-align:left!important;color:var(--text)!important;font-family:inherit;box-shadow:none}
+.look-tile.sel{border-color:#2563eb!important;box-shadow:0 0 0 3px rgba(37,99,235,.25)}
+.look-tile:hover{background:var(--bg)!important;transform:none}
+.look-tile b{display:block;font-size:14px;margin:8px 0 2px;color:var(--text)!important}
+.look-tile small{display:block;font-size:11px;color:var(--muted)!important;line-height:1.4;font-weight:500}
+.look-prev{display:block;width:100%;height:96px;border-radius:9px;position:relative;overflow:hidden;border:1px solid var(--border)}
+.look-prev i{position:absolute;display:block;border-radius:4px}
+.lp-classic{background:#f1f5f9}
+.lp-classic .sb{left:0;top:0;bottom:0;width:26%;background:#0f172a;border-radius:0}
+.lp-classic .b1{left:32%;top:10px;width:30%;height:22px;background:#fff;border:1px solid #cbd5e1}
+.lp-classic .b2{left:66%;top:10px;width:28%;height:22px;background:#fff;border:1px solid #cbd5e1}
+.lp-classic .b3{left:32%;top:40px;width:62%;height:44px;background:#fff;border:1px solid #cbd5e1}
+.lp-glass{background:radial-gradient(60px 40px at 10% 0%,#38bdf8aa,transparent),radial-gradient(70px 50px at 100% 10%,#a855f7aa,transparent),#e2e8f0}
+.lp-glass .sb{left:6px;top:6px;bottom:6px;width:24%;background:rgba(15,23,42,.72);border-radius:12px}
+.lp-glass .b1{left:32%;top:10px;width:30%;height:22px;background:rgba(255,255,255,.7);border-radius:10px}
+.lp-glass .b2{left:66%;top:10px;width:28%;height:22px;background:rgba(255,255,255,.7);border-radius:10px}
+.lp-glass .b3{left:32%;top:40px;width:62%;height:44px;background:rgba(255,255,255,.7);border-radius:12px}
+.lp-pro{background:#f8fafc}
+.lp-pro .sb{left:0;right:0;top:0;height:16px;background:#0f172a;border-radius:0}
+.lp-pro .b1{left:6px;top:24px;width:22%;height:18px;background:#fff;border:1px solid #cbd5e1;border-radius:2px}
+.lp-pro .b2{left:27%;top:24px;width:22%;height:18px;background:#fff;border:1px solid #cbd5e1;border-radius:2px}
+.lp-pro .b3{left:6px;right:6px;top:48px;height:40px;background:repeating-linear-gradient(#fff 0 7px,#e2e8f0 7px 8px);border:1px solid #cbd5e1;border-radius:2px}
+.look-swatches{display:flex;gap:10px;flex-wrap:wrap}
+.look-sw{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0}
+.look-sw.sel{border-color:var(--text);box-shadow:0 0 0 2px var(--card-bg) inset}
