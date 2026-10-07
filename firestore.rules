@@ -1,129 +1,197 @@
 rules_version = '2';
 
 // =========================================================================
-// CRM FIRESTORE SECURITY RULES
-// -------------------------------------------------------------------------
-// Deploy this from: Firebase Console > Firestore Database > Rules
-// (paste this whole file in and click "Publish"), OR via Firebase CLI:
-//   firebase deploy --only firestore:rules
+// MOOVING CRM - FIRESTORE SECURITY RULES (hardened, permission based)
+// Publish: Firebase Console > Firestore Database > Rules > paste > Publish
+// Principles: default deny, least privilege, server-side validation, no public access.
+//  - Admin role  = everything except two MAIN-ONLY powers (export, aiCode).
+//  - MAIN account (operations194@mooving.com) = may also export data and use AI Code Studio.
+//  - Any Admin can grant individual powers to individual users (permissions/{uid}).
+//    Only the MAIN account can grant or remove the two main-only powers.
 // =========================================================================
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function myUid() {
-      return request.auth.uid;
-    }
-
-    function myRole() {
-      return get(/databases/$(database)/documents/users/$(myUid())).data.role;
-    }
+    function isSignedIn() { return request.auth != null; }
+    function myUid() { return request.auth.uid; }
+    function userPath() { return /databases/$(database)/documents/users/$(myUid()); }
+    function permPath() { return /databases/$(database)/documents/permissions/$(myUid()); }
 
     function isAdmin() {
-      return isSignedIn() &&
-        exists(/databases/$(database)/documents/users/$(myUid())) &&
-        myRole() == "Admin";
+      return isSignedIn() && exists(userPath()) && get(userPath()).data.role == "Admin";
     }
+    // a real, active CRM member (has a profile that is not disabled / deleted)
+    function isMember() {
+      return isSignedIn() && exists(userPath())
+        && get(userPath()).data.get('disabled', false) != true
+        && get(userPath()).data.get('deleted', false) != true;
+    }
+    function isMain() {
+      return isSignedIn() && request.auth.token.email == 'operations194@mooving.com';
+    }
+    // granted to this user by an Admin (not counting the Admin role itself)
+    function granted(p) {
+      return isSignedIn() && exists(permPath()) && get(permPath()).data.perms.get(p, false) == true;
+    }
+    // Admins always have it, other users only when granted
+    function perm(p) { return isAdmin() || granted(p); }
+    // main account always has it, everybody else only when the main account granted it
+    function permMain(p) { return isMain() || granted(p); }
 
     // ---------------- users ----------------
-    // Anyone signed in can read the users list (needed for dashboards/reports).
-    // A user can create ONLY their own profile document (first-login bootstrap),
-    // and can only ever set role on that create if the users collection is
-    // empty (handled by matching against isFirstUser via a `role in` check is
-    // not feasible here, so we simply require role == "User" on self-created
-    // docs; the very-first-admin case is expected to be bootstrapped manually
-    // from the Firebase Console per the SETUP-README).
-    // A user can update their own doc EXCEPT the role/approval fields.
-    // Only an Admin can change someone's role or delete a user profile.
     match /users/{uid} {
+      allow get: if isSignedIn() && (uid == myUid() || perm('adminPanel') || perm('assign') || perm('viewAll'));
+      allow list: if perm('adminPanel') || perm('assign') || perm('viewAll');
 
-      allow read: if isSignedIn();
-
-      // Two ways a user doc can be created:
-      //  1. An Admin creates it for someone else (any role) — this is how
-      //     the Admin Panel's "Create New User" feature writes the profile.
-      //  2. A fallback self-bootstrap (e.g. the very first Admin account,
-      //     created directly in the Firebase Console, logging in for the
-      //     first time with no Firestore profile yet) — locked to role
-      //     "User" only, so nobody can hand themselves Admin this way.
       allow create: if isSignedIn() && (
-                      isAdmin()
-                      ||
-                      ( myUid() == uid && request.resource.data.role == "User" )
-                    );
+        isAdmin() ||
+        ( myUid() == uid
+          && request.resource.data.role == "User"
+          && request.resource.data.keys().hasOnly(['name','email','role','createdAt','lastLogin','gender']) )
+      );
 
       allow update: if isSignedIn() && (
-                      isAdmin()
-                      ||
-                      (
-                        myUid() == uid &&
-                        request.resource.data.role == resource.data.role &&
-                        (!("adminApprovalPending" in resource.data) || request.resource.data.adminApprovalPending == resource.data.adminApprovalPending) &&
-                        (!("disabled" in resource.data) || request.resource.data.disabled == resource.data.disabled)
-                      )
-                    );
+        isAdmin() ||
+        ( myUid() == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLogin','name','gender'])
+          && (!('name' in request.resource.data) || (request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80))
+          && (!('gender' in request.resource.data) || request.resource.data.gender in ['male','female','']) )
+      );
 
       allow delete: if isAdmin();
     }
 
     // ---------------- crmprojects ----------------
-    // Read is left open (no login required) ONLY so the existing
-    // "Share View-Only Link" feature (view.html) keeps working for people
-    // who don't have an account. If you don't need public share links,
-    // change this line to: allow read: if isSignedIn();
-    // Writes always require login, and edits/deletes are restricted to the
-    // project owner or an Admin - enforced here, not just in the UI.
+    // Owner sees/edits own projects. 'viewAll' (all Admins) sees everything.
+    // create for someone else needs 'assign'. delete needs 'deleteProjects'.
     match /crmprojects/{id} {
+      allow read: if isSignedIn() && (resource.data.ownerUid == myUid() || perm('viewAll'));
 
-      allow read: if true;
-
-      allow create: if isSignedIn()
-                    && request.resource.data.ownerUid == myUid();
+      allow create: if isSignedIn() && (
+        ( request.resource.data.ownerUid == myUid() && !('assignedByUid' in request.resource.data) ) ||
+        perm('assign')
+      );
 
       allow update: if isSignedIn() && (
-                       isAdmin() ||
-                       resource.data.ownerUid == myUid()
-                     );
+        ( resource.data.ownerUid == myUid()
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.get('assignedByUid', null) == resource.data.get('assignedByUid', null) ) ||
+        isAdmin()
+      );
 
-      allow delete: if isSignedIn() && isAdmin();
+      allow delete: if isSignedIn() && perm('deleteProjects');
     }
 
     // ---------------- notifications ----------------
-    // A user can only read notifications addressed to them; Admins can read all.
     match /notifications/{id} {
+      allow read: if isSignedIn() && (resource.data.targetUid == myUid() || perm('viewAll')
+                     || (resource.data.targetUid == 'admins' && perm('requests')));
 
-      allow read: if isSignedIn() && (isAdmin() || resource.data.targetUid == myUid());
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['targetUid','title','message','read','createdAt','expireAt'])
+        && request.resource.data.targetUid is string
+        && request.resource.data.title is string && request.resource.data.title.size() <= 300
+        && request.resource.data.message is string && request.resource.data.message.size() <= 1000
+        && request.resource.data.createdAt == request.time;
 
-      allow create: if isSignedIn();
-
-      allow update: if isSignedIn() && (isAdmin() || resource.data.targetUid == myUid());
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        ( resource.data.targetUid == myUid()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']) )
+      );
 
       allow delete: if isAdmin();
     }
 
-    // ---------------- activityLogs ----------------
-    // Write-only audit trail. Only Admins can read it back; nobody can edit
-    // or delete entries (append-only).
+    // ---------------- activityLogs (append-only audit trail) ----------------
     match /activityLogs/{id} {
+      allow read: if perm('activityLog');
 
-      allow read: if isAdmin();
-
-      allow create: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['action','details','userEmail','userName','timestamp','expireAt'])
+        && request.resource.data.action is string && request.resource.data.action.size() <= 200
+        && request.resource.data.timestamp == request.time;
 
       allow update: if false;
-
       allow delete: if isAdmin();
     }
 
-    // ---------------- teams (reserved for future use) ----------------
+    // ---------------- settings (columns, shared AI key, AI defaults, AI options) ----------------
+    // Read: real members only (no anonymous / stranger access). Write: Admin, or a user granted the matching power.
+    match /settings/{id} {
+      allow read: if isMember();
+      allow write: if isAdmin()
+        || (id == 'columns' && granted('columns'))
+        || ((id == 'ai' || id == 'aiops' || id == 'aidef') && granted('aiOps'));
+    }
+
+    // ---------------- changeRequests (suggestions that wait for a reviewer) ----------------
+    match /changeRequests/{id} {
+      allow read: if perm('requests');
+
+      allow create: if isMember()
+        && request.resource.data.keys().hasOnly(['type','title','details','page','source','status','createdBy','createdByName','createdAt'])
+        && request.resource.data.type in ['issue','feature']
+        && request.resource.data.source in ['auto','user','admin','ai']
+        && request.resource.data.status == 'Pending'
+        && request.resource.data.createdBy == myUid()
+        && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 200
+        && request.resource.data.details is string && request.resource.data.details.size() <= 4000
+        && request.resource.data.createdAt == request.time;
+
+      allow update, delete: if perm('requests');
+    }
+
+    // ---------------- aiChanges (AI Code Studio audit trail) ----------------
+    // Only the MAIN account, or someone the main account granted 'aiCode', can touch this.
+    match /aiChanges/{id} {
+      allow read, create, update: if permMain('aiCode');
+      allow delete: if isMain();
+    }
+
+    // ---------------- permissions (who may do what) ----------------
+    // A user can read their own powers. Only Admins can change them, and only the MAIN account
+    // can grant or remove the two main-only powers (export, aiCode).
+    match /permissions/{uid} {
+      allow read: if isSignedIn() && (uid == myUid() || isAdmin());
+
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['perms','updatedBy','updatedAt'])
+        && (isMain() || (request.resource.data.perms.get('aiCode', false) == false && request.resource.data.perms.get('export', false) == false));
+
+      allow update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['perms','updatedBy','updatedAt'])
+        && (isMain() || (request.resource.data.perms.get('aiCode', false) == resource.data.perms.get('aiCode', false)
+                         && request.resource.data.perms.get('export', false) == resource.data.perms.get('export', false)));
+
+      allow delete: if isMain();
+    }
+
+    // ---------------- userPrefs (my pinned tasks + my own AI choices) ----------------
+    match /userPrefs/{uid} {
+      allow read: if isSignedIn() && (uid == myUid() || isAdmin());
+      allow write: if isSignedIn() && uid == myUid()
+        && request.resource.data.keys().hasOnly(['pinned','ai','look','updatedAt'])
+        && (!('pinned' in request.resource.data) || (request.resource.data.pinned is list && request.resource.data.pinned.size() <= 20));
+    }
+
+    // ---------------- meta/live (real-time "something changed" signal) ----------------
+    match /meta/{id} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['ts','by'])
+        && request.resource.data.ts == request.time
+        && request.resource.data.by == myUid();
+      allow delete: if false;
+    }
+
+    // ---------------- teams (reserved) ----------------
     match /teams/{id} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
     }
 
+    // everything else is denied by default.
   }
 }
